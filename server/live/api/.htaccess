@@ -1,0 +1,22 @@
+# FAIR QuickRisk Live — API directory.
+#
+# Only the endpoint scripts listed below may be executed. The shared bootstrap file, dotfiles
+# and everything else in this directory are denied.
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(?!(_bootstrap\.php|session\.php|assessments\.php|assessment\.php|archive\.php|timeline\.php|share\.php|shared\.php|scenarios\.php|report\.php|decision-compute\.php|decision-assessments\.php|decision-assessment\.php|decision-share\.php|decision-shared\.php|decision-treatments\.php)$).*$">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "^_.*\.php$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+</IfModule>
+
+# The API is same-origin only: no cross-origin resource sharing is enabled.

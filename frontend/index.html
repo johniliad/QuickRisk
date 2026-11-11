@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuickRisk | Quantitative Cyber Risk &amp; Prioritization</title>
+    <meta
+      name="description"
+      content="QuickRisk answers &quot;What matters financially &amp; operationally?&quot; — FAIR-inspired quantitative cyber risk that expresses exposure as a range of possible loss, not a single score."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Dr. John Iliadis" />
+    <link rel="author" href="https://www.iliadis.net/" />
+    <meta name="theme-color" content="#075e65" />
+    <link rel="canonical" href="https://quickrisk.iliadis.net/" />
+
+    <!-- Open Graph / social metadata -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="QuickRisk" />
+    <meta property="og:title" content="QuickRisk | Quantitative Cyber Risk &amp; Prioritization" />
+    <meta
+      property="og:description"
+      content="QuickRisk answers &quot;What matters financially &amp; operationally?&quot; — FAIR-inspired quantitative cyber risk that expresses exposure as a range of possible loss, not a single score."
+    />
+    <meta property="og:url" content="https://quickrisk.iliadis.net/" />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="QuickRisk | Quantitative Cyber Risk &amp; Prioritization" />
+    <meta
+      name="twitter:description"
+      content="QuickRisk answers &quot;What matters financially &amp; operationally?&quot; — FAIR-inspired quantitative cyber risk that expresses exposure as a range of possible loss, not a single score."
+    />
+
+    <!--
+      Structured data. Only accurate, non-claiming facts are asserted: this is a
+      free web application, not a certification or assurance service.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "@id": "https://quickrisk.iliadis.net/#webapplication",
+        "name": "QuickRisk",
+        "url": "https://quickrisk.iliadis.net/",
+        "applicationCategory": "SecurityApplication",
+        "applicationSubCategory": "Risk quantification · prioritization",
+        "applicationSuite": "Iliadis Executive Cyber Intelligence Suite",
+        "operatingSystem": "Web",
+        "browserRequirements": "A modern web browser",
+        "description": "An independently developed FAIR-inspired quantitative cyber-risk application that uses probabilistic modelling and quantitative analysis to explore the possible range of loss associated with defined cyber-risk scenarios instead of presenting risk as a single deterministic score. It is a rapid starting point for understanding likelihood, loss exposure and uncertainty, and not a substitute for a full FAIR analysis.",
+        "author": { "@type": "Person", "@id": "https://www.iliadis.net/#john-iliadis" },
+        "creator": { "@type": "Person", "@id": "https://www.iliadis.net/#john-iliadis" },
+        "mainEntityOfPage": { "@type": "WebPage", "@id": "https://quickrisk.iliadis.net/#webpage", "url": "https://quickrisk.iliadis.net/" }
+      }
+    </script>
+  </head>
+  <body>
+    <a class="qk-skip-link" href="#main">Skip to content</a>
+    <div id="root">
+      <!--
+        Static fallback content.
+
+        It is replaced as soon as the React application mounts, and it exists so that the
+        landing page, the five scenarios, the zero-retention statement and the disclaimer
+        remain readable by crawlers and by users whose JavaScript is unavailable. The
+        interactive assessment itself requires JavaScript because the answers must stay in
+        browser memory and never reach a URL.
+      -->
+      <header>
+        <p><a href="https://www.iliadis.net/">iliadis.net</a></p>
+        <h1>FAIR QuickRisk</h1>
+        <p>Rapid quantitative cyber-risk estimation</p>
+      </header>
+      <main id="main">
+        <h2>Quantify your exposure to five common cyber-risk scenarios in under 20 minutes</h2>
+        <p>
+          FAIR QuickRisk asks eight organisation-profile questions and two questions for each of five
+          cyber-risk scenarios, then runs a server-side Monte Carlo simulation of 5,000 iterations per scenario
+          to estimate a distribution of possible annual loss exposure. Results show expected annual loss, P10,
+          P50 and P90 loss levels and threshold exceedance probabilities for each scenario.
+        </p>
+        <h3>The five assessed scenarios</h3>
+        <ol>
+          <li>Ransomware / destructive extortion</li>
+          <li>Identity, phishing, social-engineering or business-account compromise</li>
+          <li>Exploitation of a public-facing vulnerability</li>
+          <li>Third-party / supplier / managed-service compromise</li>
+          <li>DDoS / denial-of-service / externally driven service disruption</li>
+        </ol>
+        <h3>Methodology in brief</h3>
+        <p>
+          FAIR QuickRisk uses a simplified probabilistic model. Answers are translated into ranges rather than
+          single values, and thousands of simulated trials are used to estimate an annualised exposure
+          approximation. Reported P10, P50 and P90 values describe that approximation under the stated assumptions;
+          they are not percentiles of realised annual loss totals, not guarantees and not precise forecasts.
+          Scenario dependencies are not modelled, so the total shown is the sum of scenario expected values and
+          not a joint distribution percentile. <a href="/methodology.html">Read the full methodology</a>.
+        </p>
+        <h3>Your data and retention</h3>
+        <p>
+          The QuickRisk questionnaire is zero-retention: your answers and calculated results are processed
+          transiently to produce the assessment. FAIR QuickRisk does not store your answers or results in a
+          database, account, browser storage, cookie or application file. No account or login is required. If
+          you close or refresh the page, the assessment cannot be recovered.
+        </p>
+        <p>
+          The optional QuickRisk Live overlay is separate: it saves assessments you explicitly choose to save
+          in an anonymous server session, with no name, email or account, and you can archive them or revoke
+          any share link at any time. It uses synthetic SOC data only.
+        </p>
+        <h3>Important disclaimer</h3>
+        <p>
+          FAIR QuickRisk is provided solely as a preliminary, informational and educational risk-estimation
+          tool. It is not a full FAIR analysis, is not a FAIR certification or accreditation tool, and is not
+          endorsed, approved, certified or validated by the FAIR Institute or any other standards body,
+          regulator, government authority or third party. The results are estimates, not facts, and do not
+          constitute professional advice of any kind. This application must not be used as the sole basis for
+          material business decisions.
+        </p>
+      </main>
+      <footer>
+        <p>FAIR QuickRisk is an independently developed tool by <a href="https://www.iliadis.net/#john-iliadis">Dr. John Iliadis</a>. It is not endorsed by, affiliated with, or validated by the FAIR Institute, ENISA, Verizon, IBM, any regulator or any other organisation referenced for contextual evidence.</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

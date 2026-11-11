@@ -1,0 +1,22 @@
+# FAIR QuickRisk Live — public share route.
+#
+# A share link is served at /live/share/{randomToken}. There is no client-side router, so the
+# only rewrite this application needs is the one below: it maps the opaque token path onto the
+# static share shell in this same directory. The substitution is relative, so it resolves
+# correctly whether the application is published at the site root or under a subdirectory.
+#
+# The calculation and Live API endpoints are never affected by this rule.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Shared Board Risk Pack (Decision Lab): /live/share/board/{token}
+    RewriteRule ^board/[A-Za-z0-9]{32,128}/?$ index.html [L]
+
+    # Shared QuickRisk Live assessment: /live/share/{token}
+    RewriteRule ^[A-Za-z0-9]{32,128}/?$ index.html [L]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>

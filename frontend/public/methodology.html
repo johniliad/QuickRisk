@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Methodology, limitations and disclaimer | FAIR QuickRisk</title>
+    <meta
+      name="description"
+      content="How FAIR QuickRisk estimates cyber-risk exposure: the simplified model, the typical-year/bad-year (1 in 10) reading, limitations, zero-retention privacy statement and full disclaimer."
+    />
+    <link rel="canonical" href="https://quickrisk.iliadis.net/methodology.html" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #142b3b;
+        --heading: #102a3a;
+        --muted: #526675;
+        --paper: #ffffff;
+        --canvas: #f3f7f8;
+        --border: #dce6e9;
+        --accent: #075e65;
+        --accent-soft: #e7f4f2;
+        --focus: #8a4b00;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+      a {
+        color: var(--accent);
+      }
+      :focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 3px;
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        background: var(--canvas);
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .shell {
+        width: min(70rem, calc(100% - 3rem));
+        margin-inline: auto;
+        padding-block: 2rem;
+      }
+      h1 {
+        color: var(--heading);
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        line-height: 1.15;
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        color: var(--heading);
+        font-size: clamp(1.3rem, 2.4vw, 1.6rem);
+        margin-top: 2.5rem;
+      }
+      h3 {
+        color: var(--heading);
+        font-size: 1.05rem;
+        margin-bottom: 0.25rem;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .lede {
+        color: var(--muted);
+        font-size: 1.06rem;
+        max-width: 48rem;
+      }
+      .callout {
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent);
+        background: var(--accent-soft);
+        padding: 1rem 1.25rem;
+        border-radius: 0.25rem;
+      }
+      ul,
+      ol {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin-block: 0.25rem;
+      }
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--accent);
+        border-radius: 0.25rem;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 650;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="shell">
+        <p class="eyebrow">FAIR QuickRisk</p>
+        <h1>Methodology, limitations and disclaimer</h1>
+        <p class="lede">
+          Estimate your likely annual cyber-loss across five common scenarios — an indication, not a full FAIR
+          analysis, an audit, a certification or professional advice.
+        </p>
+        <p><a class="button" href="./">Start the assessment</a></p>
+      </div>
+    </header>
+
+    <main class="shell">
+      <h2>What the application does</h2>
+      <p>
+        FAIR QuickRisk asks eight organisation-profile questions and exactly two questions for each of five
+        predefined scenarios, then runs a server-side Monte Carlo simulation of 5,000 simulated years per
+        scenario. It reports expected annual loss, a typical-year to bad-year (1 in 10) range, the chance of
+        exceeding key thresholds, and an estimate-precision indicator for each scenario.
+      </p>
+
+      <h2>Why these five scenarios</h2>
+      <p>
+        The five scenarios are a practical rapid-assessment set chosen for current threat evidence and broad
+        applicability, not a mathematically exact ranking of the five most frequent cyber risks. Public threat
+        reporting identifies phishing and social engineering as a leading initial access route, vulnerability
+        exploitation as a major and growing vector, ransomware as the most impactful incident type, third-party
+        involvement as a large and increasing share of breaches, and denial-of-service as the highest-volume
+        disruption activity.
+      </p>
+      <p>
+        Incident frequency is not treated as business risk. A very frequent scenario such as denial-of-service
+        is not automatically ranked highly, because the model also considers financial loss magnitude.
+      </p>
+
+      <h2>What is borrowed from FAIR, and what is simplified</h2>
+      <p>
+        The model borrows FAIR's core idea: separate "how often" from "how costly", use ranges rather than
+        single numbers, and keep a primary loss apart from a possible knock-on (secondary) loss. The technical
+        names — threat event frequency, loss event frequency, loss magnitude, primary loss and secondary loss —
+        are each explained in plain language inside the application.
+      </p>
+      <ul>
+        <li>A full FAIR analysis decomposes frequency and magnitude into many factors. This application uses a small fixed factor set.</li>
+        <li>Only five scenarios are assessed; other material scenarios are outside the model.</li>
+        <li>Scenario dependencies and correlations are not modelled, so no joint portfolio percentile is presented.</li>
+        <li>Secondary loss is represented by one occurrence probability and one magnitude distribution per scenario.</li>
+        <li>Statutory fines, regulatory penalties and specific legal liabilities are explicitly out of scope.</li>
+        <li>One loss magnitude is sampled per simulated trial rather than once per event, so the reported values are an annualised exposure approximation and not realised annual loss totals.</li>
+        <li>The model does not capture uncertainty about its own structure, distribution shapes, calibration or scenario correlation.</li>
+      </ul>
+
+      <h2>How answers become ranges</h2>
+      <p>
+        Each answer maps to a range stored in versioned model files rather than to a single number. The likelihood
+        question asks how often the scenario is attempted or contacted in a typical 12-month period, before
+        considering whether your defences would stop it: that answer is "how often" (technical name: threat event
+        frequency), and your defences are applied separately and only once, so the same control is never counted
+        twice. An impact answer maps to a range of multipliers against your organisation's typical daily disruption
+        cost. Organisation-profile answers act as modifiers. An Unknown answer is modelled as an equal-weight mixture
+        of the available answers, which widens the range, keeps the central estimate inside the range of the answers
+        you could have chosen, and reduces the estimate-precision rating.
+      </p>
+
+      <h2>What "typical year" and "bad year (1 in 10)" mean</h2>
+      <p>
+        "Typical year" is the middle of the simulated outcomes: half of the simulated years are cheaper, half
+        costlier. "Bad year (1 in 10)" is the level that only 1 in 10 simulated years is worse than. "Best case
+        (1 in 10)" is the level that only 1 in 10 simulated years falls below. The technical names for these are
+        P50 (the median), P90 (the 90th percentile) and P10 (the 10th percentile). They describe an annualised
+        exposure approximation, not realised annual loss totals. A wide typical-to-bad range is a statement about
+        uncertainty in your inputs and assumptions — not a confidence interval around a known true value.
+      </p>
+
+      <h2>What expected annual loss means</h2>
+      <p>
+        Expected annual loss is the arithmetic mean of the simulated annualised exposure values for a scenario: the
+        long-run average of the modelled approximation, not the most likely outcome and not a forecast for the
+        coming year. The total shown is the sum of the five scenario expected annual losses, which is exact for
+        expected values. Because dependencies between scenarios are not modelled, that sum is not presented as a
+        joint distribution percentile.
+      </p>
+
+      <h2>Versioning</h2>
+      <p>
+        The model identifier, model version, schema version and calibration version are shown on every result
+        and report. Scenario definitions, questions, answer options and calibration parameters live in
+        version-controlled model files outside the public web root. Calibration changes create a new version.
+        Because the questionnaire retains no assessment, a calibration change cannot alter any past assessment.
+      </p>
+
+      <h2>Your data and retention</h2>
+      <p class="callout">
+        The QuickRisk questionnaire is zero-retention: your answers and calculated results are processed
+        transiently to produce this assessment, and the application does not store them in a database,
+        account, browser storage, cookie or application file. No account or login is required. If you close
+        or refresh the page, the assessment cannot be recovered by the application.
+      </p>
+      <p>
+        The optional QuickRisk Live overlay is separate. If you use it and explicitly save an assessment, the
+        application stores that saved assessment — and the anonymous session it belongs to — in its own
+        database so you can reopen, archive or share it. No name, email or organisation is attached, share
+        links are read-only and revocable, and the only cookie Live uses is the opaque session cookie that
+        JavaScript cannot read.
+      </p>
+      <p>
+        Normal web infrastructure may process technical metadata such as source IP address, timestamp, HTTP
+        status and user-agent. Assessment answers and results are never attached to those records. The
+        application can prohibit intentional application-level persistence, but it cannot control transient
+        copies that may exist outside its architecture, such as browser memory, operating-system memory
+        management, network infrastructure or security monitoring controlled by the hosting provider.
+      </p>
+
+      <h2>Important disclaimer</h2>
+      <p>
+        FAIR QuickRisk is provided solely as a preliminary, informational and educational risk-estimation tool.
+        It is intended to provide an initial indication of potential cyber-risk exposure based on a limited
+        number of user-supplied assumptions and a simplified, probabilistic methodology inspired by concepts
+        from the FAIR risk-analysis model.
+      </p>
+      <p>
+        This application is not a full FAIR analysis, is not a FAIR certification or accreditation tool, and is
+        not endorsed, approved, certified or validated by the FAIR Institute or any other standards body,
+        regulator, government authority or third party.
+      </p>
+      <p>
+        The results are estimates, not facts. They are dependent on the quality, completeness and accuracy of
+        the information entered by the user, as well as on model assumptions, calibration parameters,
+        statistical distributions and other simplifications. Different information, assumptions, model versions
+        or professional analyses may produce materially different results.
+      </p>
+      <p>
+        The application does not constitute cybersecurity advice, risk-management advice, financial advice,
+        legal advice, regulatory advice, audit, assurance, compliance assessment, certification, insurance
+        advice, valuation, incident-response advice or professional advice of any kind. It must not be used as
+        the sole basis for decisions concerning cybersecurity investment, risk acceptance, business continuity,
+        insurance, financial reporting, regulatory compliance, regulatory notification, legal action, incident
+        response, system shutdown, service restoration or any other material business decision.
+      </p>
+      <p>
+        The application is provided "AS IS" and "AS AVAILABLE", without warranties or representations of any
+        kind, to the maximum extent permitted by applicable law. The user is solely responsible for
+        independently validating the inputs, interpreting the outputs, obtaining appropriate professional
+        advice and making any decision arising from the assessment. A favourable result does not mean that an
+        organisation is secure or that its cyber risk is acceptable. A high result does not, by itself,
+        establish that the organisation is non-compliant or materially exposed.
+      </p>
+
+      <h2>Contextual evidence sources</h2>
+      <p>
+        The scenario set is informed by current public threat reporting. Those sources provide contextual
+        justification only and are not used as direct model coefficients. Calibration values are documented
+        separately and classified as externally evidenced, internally derived, heuristic, or placeholder
+        requiring future validation.
+      </p>
+      <ul>
+        <li><a href="https://www.enisa.europa.eu/publications/enisa-threat-landscape-2025">ENISA Threat Landscape 2025</a></li>
+        <li><a href="https://www.enisa.europa.eu/topics/cyber-threats/threat-landscape">ENISA Threat Landscape (current edition)</a></li>
+        <li><a href="https://www.verizon.com/business/resources/reports/">Verizon Data Breach Investigations Report 2025</a></li>
+        <li><a href="https://www.ibm.com/think/x-force/threat-intelligence-index-2026-securing-identities-ai-detection">IBM X-Force Threat Intelligence Index 2026</a></li>
+        <li><a href="https://www.fairinstitute.org/">FAIR Institute — FAIR Standard v3.0 (conceptual reference only)</a></li>
+      </ul>
+    </main>
+
+    <footer>
+      <div class="shell">
+        <p>
+          FAIR QuickRisk is independently developed and is not endorsed by the FAIR Institute, ENISA, Verizon,
+          IBM or any regulator. <a href="./">Return to the assessment</a>.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

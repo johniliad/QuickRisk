@@ -1,0 +1,22 @@
+# FAIR QuickRisk — calculation endpoint directory.
+#
+# Only calculate.php may be executed. Everything else here is denied, and the
+# endpoint is POST-only.
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(?!calculate\.php$).*$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Reject any non-POST request to the calculation endpoint at the edge.
+    RewriteCond %{REQUEST_METHOD} !^POST$
+    RewriteRule ^calculate\.php$ - [R=405,L]
+</IfModule>

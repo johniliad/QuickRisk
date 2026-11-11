@@ -1,0 +1,375 @@
+{
+  "parametersSchemaVersion": "1.3.0",
+  "modelId": "FAIR-QK-1.3",
+  "calibrationVersion": "CAL-1.3",
+  "classificationLegend": {
+    "externally-evidenced": "Value is supported by an identified external source that is cited in the model documentation.",
+    "internally-derived": "Value is derived inside this application from a stated internal construction or from another documented parameter.",
+    "heuristic": "Value is an expert-style judgement used because no reliable quantitative source exists. Treat as provisional.",
+    "placeholder": "Value is explicitly provisional and requires future validation before the model should be relied upon analytically."
+  },
+  "sampling": {
+    "distribution": "triangular",
+    "pertLambda": 4.0,
+    "triangularRationale": "Triangular distributions are used for v1 because they are easy to explain, inspect and reproduce, and because the questionnaire only supports min/most-likely/max reasoning.",
+    "wideningMeanShiftCap": 1.5,
+    "wideningMeanShiftCapRationale": "Widening a right-skewed range raises its arithmetic mean because the upper tail is expanded while the most-likely value is held. Left unbounded, an Unknown answer would inflate the central estimate instead of merely widening the distribution. Widening is therefore reduced until the mean of the range is at most 1.5x the un-widened mean. The cap is applied by QkModifiers::applyRange to every widened input, and it is what keeps an all-Unknown assessment's central estimate within a stated multiple of the all-known assessment.",
+    "clamps": {
+      "threatEventFrequency": { "min": 0.001, "max": 100.0 },
+      "susceptibility": { "min": 0.005, "max": 0.99 },
+      "impactMultiplier": { "min": 0.05, "max": 60.0 },
+      "lossMagnitude": { "min": 1000.0, "max": 500000000.0 },
+      "secondaryLossProbability": { "min": 0.01, "max": 0.99 }
+    }
+  },
+  "frequency": {
+    "optionSet": "frequency5",
+    "units": "threat events per year (attempts or contact, before control effectiveness)",
+    "classification": "internally-derived",
+    "source": "FAIR QuickRisk requirements v2 section 12 illustrative frequency mapping; retained unchanged as the v1 calibration basis.",
+    "answerInterpretation": "The likelihood answer is interpreted as threat event frequency: how often the scenario is attempted or contacted in a typical 12-month period, before considering whether controls would prevent success. Control effectiveness is applied separately and only once, as susceptibility. The question wording and help text were corrected in CAL-1.2 to match this interpretation; CAL-1.0 wording asked for scenario plausibility given existing controls, which risked counting controls twice.",
+    "bands": {
+      "VERY_UNLIKELY": { "min": 0.01, "mode": 0.03, "max": 0.10 },
+      "UNLIKELY": { "min": 0.05, "mode": 0.15, "max": 0.30 },
+      "POSSIBLE": { "min": 0.20, "mode": 0.50, "max": 1.00 },
+      "LIKELY": { "min": 0.50, "mode": 1.50, "max": 3.00 },
+      "VERY_LIKELY": { "min": 1.50, "mode": 4.00, "max": 10.00 }
+    },
+    "unknownPolicy": {
+      "type": "mixture",
+      "weights": {
+        "VERY_UNLIKELY": 0.2,
+        "UNLIKELY": 0.2,
+        "POSSIBLE": 0.2,
+        "LIKELY": 0.2,
+        "VERY_LIKELY": 0.2
+      },
+      "classification": "internally-derived",
+      "note": "An Unknown answer is modelled as an equal-weight mixture over the five likelihood answers, applied per scenario after the scenario frequency scale and the frequency modifiers. This widens the distribution while keeping the central estimate inside the range of the available answers, so an Unknown answer is neither optimistic nor punitive by construction. Weights are configurable and are part of the calibration review.",
+      "baseBandMean": 1.5227,
+      "previousBehaviour": "CAL-1.0 used a single wide band (0.01 / 0.50 / 10.00, base mean 3.50). That band raised the central estimate by roughly 6x relative to the Possible answer and was removed in CAL-1.2 because it shifted the central estimate rather than only widening the distribution."
+    }
+  },
+  "impactMultiplier": {
+    "optionSet": "impact5",
+    "units": "multiple of the daily disruption-cost anchor",
+    "classification": "internally-derived",
+    "source": "FAIR QuickRisk requirements v2 section 12 illustrative impact multipliers; most-likely values are internal derivations inside the published ranges.",
+    "answerInterpretation": "The impact answer is interpreted as the financial and business impact of one successful loss event, expressed as a multiple of the organisation's daily disruption-cost anchor (effectively the equivalent number of days of disruption cost).",
+    "bands": {
+      "MINOR": { "min": 0.25, "mode": 0.50, "max": 1.00 },
+      "MODERATE": { "min": 0.50, "mode": 1.00, "max": 2.00 },
+      "SIGNIFICANT": { "min": 1.00, "mode": 2.20, "max": 5.00 },
+      "SEVERE": { "min": 3.00, "mode": 6.00, "max": 15.00 },
+      "CRITICAL": { "min": 8.00, "mode": 16.00, "max": 40.00 }
+    },
+    "unknownPolicy": {
+      "type": "mixture",
+      "weights": {
+        "MINOR": 0.2,
+        "MODERATE": 0.2,
+        "SIGNIFICANT": 0.2,
+        "SEVERE": 0.2,
+        "CRITICAL": 0.2
+      },
+      "classification": "internally-derived",
+      "note": "An Unknown impact answer is modelled as an equal-weight mixture over the five impact answers, applied per scenario after the scenario impact scale. The central estimate remains inside the range of the available answers.",
+      "baseBandMean": 6.7633,
+      "previousBehaviour": "CAL-1.0 used a single wide band (0.25 / 2.00 / 40.00, base mean 14.08). That band raised the central estimate by roughly 5x relative to the Significant answer and was removed in CAL-1.2."
+    }
+  },
+  "disruptionCostAnchor": {
+    "questionCode": "QP8",
+    "units": "EUR per day of major disruption",
+    "classification": "heuristic",
+    "source": "Options mirror the questionnaire bands; most-likely values are internal heuristics within each band.",
+    "bands": {
+      "LT25K": { "min": 5000, "mode": 12000, "max": 25000 },
+      "25_100K": { "min": 25000, "mode": 45000, "max": 100000 },
+      "100_500K": { "min": 100000, "mode": 200000, "max": 500000 },
+      "500K_2M": { "min": 500000, "mode": 900000, "max": 2000000 },
+      "2_10M": { "min": 2000000, "mode": 3500000, "max": 10000000 },
+      "GT10M": { "min": 10000000, "mode": 14000000, "max": 40000000 }
+    },
+    "fallback": {
+      "min": 8000,
+      "mode": 60000,
+      "max": 1500000,
+      "note": "Used when QP8 is unknown or skipped. The base fallback is then multiplied by the organisation-size modifier and the critical-service-dependency modifier, and confidence is reduced."
+    }
+  },
+  "susceptibility": {
+    "units": "probability that a threat event becomes a loss event",
+    "classification": "heuristic",
+    "source": "Internal heuristic per scenario. Represents the combined effect of preventive, detective and response controls in a single organisation-level factor.",
+    "basis": "Scenario base ranges are scaled by the security-maturity modifier and clamped. Scenario bases differ because disruption and intrusion scenarios have structurally different success probabilities."
+  },
+  "modifiers": [
+    {
+      "code": "publicExposure",
+      "questionCode": "QP3",
+      "target": "threatEventFrequency",
+      "appliesTo": ["S1", "S2", "S3", "S5"],
+      "appliesToNote": "Excludes S4 because third-party frequency is driven by the supplier's exposure, not by the assessed organisation's own internet-facing surface.",
+      "unknownWiden": 1.40,
+      "classification": "heuristic",
+      "values": {
+        "LIMITED": 0.70,
+        "MODERATE": 0.90,
+        "SIGNIFICANT": 1.00,
+        "EXTENSIVE": 1.25,
+        "VERY_EXTENSIVE": 1.50,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "securityMaturity",
+      "questionCode": "QP7",
+      "target": "susceptibility",
+      "appliesTo": ["ALL"],
+      "unknownWiden": 1.50,
+      "classification": "heuristic",
+      "values": {
+        "VERY_LIMITED": 1.80,
+        "LIMITED": 1.40,
+        "MODERATE": 1.00,
+        "STRONG": 0.70,
+        "VERY_STRONG": 0.50,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "criticalServiceDependency",
+      "questionCode": "QP2",
+      "target": "primaryLossMagnitude",
+      "appliesTo": ["ALL"],
+      "unknownWiden": 1.40,
+      "classification": "heuristic",
+      "values": {
+        "LOW": 0.60,
+        "MODERATE": 0.80,
+        "HIGH": 1.00,
+        "VERY_HIGH": 1.30,
+        "EXTREME": 1.60,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "recoveryCapability",
+      "questionCode": "QP6",
+      "target": "primaryLossMagnitude",
+      "appliesTo": ["ALL"],
+      "unknownWiden": 1.40,
+      "classification": "heuristic",
+      "values": {
+        "VERY_LOW": 1.50,
+        "LOW": 1.25,
+        "MODERATE": 1.00,
+        "HIGH": 0.80,
+        "VERY_HIGH": 0.65,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "sensitiveInformation",
+      "questionCode": "QP4",
+      "target": "secondaryLossProbability",
+      "appliesTo": ["ALL"],
+      "unknownWiden": 1.50,
+      "classification": "heuristic",
+      "values": {
+        "LIMITED": 0.50,
+        "MODERATE": 0.75,
+        "SIGNIFICANT": 1.00,
+        "VERY_SIGNIFICANT": 1.35,
+        "CRITICAL": 1.70,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "thirdPartyDependencyFrequency",
+      "questionCode": "QP5",
+      "target": "threatEventFrequency",
+      "appliesTo": ["S4"],
+      "unknownWiden": 1.40,
+      "classification": "heuristic",
+      "values": {
+        "LOW": 0.50,
+        "MODERATE": 0.75,
+        "HIGH": 1.00,
+        "VERY_HIGH": 1.35,
+        "EXTREME": 1.70,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "thirdPartyDependencySecondary",
+      "questionCode": "QP5",
+      "target": "secondaryLossProbability",
+      "appliesTo": ["S4"],
+      "unknownWiden": 1.40,
+      "classification": "heuristic",
+      "values": {
+        "LOW": 0.60,
+        "MODERATE": 0.80,
+        "HIGH": 1.00,
+        "VERY_HIGH": 1.30,
+        "EXTREME": 1.60,
+        "UNKNOWN": 1.00
+      }
+    },
+    {
+      "code": "organisationSize",
+      "questionCode": "QP1",
+      "target": "disruptionCostAnchorFallback",
+      "appliesTo": ["ALL"],
+      "condition": { "questionUnknown": "QP8" },
+      "conditionNote": "Applied only when the disruption-cost anchor question is Unknown or skipped.",
+      "unknownWiden": 1.80,
+      "classification": "heuristic",
+      "values": {
+        "LT10M": 0.25,
+        "10_50M": 0.60,
+        "50_250M": 1.20,
+        "250M_1B": 3.00,
+        "GT1B": 8.00,
+        "UNKNOWN": 1.00
+      }
+    }
+  ],
+  "scenarioScaling": {
+    "classification": "heuristic",
+    "source": "Internal heuristics reflecting the relative threat activity and consequence profile discussed in requirements section 2. These are not external coefficients.",
+    "frequencyScaleNote": "Multiplies the base frequency band. Denial-of-service is scaled highest because it dominates incident volume; third-party is scaled lowest because it depends on a separate party's exposure.",
+    "impactScaleNote": "Multiplies the base impact multiplier band. Ransomware is scaled highest because of combined disruption, restoration and extortion cost; denial-of-service is scaled lowest because consequence is usually availability-bound.",
+    "rankingIntentNote": "Denial-of-service is deliberately the most frequent scenario and simultaneously one of the lower-ranked scenarios by expected annual loss, which demonstrates that incident volume alone is not treated as financial risk.",
+    "scenarios": {
+      "S1": {
+        "frequencyScale": 1.00,
+        "impactScale": 1.20,
+        "susceptibility": { "min": 0.10, "mode": 0.30, "max": 0.60 },
+        "secondaryLossProbability": { "min": 0.25, "mode": 0.45, "max": 0.70 },
+        "secondaryLossMultiplier": { "min": 0.50, "mode": 1.20, "max": 2.50 }
+      },
+      "S2": {
+        "frequencyScale": 1.15,
+        "impactScale": 0.90,
+        "susceptibility": { "min": 0.15, "mode": 0.35, "max": 0.65 },
+        "secondaryLossProbability": { "min": 0.20, "mode": 0.38, "max": 0.60 },
+        "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
+      },
+      "S3": {
+        "frequencyScale": 1.15,
+        "impactScale": 1.00,
+        "susceptibility": { "min": 0.08, "mode": 0.25, "max": 0.55 },
+        "secondaryLossProbability": { "min": 0.15, "mode": 0.32, "max": 0.55 },
+        "secondaryLossMultiplier": { "min": 0.40, "mode": 1.00, "max": 2.50 }
+      },
+      "S4": {
+        "frequencyScale": 0.85,
+        "impactScale": 0.85,
+        "susceptibility": { "min": 0.05, "mode": 0.20, "max": 0.50 },
+        "secondaryLossProbability": { "min": 0.15, "mode": 0.35, "max": 0.60 },
+        "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
+      },
+      "S5": {
+        "frequencyScale": 1.50,
+        "impactScale": 0.60,
+        "susceptibility": { "min": 0.15, "mode": 0.30, "max": 0.60 },
+        "secondaryLossProbability": { "min": 0.10, "mode": 0.22, "max": 0.45 },
+        "secondaryLossMultiplier": { "min": 0.30, "mode": 0.60, "max": 1.50 }
+      }
+    }
+  },
+  "annualisation": {
+    "method": "frequency-times-severity-annualised-exposure",
+    "formula": "annualised exposure = loss event frequency x one sampled loss magnitude per simulated trial",
+    "realisedAnnualTotalsModelled": false,
+    "classification": "internally-derived",
+    "limitation": "The simulation estimates an annualised exposure approximation. It does not draw the number of loss events occurring in a year and does not sum per-event losses, so the reported percentiles are percentiles of the annualised exposure approximation and are not percentiles of realised annual loss totals.",
+    "evidence": "An independent event-based model (Poisson event counts with independently sampled per-event severities) reproduced the same expected value but materially different percentiles: for one scenario the event-based P10 and P50 were zero while the approximation reported non-zero values, and the event-based P90 was roughly 2.5x higher at a low event rate. This is why realised annual totals are declared as not modelled.",
+    "note": "Every calculation response declares this method and sets realisedAnnualTotalsModelled to false so that no consumer can present the percentiles as realised annual loss totals."
+  },
+  "secondaryLoss": {
+    "mechanism": "Secondary Loss = Bernoulli(SLEF) x SLM, drawn once per simulated trial",
+    "classification": "heuristic",
+    "limitNote": "Secondary loss is a generic financial-loss assumption. The model does not calculate or predict statutory fines, regulatory penalties or specific legal liabilities.",
+    "drawGranularityNote": "The secondary-loss Bernoulli draw is made once per simulated trial (a year), not once per realised loss event, because the model does not draw event counts. The reported secondary-loss occurrence rate is therefore the share of simulated trials in which a secondary loss was drawn, not an event-level rate.",
+    "probabilityWideningWhenImpactUnknown": 1.30,
+    "probabilityWideningWhenControlMaturityUnknown": 1.20
+  },
+  "confidence": {
+    "basis": "heuristic-input-quality",
+    "isStatisticalConfidence": false,
+    "displayLabel": "Input confidence",
+    "baseScore": 100,
+    "penalties": {
+      "profileUnknown": 5,
+      "disruptionCostUnknown": 15,
+      "frequencyUnknown": 18,
+      "impactUnknown": 20,
+      "wideDistribution": 8,
+      "veryWideDistribution": 15,
+      "provisionalCalibrationStatus": 15
+    },
+    "thresholds": { "high": 85, "medium": 62 },
+    "maxLevelWhenProvisional": "Medium",
+    "provisionalCalibrationStatuses": ["initial-release", "provisional-release", "preview", "draft"],
+    "distributionWidthMetric": "coefficientOfVariation",
+    "distributionWidthThresholds": { "wide": 1.20, "veryWide": 2.00 },
+    "notes": [
+      "Input confidence is a heuristic indicator of answer completeness, answer availability and the width of the resulting distribution.",
+      "It is not statistical confidence, not a confidence interval, and not a probability that the result is correct.",
+      "While the calibration remains provisional the highest available level is capped at Medium, because the calibration values are heuristic and have not been externally validated."
+    ]
+  },
+  "sensitivity": {
+    "enabled": true,
+    "maxFactors": 10,
+    "method": "deterministic one-at-a-time comparison of the analytic expected annualised exposure across every answer option of each factor, holding the other answers fixed",
+    "note": "This is a model sensitivity of the expected value. It is not a variance-based attribution, not a causal analysis and not a guarantee that changing a control will produce the modelled change."
+  },
+  "plausibilityReview": {
+    "status": "pending-expert-review",
+    "note": "Combinations of the highest option levels produce very large compounded exposure. Those results are arithmetically valid but have not been validated as realistic forecasts. Extreme results should be treated as calibration-limited until a risk professional has reviewed the compound multipliers."
+  },
+  "unknownAnswerDisclosure": {
+    "classification": "internally-derived",
+    "measuredOn": "Scenario S1 with the documented fixture profile, seed 20261029 and 20,000 iterations, both scenario questions Unknown compared with POSSIBLE and SIGNIFICANT.",
+    "medianRatio": 1.14,
+    "meanRatio": 5.99,
+    "p90Ratio": 7.83,
+    "frequencyMeanRelativeToMiddleAnswer": 2.687059,
+    "impactMeanRelativeToMiddleAnswer": 2.47439,
+    "allUnknownPortfolioMultipleOfAllKnown": 42.1,
+    "qp8UnknownOnlyPortfolioMultipleOfAllKnown": 2.36,
+    "interpretation": "An Unknown answer is an equal-weight mixture over the available answers, so its mean is the average of the five answer means by construction and its typical value stays close to the middle answer (median x1.14) while the upper tail widens (P90 x7.83). The mean rises by about x6 because any distribution spanning all five multiplicative answer bands is strongly right-skewed; that is a property of the answer scale, not a punitive adjustment. An all-Unknown assessment - including an Unknown organisation size and disruption cost - is about x42 the all-known baseline, and an Unknown disruption cost alone about x2.4.",
+    "whyNotLower": "The alternative, weighting the mixture so that its mean equals the middle answer, would require arbitrary weights that favour the lowest bands, and would understate the tail that an Unknown answer is meant to express. The weights are configurable in this file, and the measured central effect is asserted by the test suite so that it cannot drift silently.",
+    "note": "These figures are asserted by the test suite so that the disclosed central effect cannot drift silently."
+  },
+  "interpretation": {
+    "topScenarioCount": 3,
+    "spreadRatioWide": 20,
+    "spreadRatioVeryWide": 60,
+    "templates": {
+      "topScenario": "Based on the information provided, {scenario} is the highest estimated annual-loss scenario.",
+      "spread": "The model indicates a P10–P90 range of {p10} to {p90} for {scenario}, reflecting uncertainty in event frequency and loss magnitude.",
+      "spreadWide": "The modelled range is wide. This is a statement about uncertainty in the inputs and assumptions, not a confidence interval around a known value.",
+      "threshold": "{scenario} exceeded {threshold} in {probability} of the simulated trials.",
+      "zeroExceedance": "No simulated trial exceeded {threshold} in this run ({iterations} trials). That is not evidence that the threshold cannot be exceeded.",
+      "confidence": "Overall input confidence is {level}. {reason}",
+      "noJointPercentiles": "The total shown is the sum of the five scenario expected annual losses. Dependencies between scenarios are not modelled, so no joint portfolio percentile is presented.",
+      "annualisation": "Percentiles describe the annualised exposure approximation (loss event frequency x one sampled event magnitude per trial), not a distribution of realised annual loss totals.",
+      "unknownMixture": "Unknown answers are modelled as an equal-weight mixture of the available answers. This widens the range while keeping the central estimate inside the range of the available answers.",
+      "unknownWidens": "Unknown answers widen the modelled range and reduce input confidence. They are not treated as a favourable answer."
+    }
+  },
+  "engineLimits": {
+    "scenarioCount": 5,
+    "questionsPerScenario": 2,
+    "histogramBins": 40,
+    "histogramUpperPercentile": 0.99,
+    "minimumIterations": 1000,
+    "maximumIterations": 50000
+  }
+}

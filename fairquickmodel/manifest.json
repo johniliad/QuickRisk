@@ -1,0 +1,50 @@
+{
+  "modelId": "FAIR-QK-1.3",
+  "modelVersion": "1.3.0",
+  "schemaVersion": "1.3.0",
+  "calibrationVersion": "CAL-1.3",
+  "applicationVersion": "1.3.0",
+  "releaseStatus": "provisional-release",
+  "releasedOn": "2026-11-07",
+  "supersedesModelVersion": "1.2.0",
+  "currency": "EUR",
+  "currencySymbol": "\u20ac",
+  "locale": "en-GB",
+  "defaultIterations": 5000,
+  "maxIterations": 50000,
+  "allowedIterations": [1000, 5000, 10000, 25000, 50000],
+  "lossThresholds": [100000, 500000, 1000000, 5000000, 10000000],
+  "scenarioOrder": ["S1", "S2", "S3", "S4", "S5"],
+  "profileQuestionOrder": ["QP1", "QP2", "QP3", "QP4", "QP5", "QP6", "QP7", "QP8"],
+  "requiredProfileQuestions": ["QP1", "QP2", "QP3", "QP4", "QP5", "QP6", "QP7"],
+  "optionalProfileQuestions": ["QP8"],
+  "scenarioQuestionCodes": ["A", "B"],
+  "disclaimerVersion": "DISC-1.2",
+  "methodologyVersion": "METH-1.3",
+  "privacyNoticeVersion": "PRIV-1.1",
+  "positioningVersion": "POS-1.0",
+  "retentionMode": "zero-retention",
+  "portfolioPercentilesAvailable": false,
+  "realisedAnnualTotalsModelled": false,
+  "annualisationMethod": "frequency-times-severity-annualised-exposure",
+  "sensitivityAvailable": true,
+  "modelChangeSummary": "CAL-1.3 changes no formula, coefficient, distribution or band: the known-answer baseline and every Monte Carlo figure are identical to 1.2.0. It records the deployment identity change (one database named iliadis_quickrisk with the iliadis_quickrisk_user account, shared by the questionnaire, QuickRisk Live and Decision Lab), raises the disclaimer version to DISC-1.1, and adds the Decision Lab treatment-analysis layer (paired driver effects over the existing engine, deterministic decision rules, Board Risk Pack). CAL-1.2 corrected four issues identified in an independent quantitative audit: the likelihood question now asks for threat event frequency before control effectiveness, so controls are counted once; Unknown answers use an equal-weight mixture of the available answers instead of a punitive wide band; every response declares an annualised exposure approximation and not realised annual loss totals; input confidence is relabelled, capped at Medium while the calibration is provisional, and reports a sensitivity analysis of the expected value.",
+  "files": {
+    "content": "content.json",
+    "questions": "questions.json",
+    "answerOptions": "answer-options.json",
+    "scenarios": "scenarios.json",
+    "parameters": "parameters.json"
+  },
+  "visibility": {
+    "public": ["manifest.json", "content.json", "questions.json", "answer-options.json", "scenarios.json", "versions/"],
+    "serverOnly": ["parameters.json"],
+    "note": "parameters.json contains calibration values and must never be bundled into the browser build or exposed by Apache."
+  },
+  "documentation": {
+    "modelDocumentation": "docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md",
+    "releaseChecklist": "docs/RELEASE_CHECKLIST.md",
+    "zeroRetentionProof": "docs/ZERO_RETENTION_PROOF.md",
+    "auditReport": "docs/AUDIT_RESPONSE_FAIR-QK-1.3.md"
+  }
+}

@@ -1,0 +1,13 @@
+# FAIR QuickRisk — includes directory.
+#
+# This directory contains PHP includes and the deployment configuration. It must
+# never be reachable over HTTP. If the hosting provider ignores .htaccess, move
+# this directory outside the public web root and adjust bootstrap.php accordingly.
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

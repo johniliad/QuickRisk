@@ -1,0 +1,137 @@
+{
+    "modelId": "FAIR-QK-1.3",
+    "modelVersion": "1.3.0",
+    "schemaVersion": "1.3.0",
+    "calibrationVersion": "CAL-1.3",
+    "generatedAt": "2026-10-29T21:39:04Z",
+    "generator": "tools/generate-baseline.php",
+    "fixture": {
+        "profileAnswers": {
+            "QP1": "50_250M",
+            "QP2": "HIGH",
+            "QP3": "SIGNIFICANT",
+            "QP4": "SIGNIFICANT",
+            "QP5": "MODERATE",
+            "QP6": "MODERATE",
+            "QP7": "MODERATE",
+            "QP8": "100_500K"
+        },
+        "scenarioAnswers": {
+            "S1": {
+                "S1A": "POSSIBLE",
+                "S1B": "SIGNIFICANT"
+            },
+            "S2": {
+                "S2A": "POSSIBLE",
+                "S2B": "SIGNIFICANT"
+            },
+            "S3": {
+                "S3A": "POSSIBLE",
+                "S3B": "SIGNIFICANT"
+            },
+            "S4": {
+                "S4A": "POSSIBLE",
+                "S4B": "SIGNIFICANT"
+            },
+            "S5": {
+                "S5A": "POSSIBLE",
+                "S5B": "SIGNIFICANT"
+            }
+        },
+        "seed": 20261029,
+        "iterations": 5000
+    },
+    "tolerances": {
+        "expectedAnnualLoss": 0.02,
+        "percentiles": 0.03,
+        "thresholdProbability": 0.05,
+        "portfolio": 0.02
+    },
+    "portfolio": {
+        "expectedAnnualLoss": 761350.2309192946,
+        "confidenceScore": 85,
+        "confidenceLevel": "Medium"
+    },
+    "scenarios": {
+        "S1": {
+            "expectedAnnualLoss": 196686.94849444772,
+            "p10": 67616.1940613217,
+            "p50": 164281.76631281193,
+            "p90": 372924.35213660944,
+            "expectedLossEventFrequency": 0.18938873876938886,
+            "expectedLossMagnitude": 1039255.2491567733,
+            "confidenceScore": 85,
+            "thresholdProbabilities": {
+                "100000": 0.7668,
+                "500000": 0.033,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S2": {
+            "expectedAnnualLoss": 194894.5340191986,
+            "p10": 67700.33935800781,
+            "p50": 163706.5344920703,
+            "p90": 365361.5969141556,
+            "expectedLossEventFrequency": 0.2514078304524019,
+            "expectedLossMagnitude": 771682.814606429,
+            "confidenceScore": 85,
+            "thresholdProbabilities": {
+                "100000": 0.7546,
+                "500000": 0.032,
+                "1000000": 0.0004,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S3": {
+            "expectedAnnualLoss": 161667.07715956977,
+            "p10": 54831.14238331873,
+            "p50": 132538.5441937999,
+            "p90": 300403.9209916116,
+            "expectedLossEventFrequency": 0.19103552327594384,
+            "expectedLossMagnitude": 846831.3838557769,
+            "confidenceScore": 85,
+            "thresholdProbabilities": {
+                "100000": 0.6632,
+                "500000": 0.02,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S4": {
+            "expectedAnnualLoss": 63724.185026698986,
+            "p10": 20349.476039239045,
+            "p50": 51465.44217163822,
+            "p90": 120529.3061949472,
+            "expectedLossEventFrequency": 0.08997191459544797,
+            "expectedLossMagnitude": 707840.6524789027,
+            "confidenceScore": 85,
+            "thresholdProbabilities": {
+                "100000": 0.1648,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S5": {
+            "expectedAnnualLoss": 144377.4862193796,
+            "p10": 52558.83117835398,
+            "p50": 121356.48937659521,
+            "p90": 264966.40866949345,
+            "expectedLossEventFrequency": 0.29451449998304213,
+            "expectedLossMagnitude": 492480.9070378558,
+            "confidenceScore": 85,
+            "thresholdProbabilities": {
+                "100000": 0.6212,
+                "500000": 0.007,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        }
+    }
+}

@@ -1,0 +1,118 @@
+# FAIR QuickRisk — Apache configuration for ~/public_html/quickrisk/
+#
+# Deployed alongside the compiled React assets and the PHP API. This file must not
+# contain secrets and must never be served as content.
+
+Options -Indexes
+DirectoryIndex index.html
+
+# ---------------------------------------------------------------------------
+# Never serve model files, configuration, source, maps or development artefacts.
+# The authoritative model lives outside the web root; these rules are defence in
+# depth in case a copy is ever placed here by mistake.
+# ---------------------------------------------------------------------------
+<FilesMatch "\.(json|md|map|ts|tsx|jsx|lock|log|bak|sql|yml|yaml|ini|env|dist)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ---------------------------------------------------------------------------
+# Security headers.
+#
+# They are defined here rather than in the virtual host because the application is served
+# by shared hosting with no apache.conf access. `Header` only needs AllowOverride to
+# include FileInfo, which live/share/.htaccess requires anyway, so any host that serves
+# the share links correctly also applies everything below. Verify from anywhere with:
+#
+#   curl -sI https://HOST/ | grep -i 'content-security-policy'
+#
+# `always` stamps error responses too, so even the 403 holding notice carries them.
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set X-Frame-Options "DENY"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+    # The policy the application needs, in one header with one style-src. A second policy
+    # header — from a child .htaccess or a <meta http-equiv> tag — is enforced in addition
+    # to this one, so it can only make the page stricter, never relax it.
+    #
+    #   script-src  'self'            the build is a single external module, no inline code
+    #   style-src   'unsafe-inline'   methodology.html, the holding notice and the React
+    #                                 charts and progress bars set inline styles at runtime
+    #   img-src     data:             inline SVG and data URIs in the charts
+    #   connect-src 'self'            QuickRisk Live and Decision Lab same-origin JSON APIs
+    #   frame-ancestors 'none'        cannot be expressed in a <meta> tag at all
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+    # Safe on this host: includeSubDomains covers only *.quickrisk.iliadis.net, and every
+    # name below that domain is served over HTTPS. Raise max-age only once that is true.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Caching: versioned static assets may be cached; HTML and API responses must not
+# be cached, because a calculation response must never be reused from a cache.
+# ---------------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|svg|png|webp|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(html|xml|txt)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# No SPA rewrite rule is defined on purpose for the QuickRisk application: it is a single
+# index.html with in-memory views, so there are no client-side routes to fall back from.
+# This also guarantees that /api/calculate.php is never rewritten by the root.
+#
+# QuickRisk Live adds exactly one rewrite and scopes it to its own directory:
+# live/share/.htaccess maps /live/share/{opaqueToken} onto the static share shell. It cannot
+# affect /api/calculate.php or any other path.
+
+# Compress text assets where mod_deflate is available.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# The temporary beta access gate is appended BELOW this line by tools/deploy.sh,
+# from ~/quickrisk-config/beta-gate.htaccess.
+#
+# It is never versioned: it holds real addresses and is rewritten whenever the office
+# DDNS address changes. While that file exists the site answers 403 with the holding
+# notice to every address that is not listed. Delete the file and redeploy to open the
+# site to the public.
+# ---------------------------------------------------------------------------

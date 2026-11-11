@@ -1,0 +1,118 @@
+{
+  "questionsSchemaVersion": "1.0.0",
+  "profileIntro": "These questions establish the economic scale, dependency and control context used to interpret the five scenarios. No name, email address or organisation name is requested.",
+  "profileQuestions": [
+    {
+      "code": "QP1",
+      "order": 1,
+      "text": "What is your organisation's approximate annual revenue or operating budget?",
+      "help": "Used only to establish broad economic scale, and as a fallback when the daily disruption cost is not known. It is not used as a direct prediction of loss.",
+      "optionSet": "size5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "organisationSize",
+      "purpose": "Broad economic scale and fallback loss-anchor prior.",
+      "shortLabel": "Organisation size"
+    },
+    {
+      "code": "QP2",
+      "order": 2,
+      "text": "How dependent is the organisation on continuously available digital services and technology?",
+      "help": "A higher dependency increases the modelled cost of an outage and the operational consequence of disruption.",
+      "optionSet": "dependency5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "criticalServiceDependency",
+      "purpose": "Scales loss magnitude.",
+      "shortLabel": "Critical-service dependency"
+    },
+    {
+      "code": "QP3",
+      "order": 3,
+      "text": "How significant is your organisation's internet-facing attack surface?",
+      "help": "A larger internet-facing surface increases how often threat activity is expected to reach your environment.",
+      "optionSet": "exposure5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "publicExposure",
+      "purpose": "Scales threat event frequency for externally reachable scenarios.",
+      "shortLabel": "Internet-facing exposure"
+    },
+    {
+      "code": "QP4",
+      "order": 4,
+      "text": "If a cyber incident occurred, how significant would the potential exposure of sensitive, confidential or personal information be?",
+      "help": "Used only as an input to the probability that consequential (secondary) costs arise. The model does not calculate GDPR fines or other legal penalties.",
+      "optionSet": "sensitivity5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "sensitiveInformation",
+      "purpose": "Scales the secondary-loss probability only. Never used to estimate statutory fines.",
+      "shortLabel": "Sensitive-information exposure"
+    },
+    {
+      "code": "QP5",
+      "order": 5,
+      "text": "How dependent is the organisation on external technology providers, suppliers, cloud services, MSPs, SaaS providers or other third parties for critical operations?",
+      "help": "Higher dependency increases the modelled likelihood and consequence of a third-party incident propagating into your organisation.",
+      "optionSet": "dependency5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "thirdPartyDependency",
+      "purpose": "Scales the third-party/supplier scenario.",
+      "shortLabel": "Third-party dependency"
+    },
+    {
+      "code": "QP6",
+      "order": 6,
+      "text": "How confident are you that the organisation can restore critical services after a serious cyber disruption?",
+      "help": "Lower recovery confidence increases the modelled duration and cost of disruption.",
+      "optionSet": "recovery5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "recoveryCapability",
+      "purpose": "Scales loss magnitude.",
+      "shortLabel": "Recovery capability"
+    },
+    {
+      "code": "QP7",
+      "order": 7,
+      "text": "Overall, how effective do you believe the organisation's preventive, detective and response controls are against cyber threats?",
+      "help": "Broadly scales how likely your defences are to stop an incident across all scenarios. It does not replace scenario-specific control assessment.",
+      "optionSet": "maturity5",
+      "required": true,
+      "unknownAllowed": true,
+      "profileFactor": "securityMaturity",
+      "purpose": "Scales susceptibility for every scenario.",
+      "shortLabel": "Control maturity"
+    },
+    {
+      "code": "QP8",
+      "order": 8,
+      "text": "What would a full day of major technology/service disruption approximately cost the organisation in direct and near-direct financial terms?",
+      "help": "Strongly recommended. This is the main anchor for how costly a day of disruption is. If you skip it, the model derives a wider anchor from your size, dependency and recovery answers, and precision is reduced.",
+      "optionSet": "disruptionCost6",
+      "required": false,
+      "unknownAllowed": true,
+      "profileFactor": "disruptionCostAnchor",
+      "purpose": "Loss-magnitude anchor. Optional in v1; skipping widens the anchor and lowers confidence.",
+      "shortLabel": "Daily disruption cost"
+    }
+  ],
+  "scenarioQuestionTemplates": [
+    {
+      "template": "SQA",
+      "kind": "likelihood",
+      "optionSet": "frequency5",
+      "help": "Count attempts or contact events, not successful incidents. Your defences are applied separately and only once, so do not discount your answer for existing controls.",
+      "genericText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is this scenario attempted or contacted in a typical 12-month period? Answer before considering whether your controls would prevent it."
+    },
+    {
+      "template": "SQB",
+      "kind": "impact",
+      "optionSet": "impact5",
+      "help": "Consider disruption, response and recovery cost, data or service loss, and consequential business consequences.",
+      "genericText": "If this scenario occurred successfully, what level of financial/business impact would you expect?"
+    }
+  ]
+}

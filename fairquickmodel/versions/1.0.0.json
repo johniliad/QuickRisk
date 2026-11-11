@@ -1,0 +1,33 @@
+{
+  "modelId": "FAIR-QK-1.0",
+  "modelVersion": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "calibrationVersion": "CAL-1.0",
+  "applicationVersion": "1.0.0",
+  "releasedOn": "2026-10-29",
+  "status": "active",
+  "releaseStatus": "initial-release",
+  "supersedes": null,
+  "scenarioSet": ["S1", "S2", "S3", "S4", "S5"],
+  "profileQuestions": ["QP1", "QP2", "QP3", "QP4", "QP5", "QP6", "QP7", "QP8"],
+  "questionsPerScenario": 2,
+  "defaultIterations": 5000,
+  "currency": "EUR",
+  "changes": [
+    "Initial model version. Five scenarios (S1 ransomware/destructive extortion, S2 identity/phishing/social engineering, S3 public-facing vulnerability exploitation, S4 third-party/supplier compromise, S5 DDoS/service disruption).",
+    "Eight organisation-profile questions, of which QP1-QP7 are required and QP8 (daily disruption cost) is optional but strongly recommended.",
+    "Triangular distributions for frequency, susceptibility, loss magnitude and secondary-loss magnitude; Bernoulli draw for secondary-loss occurrence.",
+    "Frequency bands and impact multipliers taken from requirements v2 section 12 illustrative mappings and retained as the v1 calibration basis.",
+    "Secondary-loss probability and magnitude are scenario-specific and are modified by sensitive-information exposure (and, for S4, third-party dependency).",
+    "Confidence scoring based on unknown answers, availability of the disruption-cost anchor, distribution width and calibration status."
+  ],
+  "calibrationChangePolicy": "Calibration values are changed only by publishing a new calibration version and a new model version record. The meaning of an existing version is never edited in place. Because no user assessment is retained, calibration changes cannot retroactively alter any prior assessment.",
+  "knownLimitations": [
+    "Calibration values are application assumptions/heuristics, not universally authoritative FAIR values.",
+    "All parameters are classified as internally-derived or heuristic in this release; none are externally evidenced coefficients.",
+    "Scenario correlation is not modelled, so no joint portfolio percentile is produced.",
+    "Loss magnitude is sampled once per simulated year rather than once per event.",
+    "Statutory fines and legal liabilities are explicitly out of scope."
+  ],
+  "documentation": "docs/MODEL_DOCUMENTATION_FAIR-QK-1.0.md"
+}

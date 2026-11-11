@@ -1,0 +1,106 @@
+{
+  "answerOptionsSchemaVersion": "1.0.0",
+  "unknownCode": "UNKNOWN",
+  "optionSets": {
+    "size5": {
+      "label": "Organisation economic scale",
+      "options": [
+        { "code": "LT10M", "label": "Less than €10 million", "order": 1 },
+        { "code": "10_50M", "label": "€10–50 million", "order": 2 },
+        { "code": "50_250M", "label": "€50–250 million", "order": 3 },
+        { "code": "250M_1B", "label": "€250 million–€1 billion", "order": 4 },
+        { "code": "GT1B", "label": "More than €1 billion", "order": 5 },
+        { "code": "UNKNOWN", "label": "Prefer not to say / unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "dependency5": {
+      "label": "Dependency level",
+      "options": [
+        { "code": "LOW", "label": "Low", "order": 1 },
+        { "code": "MODERATE", "label": "Moderate", "order": 2 },
+        { "code": "HIGH", "label": "High", "order": 3 },
+        { "code": "VERY_HIGH", "label": "Very high", "order": 4 },
+        { "code": "EXTREME", "label": "Extreme", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "exposure5": {
+      "label": "Exposure level",
+      "options": [
+        { "code": "LIMITED", "label": "Limited", "order": 1 },
+        { "code": "MODERATE", "label": "Moderate", "order": 2 },
+        { "code": "SIGNIFICANT", "label": "Significant", "order": 3 },
+        { "code": "EXTENSIVE", "label": "Extensive", "order": 4 },
+        { "code": "VERY_EXTENSIVE", "label": "Very extensive", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "sensitivity5": {
+      "label": "Sensitive-information exposure level",
+      "options": [
+        { "code": "LIMITED", "label": "Limited", "order": 1 },
+        { "code": "MODERATE", "label": "Moderate", "order": 2 },
+        { "code": "SIGNIFICANT", "label": "Significant", "order": 3 },
+        { "code": "VERY_SIGNIFICANT", "label": "Very significant", "order": 4 },
+        { "code": "CRITICAL", "label": "Critical", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "recovery5": {
+      "label": "Recovery confidence level",
+      "options": [
+        { "code": "VERY_LOW", "label": "Very low", "order": 1 },
+        { "code": "LOW", "label": "Low", "order": 2 },
+        { "code": "MODERATE", "label": "Moderate", "order": 3 },
+        { "code": "HIGH", "label": "High", "order": 4 },
+        { "code": "VERY_HIGH", "label": "Very high", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "maturity5": {
+      "label": "Control maturity level",
+      "options": [
+        { "code": "VERY_LIMITED", "label": "Very limited", "order": 1 },
+        { "code": "LIMITED", "label": "Limited", "order": 2 },
+        { "code": "MODERATE", "label": "Moderate", "order": 3 },
+        { "code": "STRONG", "label": "Strong", "order": 4 },
+        { "code": "VERY_STRONG", "label": "Very strong", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 6, "unknown": true }
+      ]
+    },
+    "disruptionCost6": {
+      "label": "Daily disruption cost",
+      "options": [
+        { "code": "LT25K", "label": "Less than €25k", "order": 1 },
+        { "code": "25_100K", "label": "€25–100k", "order": 2 },
+        { "code": "100_500K", "label": "€100–500k", "order": 3 },
+        { "code": "500K_2M", "label": "€500k–€2m", "order": 4 },
+        { "code": "2_10M", "label": "€2–10m", "order": 5 },
+        { "code": "GT10M", "label": "More than €10m", "order": 6 },
+        { "code": "UNKNOWN", "label": "Unknown", "order": 7, "unknown": true }
+      ]
+    },
+    "frequency5": {
+      "label": "12-month plausibility",
+      "options": [
+        { "code": "VERY_UNLIKELY", "label": "Very unlikely", "order": 1 },
+        { "code": "UNLIKELY", "label": "Unlikely", "order": 2 },
+        { "code": "POSSIBLE", "label": "Possible", "order": 3 },
+        { "code": "LIKELY", "label": "Likely", "order": 4 },
+        { "code": "VERY_LIKELY", "label": "Very likely", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown / insufficient information", "order": 6, "unknown": true }
+      ]
+    },
+    "impact5": {
+      "label": "Financial / business impact level",
+      "options": [
+        { "code": "MINOR", "label": "Minor", "order": 1 },
+        { "code": "MODERATE", "label": "Moderate", "order": 2 },
+        { "code": "SIGNIFICANT", "label": "Significant", "order": 3 },
+        { "code": "SEVERE", "label": "Severe", "order": 4 },
+        { "code": "CRITICAL", "label": "Critical", "order": 5 },
+        { "code": "UNKNOWN", "label": "Unknown / insufficient information", "order": 6, "unknown": true }
+      ]
+    }
+  }
+}

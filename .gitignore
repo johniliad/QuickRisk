@@ -1,0 +1,134 @@
+# Ignore rules for the FAIR QuickRisk repository.
+#
+# Nothing in this repository may contain secrets, credentials, assessment data or
+# generated artefacts. The model files are source-controlled and are the only
+# authoritative configuration.
+
+# Node / build tooling
+node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+*.tsbuildinfo
+
+# Local tooling used during development (e.g. a portable PHP CLI)
+.tmp/
+
+# Local deployment configuration and runtime state (never committed)
+quickrisk-config/
+quickrisk-state/
+*.local.php
+
+# The host's own web-server configuration: the project-root .htaccess holds cPanel
+# paths, the beta IP allow-list (real colleagues' addresses) and the DDNS hostname.
+# It lives only on the host. The versioned Apache policies are server/.htaccess,
+# server/api/.htaccess, server/includes/.htaccess, server/live/api/.htaccess and
+# frontend/public/live/share/.htaccess, which are tracked (the leading slash below
+# anchors the rule to the repository root and leaves those files alone).
+/.htaccess
+
+# Editor and OS noise
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Never commit source maps, archives or backups of the application
+*.map
+*.zip
+*.tar.gz
+*.bak
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Local env / config (never commit secrets)
+.env
+.env.*
+!.env.example
+private-config/
+
+# Local private config with real secrets (never commit)
+/brig.php
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage/
+*.tsbuildinfo
+
+# Seed export temp bundles
+.tmp-seed/
+scripts/.tmp-seed/
+
+# Composer / PHP server deps (installed on the host, not committed)
+/vendor/
+/api/vendor/
+composer.phar
+
+# Plaintext one-time AI access tokens — NEVER commit
+ai-access-tokens.txt
+
+# PHP local runtime bits
+/api/storage/*
+!/api/storage/.gitkeep
+
+# Vibe coding markdown files
+requirements/*
+privatedocs
+docs
+
+#Development plan in markdown
+CISO_Board_Reporting_Development_Plan.md
+# ==========================================
+# 1. API Keys & Secrets (CRITICAL FOR VIBE CODING)
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+secrets.json
+
+# ==========================================
+# 2. AI Tool Metadata & Prompts
+# ==========================================
+.cursor/
+.windsurf/
+.claude/
+.copilot/
+*.prompts
+
+# ==========================================
+# 3. VS Code & OS Files
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# 4. Local Logs & Caches
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+.cache/
+#config files for agents
+llms.txt

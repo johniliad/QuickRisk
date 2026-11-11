@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/*
+ * FAIR QuickRisk design tokens.
+ *
+ * Derived from the current iliadis.net visual system so that QuickRisk reads as a
+ * first-party tool: restrained executive/technology presentation, strong
+ * typographic hierarchy, generous whitespace, 0.25rem control/card radii and a
+ * teal accent against an off-white canvas.
+ *
+ * The site is a visual reference only. QuickRisk is self-contained and has no
+ * runtime dependency on the main site's CSS or JavaScript.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-ink: #142b3b;
+  --color-heading: #102a3a;
+  --color-muted: #526675;
+  --color-paper: #ffffff;
+  --color-canvas: #f3f7f8;
+  --color-border: #dce6e9;
+  --color-accent: #087e83;
+  --color-accent-strong: #075e65;
+  --color-accent-soft: #e7f4f2;
+  --color-accent-hover: #03484d;
+  --color-focus: #8a4b00;
+  --color-focus-ring: #f2c078;
+  --color-danger: #a32d2d;
+  --color-success: #1f6f5c;
+  --color-warning: #8a4b00;
+
+  --radius-control: 0.25rem;
+  --radius-card: 0.25rem;
+  --radius-image: 0.5rem;
+
+  --shadow-card: 0 1px 2px #19374610;
+  --shadow-raised: 0 12px 32px #19374614;
+
+  --text-display: clamp(2rem, 4.5vw, 3rem);
+  --text-title: clamp(1.5rem, 2.6vw, 2rem);
+  --text-section: 1.25rem;
+  --text-body: 1rem;
+  --text-small: 0.9rem;
+  --text-micro: 0.78rem;
+
+  --container-content: 70rem;
+  --container-reading: 48rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-heading);
+    line-height: 1.2;
+  }
+
+  a {
+    color: var(--color-accent-strong);
+    text-underline-offset: 0.18em;
+  }
+
+  a:hover {
+    color: var(--color-accent-hover);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  /* Charts and tables must remain readable when printed. */
+  @media print {
+    body {
+      background: #ffffff;
+      font-size: 11pt;
+    }
+  }
+}
+
+@layer utilities {
+  .qk-shell {
+    width: min(var(--container-content), calc(100% - 2 * 1.5rem));
+    margin-inline: auto;
+  }
+
+  .qk-reading {
+    max-width: var(--container-reading);
+  }
+
+  .qk-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .qk-skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: 0.75rem;
+    z-index: 50;
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-control);
+    background: var(--color-heading);
+    color: var(--color-paper);
+    transform: translateY(-180%);
+  }
+
+  .qk-skip-link:focus {
+    transform: translateY(0);
+  }
+}
+
+/* Print-friendly report: only the report section is printed. */
+@media print {
+  .qk-no-print {
+    display: none !important;
+  }
+
+  .qk-print-block {
+    break-inside: avoid;
+  }
+
+  .qk-print-page-break {
+    break-before: page;
+  }
+
+  @page {
+    margin: 18mm 16mm;
+  }
+}

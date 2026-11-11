@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /includes/
+
+# No assessment data is ever stored by this application, so there is nothing
+# user-specific to exclude. Crawlers are welcome on the landing page and the
+# methodology page.
+
+Sitemap: https://quickrisk.iliadis.net/sitemap.xml

@@ -1,0 +1,39 @@
+{
+  "modelId": "FAIR-QK-1.3",
+  "modelVersion": "1.3.0",
+  "schemaVersion": "1.3.0",
+  "calibrationVersion": "CAL-1.3",
+  "applicationVersion": "1.3.0",
+  "releasedOn": "2026-11-07",
+  "status": "active",
+  "releaseStatus": "provisional-release",
+  "supersedes": "1.2.0",
+  "scenarioSet": ["S1", "S2", "S3", "S4", "S5"],
+  "profileQuestions": ["QP1", "QP2", "QP3", "QP4", "QP5", "QP6", "QP7", "QP8"],
+  "questionsPerScenario": 2,
+  "defaultIterations": 5000,
+  "currency": "EUR",
+  "changeOrigin": "Independent quantitative, statistical and FAIR methodology audit. This version implements the four mandatory corrections and the five recommended corrections recorded in the audit response.",
+  "changes": [
+    "CORRECTION (audit QK-01): the scenario likelihood question now asks for threat event frequency — how often the scenario is attempted or contacted in a typical 12-month period — and explicitly asks the user not to discount the answer for existing controls. Control effectiveness is applied once, as susceptibility. The CAL-1.0 wording asked for scenario plausibility given existing controls, which risked counting control effectiveness twice. Question wording, help text and the scenario question template were updated.",
+    "CORRECTION (audit QK-02): Unknown answers are now modelled as an equal-weight mixture over the available answers, applied after the scenario scale and the modifiers. The CAL-1.0 single wide band raised the central estimate by roughly 6x (frequency) and 5x (impact) relative to the mid-range answers; the mixture widens the distribution while keeping the central estimate inside the range of the available answers. Weights are configurable and documented.",
+    "CORRECTION (audit QK-03): the model now declares its annualisation method explicitly. Every response reports annualisationMethod = frequency-times-severity-annualised-exposure and realisedAnnualTotalsModelled = false, and the methodology, results view and report state that percentiles describe an annualised exposure approximation and not realised annual loss totals.",
+    "CORRECTION (audit QK-04): the confidence indicator is relabelled 'Input confidence', is declared as a heuristic input-quality indicator rather than statistical confidence, and the highest available level is capped at Medium while the calibration remains provisional. Responses now include basis = heuristic-input-quality and isStatisticalConfidence = false.",
+    "CORRECTION (audit QK-05): the 'risk drivers' visualisation is relabelled as modelled components, and a deterministic one-at-a-time sensitivity analysis of the expected annualised exposure is now computed for every answer option of every factor and returned with each assessment.",
+    "CORRECTION (audit QK-06): compound extreme cases are documented, the model carries a plausibilityReview status of pending-expert-review, and the release checklist requires a risk-professional review of the compound multipliers before extremes are relied upon.",
+    "CORRECTION (audit QK-08): the model, methodology and limitations now state that the simulation does not capture model-form uncertainty, distribution-shape uncertainty, calibration uncertainty or correlation uncertainty.",
+    "CORRECTION (audit QK-09): zero threshold exceedances are reported as an explicit count of simulated trials (for example '0 of 5,000 simulated trials') instead of a bare zero percentage, and the exceedance counts are returned by the calculation endpoint.",
+    "Schema version raised to 1.3.0 because the calculation response gained annualisation metadata, exceedance counts, a sensitivity block and input-kind information.",
+    "Methodology version raised to METH-1.3 to reflect the corrected explanation of frequency, unknown answers, annualisation, sensitivity and input confidence."
+  ],
+  "calibrationChangePolicy": "Calibration values are changed only by publishing a new calibration version and a new model version record. The meaning of an existing version is never edited in place. Because no user assessment is retained, calibration changes cannot retroactively alter any prior assessment.",
+  "knownLimitations": [
+    "Calibration values remain application assumptions/heuristics, not universally authoritative FAIR values. No parameter is externally evidenced in this release.",
+    "The model reports an annualised exposure approximation and does not model realised annual loss totals; percentiles are not percentiles of actual annual losses.",
+    "Model-form uncertainty, distribution-shape uncertainty, calibration uncertainty and scenario correlation are not represented.",
+    "Loss magnitude is sampled once per simulated trial rather than once per event, and the secondary-loss draw is made once per trial.",
+    "Statutory fines and legal liabilities are explicitly out of scope.",
+    "Extreme compound inputs produce very large figures that are arithmetically valid but await risk-professional plausibility review."
+  ],
+  "documentation": "docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md"
+}

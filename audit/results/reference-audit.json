@@ -1,0 +1,1014 @@
+{
+  "generatedAt": "2026-10-29T21:47:06.620Z",
+  "seed": 20261029,
+  "crossImplementation": [
+    {
+      "scenario": "S1",
+      "production": {
+        "expectedAnnualLoss": 196686.94849444772,
+        "p10": 67616.1940613217,
+        "p50": 164281.76631281193,
+        "p90": 372924.35213660944
+      },
+      "reference": {
+        "expectedAnnualLoss": 196686.94862341988,
+        "p10": 67616.19414306912,
+        "p50": 164281.76640803384,
+        "p90": 372924.35246258916
+      },
+      "relativeDifference": {
+        "expectedAnnualLoss": 6.557230688905285e-10,
+        "p10": 1.2089917540958507e-9,
+        "p50": 5.796255702962649e-10,
+        "p90": 8.741175556430511e-10
+      },
+      "analyticExpectedAnnualLoss": 198123.45679012343,
+      "analyticVsReference": -0.0072505708812928
+    },
+    {
+      "scenario": "S2",
+      "production": {
+        "expectedAnnualLoss": 194894.5340191986,
+        "p10": 67700.33935800781,
+        "p50": 163706.5344920703,
+        "p90": 365361.5969141556
+      },
+      "reference": {
+        "expectedAnnualLoss": 194894.53414433048,
+        "p10": 67700.33937805885,
+        "p50": 163706.5345746404,
+        "p90": 365361.59706265706
+      },
+      "relativeDifference": {
+        "expectedAnnualLoss": 6.420492528157288e-10,
+        "p10": 2.9617340958054293e-10,
+        "p50": 5.043787610261998e-10,
+        "p90": 4.064507087019396e-10
+      },
+      "analyticExpectedAnnualLoss": 192694.45432098766,
+      "analyticVsReference": 0.011417452728961053
+    },
+    {
+      "scenario": "S3",
+      "production": {
+        "expectedAnnualLoss": 161667.07715956977,
+        "p10": 54831.14238331873,
+        "p50": 132538.5441937999,
+        "p90": 300403.9209916116
+      },
+      "reference": {
+        "expectedAnnualLoss": 161667.0772709859,
+        "p10": 54831.14249147742,
+        "p50": 132538.54432939895,
+        "p90": 300403.92120236513
+      },
+      "relativeDifference": {
+        "expectedAnnualLoss": 6.891701744293953e-10,
+        "p10": 1.9725777015826686e-9,
+        "p50": 1.023091465879955e-9,
+        "p90": 7.015671596815572e-10
+      },
+      "analyticExpectedAnnualLoss": 161862.0286419753,
+      "analyticVsReference": -0.001204429307015696
+    },
+    {
+      "scenario": "S4",
+      "production": {
+        "expectedAnnualLoss": 63724.185026698986,
+        "p10": 20349.476039239045,
+        "p50": 51465.44217163822,
+        "p90": 120529.3061949472
+      },
+      "reference": {
+        "expectedAnnualLoss": 63724.185073069035,
+        "p10": 20349.47605060513,
+        "p50": 51465.442218857555,
+        "p90": 120529.30625305935
+      },
+      "relativeDifference": {
+        "expectedAnnualLoss": 7.276679792703712e-10,
+        "p10": 5.585444182138445e-10,
+        "p50": 9.174959566861873e-10,
+        "p90": 4.821411818957651e-10
+      },
+      "analyticExpectedAnnualLoss": 63724.500000000015,
+      "analyticVsReference": -0.000004942007092714876
+    },
+    {
+      "scenario": "S5",
+      "production": {
+        "expectedAnnualLoss": 144377.4862193796,
+        "p10": 52558.83117835398,
+        "p50": 121356.48937659521,
+        "p90": 264966.40866949345
+      },
+      "reference": {
+        "expectedAnnualLoss": 144377.48631404754,
+        "p10": 52558.83122541562,
+        "p50": 121356.48943425421,
+        "p90": 264966.408782319
+      },
+      "relativeDifference": {
+        "expectedAnnualLoss": 6.556972527680028e-10,
+        "p10": 8.954087246825435e-10,
+        "p50": 4.751208262359076e-10,
+        "p90": 4.2581072646009514e-10
+      },
+      "analyticExpectedAnnualLoss": 146396.4444444444,
+      "analyticVsReference": -0.013791032549038733
+    }
+  ],
+  "portfolioComparison": {
+    "production": 761350.2309192946,
+    "reference": 761350.231425853,
+    "relativeDifference": 6.653420706261053e-10
+  },
+  "convergence": {
+    "1000": {
+      "s1": {
+        "mean": 195734.43727634737,
+        "p10": 68023.94170364192,
+        "p50": 162764.25586037585,
+        "p90": 374909.8429582527,
+        "sd": 131139.52207337468,
+        "monteCarloMeanStandardError": 4146.995810177908
+      },
+      "portfolioExpectedAnnualLoss": 749964.2246511062
+    },
+    "5000": {
+      "s1": {
+        "mean": 196686.94862341988,
+        "p10": 67616.19414306912,
+        "p50": 164281.76640803384,
+        "p90": 372924.35246258916,
+        "sd": 129239.1589083559,
+        "monteCarloMeanStandardError": 1827.717713178885
+      },
+      "portfolioExpectedAnnualLoss": 761350.231425853
+    },
+    "10000": {
+      "s1": {
+        "mean": 198257.2461789167,
+        "p10": 68050.45590270398,
+        "p50": 165254.30585402876,
+        "p90": 375442.8920816154,
+        "sd": 131408.24324004212,
+        "monteCarloMeanStandardError": 1314.0824324004213
+      },
+      "portfolioExpectedAnnualLoss": 763724.9295160627
+    },
+    "50000": {
+      "s1": {
+        "mean": 198765.1889103768,
+        "p10": 68956.25861626354,
+        "p50": 165498.4649192312,
+        "p90": 371363.17967586644,
+        "sd": 132079.5140362212,
+        "monteCarloMeanStandardError": 590.6775436402564
+      },
+      "portfolioExpectedAnnualLoss": 764629.1312780302
+    },
+    "100000": {
+      "s1": {
+        "mean": 198637.18842874694,
+        "p10": 68925.87338428886,
+        "p50": 165410.95224670216,
+        "p90": 371310.14855760726,
+        "sd": 132493.4881404886,
+        "monteCarloMeanStandardError": 418.98119766445114
+      },
+      "portfolioExpectedAnnualLoss": 763817.6586552933
+    }
+  },
+  "monteCarloError": {
+    "5000": {
+      "replicates": 20,
+      "mean": {
+        "mean": 198163.18648533596,
+        "standardDeviationAcrossSeeds": 1441.0156162239507,
+        "min": 195669.24654033524,
+        "max": 200836.7291271008
+      },
+      "p50": {
+        "mean": 165221.89822337386,
+        "standardDeviationAcrossSeeds": 1877.7033813173787,
+        "min": 161994.23093757342,
+        "max": 169330.91111304116
+      },
+      "p90": {
+        "mean": 370775.2293182701,
+        "standardDeviationAcrossSeeds": 5004.995383537462,
+        "min": 360016.53019025305,
+        "max": 379017.8381389951
+      }
+    },
+    "50000": {
+      "replicates": 20,
+      "mean": {
+        "mean": 198301.18298065546,
+        "standardDeviationAcrossSeeds": 460.90095775128657,
+        "min": 197388.05291315727,
+        "max": 198925.82981373902
+      },
+      "p50": {
+        "mean": 165382.27066986225,
+        "standardDeviationAcrossSeeds": 501.49634297083816,
+        "min": 164316.98757409304,
+        "max": 166081.68880382745
+      },
+      "p90": {
+        "mean": 370384.72217473516,
+        "standardDeviationAcrossSeeds": 1541.5678401017205,
+        "min": 367525.55042326497,
+        "max": 373162.80010561494
+      }
+    }
+  },
+  "unknownPriors": {
+    "frequency": {
+      "policy": "mixture",
+      "weights": {
+        "VERY_UNLIKELY": 0.2,
+        "UNLIKELY": 0.2,
+        "POSSIBLE": 0.2,
+        "LIKELY": 0.2,
+        "VERY_LIKELY": 0.2
+      },
+      "components": [
+        {
+          "optionCode": "VERY_UNLIKELY",
+          "weight": 0.2,
+          "min": 0.01,
+          "mode": 0.03,
+          "max": 0.1
+        },
+        {
+          "optionCode": "UNLIKELY",
+          "weight": 0.2,
+          "min": 0.05,
+          "mode": 0.15,
+          "max": 0.3
+        },
+        {
+          "optionCode": "POSSIBLE",
+          "weight": 0.2,
+          "min": 0.2,
+          "mode": 0.5,
+          "max": 1
+        },
+        {
+          "optionCode": "LIKELY",
+          "weight": 0.2,
+          "min": 0.5,
+          "mode": 1.5,
+          "max": 3
+        },
+        {
+          "optionCode": "VERY_LIKELY",
+          "weight": 0.2,
+          "min": 1.5,
+          "mode": 4,
+          "max": 10
+        }
+      ],
+      "mixtureMean": 1.5226666666666668,
+      "mixtureVariance": 4.341079555555556,
+      "mixtureStandardDeviation": 2.0835257511140957,
+      "minimumKnownMean": 0.04666666666666667,
+      "maximumKnownMean": 5.166666666666667,
+      "averageKnownMean": 1.5226666666666666,
+      "ratioToAverageKnownMean": 1.0000000000000002,
+      "insideKnownRange": true,
+      "known": [
+        {
+          "code": "VERY_UNLIKELY",
+          "mean": 0.04666666666666667,
+          "variance": 0.0003722222222222224
+        },
+        {
+          "code": "UNLIKELY",
+          "mean": 0.16666666666666666,
+          "variance": 0.002638888888888888
+        },
+        {
+          "code": "POSSIBLE",
+          "mean": 0.5666666666666667,
+          "variance": 0.02722222222222222
+        },
+        {
+          "code": "LIKELY",
+          "mean": 1.6666666666666667,
+          "variance": 0.2638888888888889
+        },
+        {
+          "code": "VERY_LIKELY",
+          "mean": 5.166666666666667,
+          "variance": 3.1805555555555554
+        }
+      ],
+      "previousBehaviour": "CAL-1.0 used a single wide band (0.01 / 0.50 / 10.00, base mean 3.50). That band raised the central estimate by roughly 6x relative to the Possible answer and was removed in CAL-1.2 because it shifted the central estimate rather than only widening the distribution."
+    },
+    "impact": {
+      "policy": "mixture",
+      "weights": {
+        "MINOR": 0.2,
+        "MODERATE": 0.2,
+        "SIGNIFICANT": 0.2,
+        "SEVERE": 0.2,
+        "CRITICAL": 0.2
+      },
+      "components": [
+        {
+          "optionCode": "MINOR",
+          "weight": 0.2,
+          "min": 0.25,
+          "mode": 0.5,
+          "max": 1
+        },
+        {
+          "optionCode": "MODERATE",
+          "weight": 0.2,
+          "min": 0.5,
+          "mode": 1,
+          "max": 2
+        },
+        {
+          "optionCode": "SIGNIFICANT",
+          "weight": 0.2,
+          "min": 1,
+          "mode": 2.2,
+          "max": 5
+        },
+        {
+          "optionCode": "SEVERE",
+          "weight": 0.2,
+          "min": 3,
+          "mode": 6,
+          "max": 15
+        },
+        {
+          "optionCode": "CRITICAL",
+          "weight": 0.2,
+          "min": 8,
+          "mode": 16,
+          "max": 40
+        }
+      ],
+      "mixtureMean": 6.763333333333334,
+      "mixtureVariance": 70.62323888888888,
+      "mixtureStandardDeviation": 8.403763376540827,
+      "minimumKnownMean": 0.5833333333333334,
+      "maximumKnownMean": 21.333333333333332,
+      "averageKnownMean": 6.763333333333333,
+      "ratioToAverageKnownMean": 1.0000000000000002,
+      "insideKnownRange": true,
+      "known": [
+        {
+          "code": "MINOR",
+          "mean": 0.5833333333333334,
+          "variance": 0.024305555555555556
+        },
+        {
+          "code": "MODERATE",
+          "mean": 1.1666666666666667,
+          "variance": 0.09722222222222222
+        },
+        {
+          "code": "SIGNIFICANT",
+          "mean": 2.733333333333333,
+          "variance": 0.7022222222222223
+        },
+        {
+          "code": "SEVERE",
+          "mean": 8,
+          "variance": 6.5
+        },
+        {
+          "code": "CRITICAL",
+          "mean": 21.333333333333332,
+          "variance": 46.22222222222222
+        }
+      ],
+      "previousBehaviour": "CAL-1.0 used a single wide band (0.25 / 2.00 / 40.00, base mean 14.08). That band raised the central estimate by roughly 5x relative to the Significant answer and was removed in CAL-1.2."
+    },
+    "neutralityVerdict": "PASS: both Unknown mixtures keep the central estimate inside the range of the available answers. Frequency mixture mean / average known mean = 1.000. Impact mixture mean / average known mean = 1.000."
+  },
+  "sensitivity": {
+    "likelihood": [
+      {
+        "value": "VERY_UNLIKELY",
+        "expectedAnnualLoss": 16318.865873845569,
+        "ratioToBase": 0.08239365142418838
+      },
+      {
+        "value": "UNLIKELY",
+        "expectedAnnualLoss": 58256.86301675615,
+        "ratioToBase": 0.29413782192807314
+      },
+      {
+        "value": "POSSIBLE",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "LIKELY",
+        "expectedAnnualLoss": 582568.6301675675,
+        "ratioToBase": 2.941378219280762
+      },
+      {
+        "value": "VERY_LIKELY",
+        "expectedAnnualLoss": 1806264.2368209283,
+        "ratioToBase": 9.119794663373284
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 538913.7942786412,
+        "ratioToBase": 2.720965761759611
+      }
+    ],
+    "impact": [
+      {
+        "value": "MINOR",
+        "expectedAnnualLoss": 67976.11798676764,
+        "ratioToBase": 0.3432101601832332
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 103249.1478897306,
+        "ratioToBase": 0.5213030345880422
+      },
+      {
+        "value": "SIGNIFICANT",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "SEVERE",
+        "expectedAnnualLoss": 516754.7001426939,
+        "ratioToBase": 2.609084906053872
+      },
+      {
+        "value": "CRITICAL",
+        "expectedAnnualLoss": 1323507.386907525,
+        "ratioToBase": 6.682364273179698
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 451660.75247064466,
+        "ratioToBase": 2.280426770385814
+      }
+    ],
+    "QP8": [
+      {
+        "value": "LT25K",
+        "expectedAnnualLoss": 10398.520025312564,
+        "ratioToBase": 0.052501934933248284
+      },
+      {
+        "value": "25_100K",
+        "expectedAnnualLoss": 42099.68895939822,
+        "ratioToBase": 0.2125605494893373
+      },
+      {
+        "value": "100_500K",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "500K_2M",
+        "expectedAnnualLoss": 841993.7791879693,
+        "ratioToBase": 4.251210989786771
+      },
+      {
+        "value": "2_10M",
+        "expectedAnnualLoss": 3837151.6683006873,
+        "ratioToBase": 19.37370767452768
+      },
+      {
+        "value": "GT10M",
+        "expectedAnnualLoss": 15847293.220268155,
+        "ratioToBase": 80.01268983406283
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 464735.8982300805,
+        "ratioToBase": 2.3464429390553554
+      }
+    ],
+    "QP7": [
+      {
+        "value": "VERY_LIMITED",
+        "expectedAnnualLoss": 338692.608625715,
+        "ratioToBase": 1.7100527053036005
+      },
+      {
+        "value": "LIMITED",
+        "expectedAnnualLoss": 277283.647811205,
+        "ratioToBase": 1.4000000000000028
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "STRONG",
+        "expectedAnnualLoss": 138641.8239056025,
+        "ratioToBase": 0.7000000000000014
+      },
+      {
+        "value": "VERY_STRONG",
+        "expectedAnnualLoss": 99029.87421828731,
+        "ratioToBase": 0.5
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 254787.13769430108,
+        "ratioToBase": 1.286415537258407
+      }
+    ],
+    "QP6": [
+      {
+        "value": "VERY_LOW",
+        "expectedAnnualLoss": 297089.6226548612,
+        "ratioToBase": 1.4999999999999962
+      },
+      {
+        "value": "LOW",
+        "expectedAnnualLoss": 247574.68554571757,
+        "ratioToBase": 1.2499999999999964
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "HIGH",
+        "expectedAnnualLoss": 158447.79874925918,
+        "ratioToBase": 0.7999999999999974
+      },
+      {
+        "value": "VERY_HIGH",
+        "expectedAnnualLoss": 128738.83648377219,
+        "ratioToBase": 0.6499999999999934
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 240328.6888913909,
+        "ratioToBase": 1.213415097153636
+      }
+    ],
+    "QP4": [
+      {
+        "value": "LIMITED",
+        "expectedAnnualLoss": 181892.4334453352,
+        "ratioToBase": 0.9183715261739982
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 191026.04373763094,
+        "ratioToBase": 0.9644869553028029
+      },
+      {
+        "value": "SIGNIFICANT",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "VERY_SIGNIFICANT",
+        "expectedAnnualLoss": 210346.48216202986,
+        "ratioToBase": 1.0620354909184886
+      },
+      {
+        "value": "CRITICAL",
+        "expectedAnnualLoss": 216611.2064363713,
+        "ratioToBase": 1.093665967700335
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 203599.137942672,
+        "ratioToBase": 1.0279682749767365
+      }
+    ],
+    "QP2": [
+      {
+        "value": "LOW",
+        "expectedAnnualLoss": 118835.84906194487,
+        "ratioToBase": 0.6000000000000005
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 158447.79874925918,
+        "ratioToBase": 0.7999999999999974
+      },
+      {
+        "value": "HIGH",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "VERY_HIGH",
+        "expectedAnnualLoss": 257477.67296754438,
+        "ratioToBase": 1.2999999999999867
+      },
+      {
+        "value": "EXTREME",
+        "expectedAnnualLoss": 316895.59749851836,
+        "ratioToBase": 1.5999999999999948
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 240328.6888913909,
+        "ratioToBase": 1.213415097153636
+      }
+    ],
+    "QP3": [
+      {
+        "value": "LIMITED",
+        "expectedAnnualLoss": 138641.8239056025,
+        "ratioToBase": 0.7000000000000014
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 178253.77359291623,
+        "ratioToBase": 0.8999999999999954
+      },
+      {
+        "value": "SIGNIFICANT",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "EXTENSIVE",
+        "expectedAnnualLoss": 247574.68554571757,
+        "ratioToBase": 1.2499999999999964
+      },
+      {
+        "value": "VERY_EXTENSIVE",
+        "expectedAnnualLoss": 297089.6226548612,
+        "ratioToBase": 1.4999999999999962
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 238104.8120190618,
+        "ratioToBase": 1.2021867840315417
+      }
+    ],
+    "QP1": [
+      {
+        "value": "LT10M",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "10_50M",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "50_250M",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "250M_1B",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "GT1B",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      }
+    ],
+    "QP5": [
+      {
+        "value": "LOW",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "MODERATE",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "HIGH",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "VERY_HIGH",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "EXTREME",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      },
+      {
+        "value": "UNKNOWN",
+        "expectedAnnualLoss": 198059.74843657462,
+        "ratioToBase": 1
+      }
+    ]
+  },
+  "extremeCases": {
+    "allMinimum": {
+      "portfolioExpectedAnnualLoss": 113.96135102716119,
+      "scenarios": [
+        {
+          "code": "S1",
+          "mean": 30.496283434312314,
+          "p10": 7.4148921618402195,
+          "p50": 21.184669831013082,
+          "p90": 64.28321921357212,
+          "minimum": 1.2065670100915196,
+          "maximum": 325.5405881977403,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S2",
+          "mean": 29.506936002107896,
+          "p10": 7.667262582322548,
+          "p50": 20.61974824407735,
+          "p90": 61.52986990803746,
+          "minimum": 1.5279982532530287,
+          "maximum": 349.4962960709895,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S3",
+          "mean": 24.433886569468594,
+          "p10": 5.846795716681869,
+          "p50": 16.520470801049655,
+          "p90": 50.57462868088348,
+          "minimum": 1.3222239607385509,
+          "maximum": 310.8784756339888,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S4",
+          "mean": 8.343105556571153,
+          "p10": 2.124664124211025,
+          "p50": 5.910681169477356,
+          "p90": 16.702773696312516,
+          "minimum": 0.24624522718464265,
+          "maximum": 109.74128458984714,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S5",
+          "mean": 21.18113946470124,
+          "p10": 6.055036383495799,
+          "p50": 15.332782459929124,
+          "p90": 41.231596002800956,
+          "minimum": 1.4771950454601597,
+          "maximum": 277.9776293238005,
+          "finite": true,
+          "nonNegative": true
+        }
+      ]
+    },
+    "allMaximum": {
+      "portfolioExpectedAnnualLoss": 25101244980.289234,
+      "scenarios": [
+        {
+          "code": "S1",
+          "mean": 6097287625.697947,
+          "p10": 2086192630.8890789,
+          "p50": 5002280807.273573,
+          "p90": 11428536359.874939,
+          "minimum": 401057916.562548,
+          "maximum": 39449944208.47965,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S2",
+          "mean": 5751343299.115629,
+          "p10": 2098270305.2954829,
+          "p50": 4784660296.997218,
+          "p90": 10741888544.447727,
+          "minimum": 500581442.93460727,
+          "maximum": 35370549750.6623,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S3",
+          "mean": 5282472509.335354,
+          "p10": 1731830539.1895335,
+          "p50": 4325013483.722809,
+          "p90": 10096124188.094301,
+          "minimum": 401646680.333636,
+          "maximum": 36040362360.6703,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S4",
+          "mean": 3258418021.4240465,
+          "p10": 1029725388.6052544,
+          "p50": 2657361421.591997,
+          "p90": 6266631240.143277,
+          "minimum": 182666845.29881355,
+          "maximum": 25752765024.733234,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S5",
+          "mean": 4711723524.71626,
+          "p10": 1711663461.8097672,
+          "p50": 3971465896.3794966,
+          "p90": 8586120099.299599,
+          "minimum": 353431829.2826087,
+          "maximum": 28219037386.474987,
+          "finite": true,
+          "nonNegative": true
+        }
+      ]
+    },
+    "allUnknown": {
+      "portfolioExpectedAnnualLoss": 32492725.449866176,
+      "scenarios": [
+        {
+          "code": "S1",
+          "mean": 8241262.559003151,
+          "p10": 36011.661729175685,
+          "p50": 911812.2005463543,
+          "p90": 17991639.299044,
+          "minimum": 269.92430687725437,
+          "maximum": 679410538.8468947,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S2",
+          "mean": 7601724.924514764,
+          "p10": 37722.448518175916,
+          "p50": 872334.8357439036,
+          "p90": 16664106.355973337,
+          "minimum": 73.02637065788403,
+          "maximum": 613343359.2467772,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S3",
+          "mean": 7042824.885263297,
+          "p10": 31989.147879651264,
+          "p50": 715740.7189340882,
+          "p90": 14471243.328156367,
+          "minimum": 294.3772381046002,
+          "maximum": 641105078.5430882,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S4",
+          "mean": 3581365.7232907875,
+          "p10": 17305.71387914559,
+          "p50": 410113.6774440681,
+          "p90": 8215028.313942997,
+          "minimum": 125.09009569970351,
+          "maximum": 242296316.81837824,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S5",
+          "mean": 6025547.357794178,
+          "p10": 27735.214021003354,
+          "p50": 629559.196252163,
+          "p90": 13482940.392482111,
+          "minimum": 150.92625768360824,
+          "maximum": 611404846.8988726,
+          "finite": true,
+          "nonNegative": true
+        }
+      ]
+    },
+    "qp8Unknown": {
+      "portfolioExpectedAnnualLoss": 1800224.4427273474,
+      "scenarios": [
+        {
+          "code": "S1",
+          "mean": 466362.4368764806,
+          "p10": 71311.3988656493,
+          "p50": 332910.62723745115,
+          "p90": 1040263.5740429745,
+          "minimum": 4377.895433589204,
+          "maximum": 4069073.4205458416,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S2",
+          "mean": 455194.5253271792,
+          "p10": 71945.1323238746,
+          "p50": 333378.43624389236,
+          "p90": 1000461.8924538385,
+          "minimum": 5817.427042527092,
+          "maximum": 4821921.571344832,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S3",
+          "mean": 382672.8750386846,
+          "p10": 58312.61498072248,
+          "p50": 269866.1236362378,
+          "p90": 843404.7403022583,
+          "minimum": 3837.3954045551836,
+          "maximum": 2925799.202301845,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S4",
+          "mean": 151339.602187705,
+          "p10": 22461.668072360753,
+          "p50": 105046.80475630636,
+          "p90": 339386.5574370085,
+          "minimum": 1045.7945959963165,
+          "maximum": 1710168.6057397276,
+          "finite": true,
+          "nonNegative": true
+        },
+        {
+          "code": "S5",
+          "mean": 344655.00329729787,
+          "p10": 55253.77782425472,
+          "p50": 251100.43961363717,
+          "p90": 750938.2843107594,
+          "minimum": 2471.73085305796,
+          "maximum": 2857443.691204971,
+          "finite": true,
+          "nonNegative": true
+        }
+      ]
+    }
+  },
+  "wideningMeanShiftCap": {
+    "configuredCap": 1.5,
+    "rationale": "Widening a right-skewed range raises its arithmetic mean because the upper tail is expanded while the most-likely value is held. Left unbounded, an Unknown answer would inflate the central estimate instead of merely widening the distribution. Widening is therefore reduced until the mean of the range is at most 1.5x the un-widened mean. The cap is applied by QkModifiers::applyRange to every widened input, and it is what keeps an all-Unknown assessment's central estimate within a stated multiple of the all-known assessment.",
+    "allUnknownPortfolioWithCap": 32492725.449866176,
+    "allUnknownPortfolioWithoutCap": 50988901.91549449,
+    "reductionFactor": 1.569240536444581,
+    "knownAnswerPortfolio": 763724.9295160627,
+    "note": "The cap only reduces the effective widening factor, so an assessment whose answers are all known is unaffected."
+  },
+  "eventAggregationComparison": {
+    "possible": {
+      "production": {
+        "mean": 198765.1889103768,
+        "p10": 68956.25861626354,
+        "p50": 165498.4649192312,
+        "p90": 371363.17967586644
+      },
+      "eventAggregated": {
+        "mean": 198981.5881693741,
+        "p10": 0,
+        "p50": 0,
+        "p90": 916831.4199093626
+      },
+      "ratios": {
+        "mean": 1.001088718100909,
+        "p50": 0,
+        "p90": 2.4688269330028687
+      }
+    },
+    "veryLikely": {
+      "production": {
+        "mean": 1813344.6807815272,
+        "p10": 595841.7794478327,
+        "p50": 1481693.301003195,
+        "p90": 3452062.329701523
+      },
+      "eventAggregated": {
+        "mean": 1810294.274257752,
+        "p10": 0,
+        "p50": 1425503.491918641,
+        "p90": 4180886.6330896597
+      },
+      "ratios": {
+        "mean": 0.9983178010468146,
+        "p50": 0.9620773009863037,
+        "p90": 1.2111272143371623
+      }
+    }
+  }
+}

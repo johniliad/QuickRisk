@@ -1,0 +1,189 @@
+{
+  "scenariosSchemaVersion": "1.3.0",
+  "questionInterpretation": {
+    "likelihood": "The likelihood question asks for threat event frequency: how often the scenario is attempted or contacted in a typical 12-month period, before considering whether controls would prevent success. Control effectiveness is applied separately and only once, as susceptibility. The wording was corrected in CAL-1.2; the CAL-1.0 wording asked for scenario plausibility given existing controls and risked counting control effectiveness twice.",
+    "impact": "The impact question asks for the financial and business impact of one successful loss event, expressed as a multiple of the organisation's daily disruption-cost anchor."
+  },
+  "scenarios": [
+    {
+      "code": "S1",
+      "order": 1,
+      "name": "Ransomware / destructive extortion",
+      "shortLabel": "Ransomware",
+      "shortDescription": "Criminal intrusion, encryption or destruction of systems and extortion pressure.",
+      "statement": "A criminal threat actor gains sufficient access to disrupt or encrypt critical systems and/or exfiltrate data, followed by extortion, causing operational disruption, response costs and potentially secondary losses.",
+      "likelihoodQuestion": {
+        "code": "S1A",
+        "template": "SQA",
+        "optionSet": "frequency5",
+        "text": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is ransomware or destructive extortion attempted or contacted in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+        "help": "Count attempts or contact events, not successful incidents. Your defences are applied separately and only once, so do not discount your answer for existing controls."
+      },
+      "impactQuestion": {
+        "code": "S1B",
+        "template": "SQB",
+        "optionSet": "impact5",
+        "text": "If critical systems were disrupted and/or data were exfiltrated through ransomware, what level of financial and business impact would you expect?",
+        "help": "Consider downtime duration, restoration effort, response and forensics cost, data exposure and consequential business consequences."
+      },
+      "drivers": [
+        { "code": "frequency", "label": "Expected event frequency", "detail": "How often a ransomware or destructive extortion event is modelled to become a loss event in a year." },
+        { "code": "magnitude", "label": "Expected loss per event", "detail": "Modelled primary and secondary cost of a single event." },
+        { "code": "susceptibility", "label": "Susceptibility", "detail": "Driven mainly by overall control maturity in this simplified model." },
+        { "code": "secondary", "label": "Secondary-loss contribution", "detail": "Share of expected annual loss that comes from modelled consequential loss." }
+      ],
+      "investigationPrompts": [
+        "Verify backup and restore capability, including offline or immutable copies and tested restore times.",
+        "Confirm privileged access controls, administrative tiering and remote-access hardening.",
+        "Review network segmentation and lateral-movement containment.",
+        "Validate incident-response readiness, including extortion decision-making and communications."
+      ],
+      "interpretationNote": "Ransomware is modelled as a high-consequence, lower-frequency scenario. A wide range here usually reflects uncertainty about both access prevention and recovery speed.",
+      "doesNotMean": "This is not a prediction that ransomware will occur, and it does not measure the effectiveness of any specific control."
+    },
+    {
+      "code": "S2",
+      "order": 2,
+      "name": "Identity / phishing / social-engineering compromise",
+      "shortLabel": "Identity compromise",
+      "shortDescription": "Credential theft, phishing or social engineering leading to account compromise.",
+      "statement": "An attacker uses phishing, social engineering, stolen credentials, session theft or related techniques to compromise a user or privileged account and causes unauthorised access, fraud, data exposure or operational impact.",
+      "likelihoodQuestion": {
+        "code": "S2A",
+        "template": "SQA",
+        "optionSet": "frequency5",
+        "text": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is an identity, phishing or social-engineering attack attempted against your users or accounts in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+        "help": "Count attack or credential-theft attempts, not successful compromises. Your defences are applied separately and only once, so do not discount your answer for existing controls."
+      },
+      "impactQuestion": {
+        "code": "S2B",
+        "template": "SQB",
+        "optionSet": "impact5",
+        "text": "If a compromised account resulted in unauthorised access, fraud or data exposure, what level of financial and business impact would you expect?",
+        "help": "Consider unauthorised transactions or changes, data exposure, remediation effort and business consequences."
+      },
+      "drivers": [
+        { "code": "frequency", "label": "Expected event frequency", "detail": "How often an identity compromise is modelled to become a loss event in a year." },
+        { "code": "magnitude", "label": "Expected loss per event", "detail": "Modelled primary and secondary cost of a single event." },
+        { "code": "susceptibility", "label": "Susceptibility", "detail": "Driven mainly by overall control maturity in this simplified model." },
+        { "code": "secondary", "label": "Secondary-loss contribution", "detail": "Share of expected annual loss that comes from modelled consequential loss." }
+      ],
+      "investigationPrompts": [
+        "Confirm multi-factor authentication coverage for all users, administrators and external access paths.",
+        "Review phishing-resistant authentication options for privileged and high-value accounts.",
+        "Check monitoring and alerting for anomalous authentication, session and mailbox activity.",
+        "Review joiner/mover/leaver and privileged-access provisioning processes."
+      ],
+      "interpretationNote": "Identity compromise is modelled as the highest-volume intrusion scenario. It tends to rank on a combination of frequent attempts and moderate-to-high consequence.",
+      "doesNotMean": "This is not a measure of user awareness training effectiveness or of any specific authentication control."
+    },
+    {
+      "code": "S3",
+      "order": 3,
+      "name": "Public-facing vulnerability exploitation",
+      "shortLabel": "Vulnerability exploitation",
+      "shortDescription": "Exploitation of a vulnerability in an internet-facing system or appliance.",
+      "statement": "An attacker exploits a vulnerability or insecure condition in an internet-facing application, appliance, VPN, gateway or other exposed technology component and gains unauthorised access or causes a material security incident.",
+      "likelihoodQuestion": {
+        "code": "S3A",
+        "template": "SQA",
+        "optionSet": "frequency5",
+        "text": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a public-facing service or vulnerability probed or attacked in a typical 12-month period? Answer before considering whether your patching and hardening would prevent success.",
+        "help": "Count exploitation attempts against your internet-facing estate, not successful intrusions. Your defences are applied separately and only once."
+      },
+      "impactQuestion": {
+        "code": "S3B",
+        "template": "SQB",
+        "optionSet": "impact5",
+        "text": "If an internet-facing system were successfully exploited, what level of financial and business impact would you expect?",
+        "help": "Consider access gained, systems affected, data reachable from that position and the effort needed to rebuild or contain."
+      },
+      "drivers": [
+        { "code": "frequency", "label": "Expected event frequency", "detail": "How often successful exploitation is modelled to become a loss event in a year." },
+        { "code": "magnitude", "label": "Expected loss per event", "detail": "Modelled primary and secondary cost of a single event." },
+        { "code": "susceptibility", "label": "Susceptibility", "detail": "Driven mainly by overall control maturity in this simplified model." },
+        { "code": "secondary", "label": "Secondary-loss contribution", "detail": "Share of expected annual loss that comes from modelled consequential loss." }
+      ],
+      "investigationPrompts": [
+        "Confirm you can inventory every internet-facing system, appliance and service, including shadow and legacy exposure.",
+        "Review patch and mitigation latency for externally reachable components.",
+        "Check whether exposed management interfaces are restricted, and whether remote access is hardened.",
+        "Review detection coverage for exploitation attempts and post-exploitation activity."
+      ],
+      "interpretationNote": "This scenario is sensitive to how large and how well-maintained the internet-facing estate is. Uncertainty is often driven by incomplete exposure inventories.",
+      "doesNotMean": "This is not a vulnerability scan, a penetration test or an assessment of any specific patch level."
+    },
+    {
+      "code": "S4",
+      "order": 4,
+      "name": "Third-party / supplier compromise",
+      "shortLabel": "Third-party compromise",
+      "shortDescription": "A supplier, provider or partner incident propagating into your organisation.",
+      "statement": "A cyber incident affecting a supplier, managed service, cloud provider, software provider, business partner or other third party propagates into the organisation and causes a security or availability loss.",
+      "likelihoodQuestion": {
+        "code": "S4A",
+        "template": "SQA",
+        "optionSet": "frequency5",
+        "text": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a material incident attempted through or originating from a third party or supplier in a typical 12-month period? Answer before considering whether your supplier controls would prevent it from propagating.",
+        "help": "Count supplier-related incidents or contact events, not those that successfully propagate into your environment. Your defences are applied separately and only once."
+      },
+      "impactQuestion": {
+        "code": "S4B",
+        "template": "SQB",
+        "optionSet": "impact5",
+        "text": "If a critical supplier or service provider were compromised, what level of financial and business impact would you expect in your organisation?",
+        "help": "Consider loss of a critical service, data exposure through the provider, and how quickly you could substitute or recover."
+      },
+      "drivers": [
+        { "code": "frequency", "label": "Expected event frequency", "detail": "Scaled by your third-party dependency answer for this scenario." },
+        { "code": "magnitude", "label": "Expected loss per event", "detail": "Modelled primary and secondary cost of a single event." },
+        { "code": "susceptibility", "label": "Susceptibility", "detail": "Driven mainly by overall control maturity in this simplified model." },
+        { "code": "secondary", "label": "Secondary-loss contribution", "detail": "Share of expected annual loss that comes from modelled consequential loss." }
+      ],
+      "investigationPrompts": [
+        "Identify which third parties are genuinely critical to service delivery and which hold or can reach sensitive data.",
+        "Review contractual security and notification obligations, and your ability to substitute critical providers.",
+        "Check third-party access paths, including remote administrative access and integration credentials.",
+        "Confirm contingency and exit plans for critical providers."
+      ],
+      "interpretationNote": "This scenario depends heavily on your third-party dependency answer. Where a critical provider is not substitutable, the modelled consequence range widens.",
+      "doesNotMean": "This is not an assessment of any specific supplier's security posture, nor a supply-chain audit."
+    },
+    {
+      "code": "S5",
+      "order": 5,
+      "name": "DDoS / service disruption",
+      "shortLabel": "DDoS / disruption",
+      "shortDescription": "Externally driven denial-of-service or service disruption.",
+      "statement": "An external actor overwhelms or otherwise disrupts internet-facing services, causing material service degradation or unavailability and associated operational, commercial or reputational consequences.",
+      "likelihoodQuestion": {
+        "code": "S5A",
+        "template": "SQA",
+        "optionSet": "frequency5",
+        "text": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a denial-of-service or service-disruption attempt directed at your internet-facing services in a typical 12-month period? Answer before considering whether your mitigation would prevent disruption.",
+        "help": "Count disruption attempts or attacks, not successful outages. Mitigation effectiveness is applied separately by the model, so do not discount your answer for existing mitigation capacity."
+      },
+      "impactQuestion": {
+        "code": "S5B",
+        "template": "SQB",
+        "optionSet": "impact5",
+        "text": "If critical internet-facing services became unavailable, what level of financial and business impact would you expect?",
+        "help": "Consider outage duration, customer-facing impact, service-level consequences and the cost of restoring availability."
+      },
+      "drivers": [
+        { "code": "frequency", "label": "Expected event frequency", "detail": "Denial-of-service activity is modelled as the most frequent disruption scenario." },
+        { "code": "magnitude", "label": "Expected loss per event", "detail": "Modelled primary and secondary cost of a single event." },
+        { "code": "susceptibility", "label": "Susceptibility", "detail": "Disruption success probability is modelled separately from intrusion susceptibility." },
+        { "code": "secondary", "label": "Secondary-loss contribution", "detail": "Share of expected annual loss that comes from modelled consequential loss." }
+      ],
+      "investigationPrompts": [
+        "Confirm mitigation capacity and provider coverage relative to your current traffic profile.",
+        "Review whether critical services can degrade gracefully rather than failing entirely.",
+        "Check dependency chains: upstream DNS, CDN, hosting and network providers.",
+        "Confirm customer and regulator communication plans for sustained unavailability."
+      ],
+      "interpretationNote": "Denial-of-service is modelled as a high-frequency, typically lower-consequence scenario. It demonstrates why incident volume alone is not treated as financial risk.",
+      "doesNotMean": "This is not a capacity test or a measurement of your mitigation provider's effectiveness."
+    }
+  ]
+}
