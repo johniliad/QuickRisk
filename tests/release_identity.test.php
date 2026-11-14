@@ -146,7 +146,7 @@ return [
         assertSame('CAL-1.3', (string) $manifest['calibrationVersion'], 'The calibration version must be CAL-1.3');
         assertSame('METH-1.3', (string) $manifest['methodologyVersion'], 'The methodology version must be METH-1.3');
         assertSame('DISC-1.2', (string) $manifest['disclaimerVersion'], 'The disclaimer version must be DISC-1.2');
-        assertSame('1.3.0', (string) $manifest['applicationVersion'], 'The application version must be 1.3.0');
+        assertSame('1.3.1', (string) $manifest['applicationVersion'], 'The application version must be 1.3.1');
         assertSame('1.2.0', (string) $manifest['supersedesModelVersion'], 'The release must supersede 1.2.0');
 
         $recordPath = $model->modelPath() . '/versions/' . $manifest['modelVersion'] . '.json';

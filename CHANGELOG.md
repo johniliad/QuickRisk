@@ -4,6 +4,26 @@ All notable changes to FAIR QuickRisk are recorded here. Versions follow the rel
 identity in `fairquickmodel/manifest.json`; the model, schema and application versions move
 together, and a published version's meaning is never edited in place.
 
+## [1.3.1] — 2026-11-14
+
+Compliance release. The application version moves to 1.3.1; the model, schema, calibration,
+methodology and disclaimer are unchanged (`FAIR-QK-1.3` / `1.3.0` / `CAL-1.3` / `METH-1.3` /
+`DISC-1.2`), and the 1.3.0 version record is left exactly as published.
+
+### Added
+
+- `NOTICE` is now served with the application at `/NOTICE.txt`, and its text is reproduced at
+  the head of `/THIRD-PARTY-NOTICES.txt`, so Apache-2.0 section 4(d) is satisfied for the
+  compiled bundle as well as for the source form.
+- The application footer and the static fallback link to the Notice.
+
+### Changed
+
+- `tools/prepare-upload.php` and `tools/deploy.sh` verify that `LICENSE.txt`, `NOTICE.txt`,
+  `THIRD-PARTY-NOTICES.txt` and the branded error pages are published.
+- A test keeps the error-page version line in step with the manifest, so a release cannot
+  leave four stale pages behind.
+
 ## [1.3.0] — 2026-11-14
 
 **Provisional release.** Model `FAIR-QK-1.3` · schema `1.3.0` · calibration `CAL-1.3` ·

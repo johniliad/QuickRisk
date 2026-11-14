@@ -121,6 +121,7 @@ foreach ([
     'errors/500.html',
     'errors/503.html',
     'LICENSE.txt',
+    'NOTICE.txt',
     'THIRD-PARTY-NOTICES.txt',
     'api/calculate.php',
     'includes/live/handlers.php',

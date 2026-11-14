@@ -31,6 +31,7 @@ const frontend = path.join(root, 'frontend');
 const publicDir = path.join(frontend, 'public');
 const noticesPath = path.join(publicDir, 'THIRD-PARTY-NOTICES.txt');
 const licensePath = path.join(publicDir, 'LICENSE.txt');
+const noticePath = path.join(publicDir, 'NOTICE.txt');
 const checkOnly = process.argv.includes('--check');
 
 /** Licences that may be bundled without further obligation beyond attribution. */
@@ -149,7 +150,7 @@ function collect() {
   return packages;
 }
 
-function buildNotices(packages) {
+function buildNotices(packages, notice) {
   const manifest = readJson(path.join(root, 'fairquickmodel', 'manifest.json'));
   const families = new Map();
   for (const entry of packages) {
@@ -173,6 +174,8 @@ function buildNotices(packages) {
   lines.push('FAIR QuickRisk is licensed under the Apache License, Version 2.0. A copy');
   lines.push('travels with this file as LICENSE.txt and in the repository root.');
   lines.push('');
+  lines.push('The project NOTICE is reproduced below and is also served as NOTICE.txt.');
+  lines.push('');
   lines.push('The compiled browser assets bundle the third-party packages listed below.');
   lines.push('Each entry reproduces the licence text and attribution notice that the');
   lines.push('package ships, as those licences require. Packages that ship no licence');
@@ -183,6 +186,14 @@ function buildNotices(packages) {
   lines.push('`npm run notices` in frontend/ and commit the result.');
   lines.push('');
   lines.push('Packages: ' + packages.length + '. Licence families: ' + summary + '.');
+  lines.push('');
+  lines.push(bar);
+  lines.push('PROJECT NOTICE');
+  lines.push(bar);
+  lines.push('');
+  for (const line of notice.trimEnd().split('\n')) {
+    lines.push(line);
+  }
   lines.push('');
   lines.push(thin);
   lines.push('INDEX');
@@ -224,8 +235,9 @@ function buildNotices(packages) {
 }
 
 const packages = collect();
-const notices = buildNotices(packages);
 const license = readFileSync(path.join(root, 'LICENSE'), 'utf8').replace(/\r\n?/g, '\n');
+const notice = readFileSync(path.join(root, 'NOTICE'), 'utf8').replace(/\r\n?/g, '\n');
+const notices = buildNotices(packages, notice);
 
 function compare(file, expected) {
   if (!existsSync(file)) {
@@ -240,6 +252,7 @@ function compare(file, expected) {
 if (checkOnly) {
   compare(noticesPath, notices);
   compare(licensePath, license);
+  compare(noticePath, notice);
   process.stdout.write(
     'Licence notices are current: ' + packages.length + ' production packages, all permissive.\n'
   );
@@ -248,13 +261,16 @@ if (checkOnly) {
 
 writeFileSync(noticesPath, notices, 'utf8');
 writeFileSync(licensePath, license, 'utf8');
+writeFileSync(noticePath, notice, 'utf8');
 
 process.stdout.write(
   'Wrote ' +
     path.relative(root, noticesPath) +
     ' (' +
     packages.length +
-    ' packages) and ' +
+    ' packages), ' +
     path.relative(root, licensePath) +
+    ' and ' +
+    path.relative(root, noticePath) +
     '.\n'
 );

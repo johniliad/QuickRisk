@@ -16,7 +16,8 @@ limitations under the License.
 This product bundles third-party software. The attribution notices and licence
 texts that must travel with the compiled application are in
 THIRD-PARTY-NOTICES.txt, which is also served at /THIRD-PARTY-NOTICES.txt.
-A copy of the Apache License is served at /LICENSE.txt.
+A copy of the Apache License is served at /LICENSE.txt, and this NOTICE is served
+at /NOTICE.txt.
 
 QuickRisk is an independent implementation. It is not endorsed by, affiliated
 with, or validated by the FAIR Institute, ENISA, Verizon, IBM or any regulator.

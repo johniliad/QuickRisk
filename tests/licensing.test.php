@@ -90,4 +90,35 @@ return [
             assertNotContains($copyleft, $notices, 'No copyleft licence may be bundled: ' . $copyleft);
         }
     },
+
+    'licensing: the NOTICE travels with the served bundle' => function (): void {
+        $root = qk_test_repository_root();
+        $normalise = static fn (string $text): string => trim(str_replace(["\r\n", "\r"], "\n", $text));
+
+        $notice = (string) file_get_contents($root . '/NOTICE');
+        assertTrue(
+            is_file($root . '/frontend/public/NOTICE.txt'),
+            'The NOTICE must be served at /NOTICE.txt, as Apache-2.0 section 4(d) expects'
+        );
+        assertSame(
+            $normalise($notice),
+            $normalise((string) file_get_contents($root . '/frontend/public/NOTICE.txt')),
+            'The served NOTICE must be an exact copy of the repository NOTICE'
+        );
+
+        $notices = (string) file_get_contents($root . '/frontend/public/THIRD-PARTY-NOTICES.txt');
+        assertContains('PROJECT NOTICE', $notices, 'The served notices must reproduce the project NOTICE');
+        assertContains('Copyright 2026', $notices, 'The served notices must carry the copyright statement');
+
+        assertContains(
+            '/NOTICE.txt',
+            (string) file_get_contents($root . '/frontend/src/components/layout/Footer.tsx'),
+            'The application footer must link the Notice'
+        );
+        assertContains(
+            '/NOTICE.txt',
+            (string) file_get_contents($root . '/frontend/index.html'),
+            'The static fallback must link the Notice'
+        );
+    },
 ];

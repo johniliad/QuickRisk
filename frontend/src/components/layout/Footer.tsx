@@ -46,6 +46,9 @@ export function Footer() {
           >
             Third-party notices
           </a>
+          <a className="text-small font-semibold text-accent-strong" href="/NOTICE.txt">
+            Notice
+          </a>
           <a
             className="text-small font-semibold text-accent-strong"
             href="https://www.iliadis.net/"

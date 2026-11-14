@@ -124,6 +124,12 @@ if [ "$DEPLOY_APP" -eq 1 ]; then
   test -f "$WEB_DIR/includes/live/handlers.php" || { echo "The QuickRisk Live PHP library is missing." >&2; exit 1; }
   test -f "$WEB_DIR/api/calculate.php" || { echo "calculate.php is missing." >&2; exit 1; }
   test -f "$WEB_DIR/includes/.htaccess" || { echo "includes/.htaccess is missing." >&2; exit 1; }
+  # The licence, the NOTICE and the third-party notices are part of the distribution,
+  # not documentation: a deploy that lost them publishes a non-compliant site.
+  test -f "$WEB_DIR/LICENSE.txt" || { echo "The served licence (LICENSE.txt) is missing." >&2; exit 1; }
+  test -f "$WEB_DIR/NOTICE.txt" || { echo "The served NOTICE (NOTICE.txt) is missing." >&2; exit 1; }
+  test -f "$WEB_DIR/THIRD-PARTY-NOTICES.txt" || { echo "The served third-party notices are missing." >&2; exit 1; }
+  test -f "$WEB_DIR/errors/404.html" || { echo "The branded error pages are missing." >&2; exit 1; }
   # The security headers are served from the web-root .htaccess on shared hosting, so a
   # truncated copy would leave the site without a CSP.
   grep -q 'Header always set Content-Security-Policy' "$WEB_DIR/.htaccess" \

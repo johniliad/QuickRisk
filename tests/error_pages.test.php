@@ -119,4 +119,23 @@ return [
             assertNotContains('X-Origin-Secret', $html, $label . 'the origin gate is never disclosed');
         }
     },
+
+    'error pages: the footer version follows the manifest' => function () use ($qkErrorPages): void {
+        $root = qk_test_repository_root();
+        $manifest = json_decode((string) file_get_contents($root . '/fairquickmodel/manifest.json'), true);
+
+        assertTrue(is_array($manifest), 'The manifest must be valid JSON');
+        $application = (string) ($manifest['applicationVersion'] ?? '');
+        $model = (string) ($manifest['modelId'] ?? '');
+        assertTrue($application !== '' && $model !== '', 'The manifest must declare the model and application versions');
+
+        foreach (array_keys($qkErrorPages) as $code) {
+            $html = (string) file_get_contents($root . '/frontend/public/errors/' . $code . '.html');
+            assertContains(
+                'Model ' . $model . ' · application ' . $application,
+                $html,
+                'error ' . $code . ': the footer must name the current model and application versions'
+            );
+        }
+    },
 ];
