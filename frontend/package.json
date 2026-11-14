@@ -4,12 +4,15 @@
   "version": "1.3.0",
   "type": "module",
   "description": "FAIR QuickRisk — React + TypeScript frontend (build-time only; static assets in production).",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify:boundary": "node ../tools/verify-frontend-boundary.mjs",
     "verify:storage": "node ../tools/verify-no-browser-storage.mjs",
-    "lint": "npm run typecheck && npm run verify:boundary && npm run verify:storage",
+    "verify:licenses": "node ../tools/generate-third-party-notices.mjs --check",
+    "notices": "node ../tools/generate-third-party-notices.mjs",
+    "lint": "npm run typecheck && npm run verify:boundary && npm run verify:storage && npm run verify:licenses",
     "test": "vitest run",
     "build": "npm run lint && npm run test && vite build",
     "preview": "vite preview"

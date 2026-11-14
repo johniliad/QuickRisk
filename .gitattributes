@@ -1,0 +1,9 @@
+# The application is deployed to a Linux/Apache host. Shell scripts and Apache
+# policy files must keep Unix line endings even when they are edited on Windows:
+# a stray carriage return makes the shell fail on every line and makes every
+# RewriteCond pattern unable to match.
+*.sh        text eol=lf
+*.htaccess  text eol=lf
+*.php       text eol=lf
+*.mjs       text eol=lf
+*.png       binary

@@ -7,6 +7,69 @@ Options -Indexes
 DirectoryIndex index.html
 
 # ---------------------------------------------------------------------------
+# RFC 8615 /.well-known — public by design, never gated.
+#
+# Let's Encrypt / cPanel AutoSSL validates HTTP-01 by fetching
+# /.well-known/acme-challenge/<token> directly from this origin, without the
+# Cloudflare header, so this path must pass the origin gate below. Blocking it
+# would break certificate renewal and take the site offline when the current
+# certificate expires. The same applies to pki-validation/ for third-party CAs
+# and to discovery documents such as /.well-known/security.txt.
+#
+# Deliberately narrow: GET or HEAD only, one safe path segment, first character
+# alphanumeric so "." and ".." can never match, no directory listing
+# (Options -Indexes above). It sits BEFORE the gate so that renewal also works
+# while the gate is in its fail-closed (unrendered) state.
+#
+# The rule pattern is matched relative to the directory holding this file, so it
+# works whether the application is served at the domain root or a subdirectory.
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteRule ^\.well-known/(?:(?:acme-challenge|pki-validation)/)?[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}$ - [L]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# ALWAYS-ON: origin access gate (Cloudflare -> origin).
+#
+# Every request must arrive from Cloudflare carrying the shared X-Origin-Secret
+# header; anything else is refused. The real rule is rendered by
+# tools/render-apache-policy.php from ~/quickrisk-config/cloudflare-origin-secret
+# (or QK_ORIGIN_SECRET). The value is never versioned and never appears in any
+# file in this repository.
+#
+# The block below is FAIL-CLOSED as committed: it refuses everything until the
+# renderer replaces it. That is deliberate. A copy of this file that escapes the
+# pipeline (manual upload, rsync) must lock the site, not open it. Never soften
+# this stub into a matchable placeholder: this repository is public, so any
+# committed header value would be a known bypass.
+#
+# Requirement: requirements/QuickRisk_Cloudflare_Origin_Gate_Requirements.md
+# ---------------------------------------------------------------------------
+# >>> QK-ORIGIN-GATE-BEGIN
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Fail-closed stub. Replaced at deploy time with the X-Origin-Secret check.
+    RewriteRule ^ - [F,L]
+</IfModule>
+# <<< QK-ORIGIN-GATE-END
+
+# ---------------------------------------------------------------------------
+# Error documents: static pages delivered with the build
+# (frontend/public/errors/), styled with the application's design tokens.
+# Paths are domain-root relative; if the application is ever published under a
+# subdirectory, that prefix must be added to each path (see
+# static-pages/README.md for the same rule). While
+# ~/quickrisk-config/beta-gate.htaccess exists it appends its own
+# ErrorDocument 403, which wins for as long as the holding notice is in use.
+# ---------------------------------------------------------------------------
+ErrorDocument 403 /errors/403.html
+ErrorDocument 404 /errors/404.html
+ErrorDocument 500 /errors/500.html
+ErrorDocument 503 /errors/503.html
+
+# ---------------------------------------------------------------------------
 # Never serve model files, configuration, source, maps or development artefacts.
 # The authoritative model lives outside the web root; these rules are defence in
 # depth in case a copy is ever placed here by mistake.

@@ -180,4 +180,111 @@ return [
             'The deploy script must verify that the deployed policy still allows the API calls'
         );
     },
+
+    'apache policy: the origin gate is fail-closed in the repository' => function (): void {
+        $root = qk_test_repository_root();
+        $htaccess = (string) file_get_contents($root . '/server/.htaccess');
+
+        $begin = '# >>> QK-ORIGIN-GATE-BEGIN';
+        $end = '# <<< QK-ORIGIN-GATE-END';
+
+        assertSame(1, substr_count($htaccess, $begin), 'Exactly one gate block may exist');
+        assertSame(1, substr_count($htaccess, $end), 'The gate block must be closed once');
+        assertTrue(strpos($htaccess, $begin) < strpos($htaccess, $end), 'The gate markers must be in order');
+
+        $block = substr($htaccess, (int) strpos($htaccess, $begin), (int) strpos($htaccess, $end) - (int) strpos($htaccess, $begin));
+        assertContains('RewriteRule ^ - [F,L]', $block, 'The committed gate must deny everything');
+        assertContains('Fail-closed stub', $block, 'The committed gate must be labelled as a fail-closed stub');
+
+        // This repository is public: a committed header condition would be a known bypass.
+        assertNotContains(
+            'RewriteCond %{HTTP:X-Origin-Secret}',
+            $htaccess,
+            'No versioned file may contain the origin-secret condition or a placeholder value'
+        );
+        assertSame(
+            0,
+            preg_match('/[A-Za-z0-9]{32,}/', $htaccess),
+            'No value that could be mistaken for a deployed secret may be committed'
+        );
+    },
+
+    'apache policy: the /.well-known exemption precedes the gate and is read-only' => function (): void {
+        $root = qk_test_repository_root();
+        $htaccess = (string) file_get_contents($root . '/server/.htaccess');
+
+        $wellKnownAt = strpos($htaccess, 'RewriteRule ^\\.well-known/');
+        $gateAt = strpos($htaccess, '# >>> QK-ORIGIN-GATE-BEGIN');
+
+        assertTrue($wellKnownAt !== false, 'The policy must exempt /.well-known or certificate renewal fails');
+        assertTrue($gateAt !== false, 'The gate block must exist');
+        assertTrue($wellKnownAt < $gateAt, 'The exemption must come before the gate, or it can never run');
+
+        assertContains(
+            'RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$',
+            $htaccess,
+            'The /.well-known exemption must be limited to GET and HEAD'
+        );
+        assertContains(
+            '[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}$ - [L]',
+            $htaccess,
+            'The exemption must match one safe path segment and must not allow "." or ".."'
+        );
+        assertNotContains(
+            'RewriteRule ^\\.well-known/ - [L]',
+            $htaccess,
+            'The exemption must not be widened to the whole /.well-known prefix without a name pattern'
+        );
+    },
+
+    'apache policy: branded error documents are declared and shipped' => function (): void {
+        $root = qk_test_repository_root();
+        $htaccess = (string) file_get_contents($root . '/server/.htaccess');
+
+        foreach ([403, 404, 500, 503] as $code) {
+            $target = '/errors/' . $code . '.html';
+            assertContains('ErrorDocument ' . $code . ' ' . $target, $htaccess, 'The ' . $code . ' error document must be declared');
+            assertTrue(
+                is_file($root . '/frontend/public' . $target),
+                'The declared error page must ship with the build: ' . $target
+            );
+        }
+    },
+
+    'apache policy: one renderer, used by both publishing paths, and no raw policy copy' => function (): void {
+        $root = qk_test_repository_root();
+        $renderer = (string) file_get_contents($root . '/tools/render-apache-policy.php');
+        $deploy = (string) file_get_contents($root . '/tools/deploy.sh');
+        $upload = (string) file_get_contents($root . '/tools/prepare-upload.php');
+
+        assertContains('QK_ORIGIN_SECRET', $renderer, 'The renderer must read the secret from the environment');
+        assertContains('QK-ORIGIN-GATE-BEGIN', $renderer, 'The renderer must replace the marked block');
+        assertContains('[A-Za-z0-9_-]{32,128}', $renderer, 'The renderer must validate the secret characters');
+        assertContains('--check', $renderer, 'The renderer must support a validation-only mode');
+
+        assertContains('tools/render-apache-policy.php', $deploy, 'The deploy script must use the renderer');
+        assertNotContains(
+            'rsync -a "$REPOSITORY_ROOT/server/.htaccess"',
+            $deploy,
+            'The deploy script must never copy the fail-closed policy verbatim'
+        );
+        assertContains("--exclude '.well-known/'", $deploy, 'The deploy sweep must preserve the ACME directory');
+        assertContains('Fail-closed stub', $deploy, 'The deploy must fail when the stub survives');
+
+        assertContains('tools/render-apache-policy.php', $upload, 'The manual upload path must use the same renderer');
+        assertContains('.well-known', $upload, 'The upload checklist must protect the ACME directory');
+    },
+
+    'apache policy: the requirements directory and the origin secret stay out of git' => function (): void {
+        $root = qk_test_repository_root();
+        $ignore = (string) file_get_contents($root . '/.gitignore');
+
+        assertContains('requirements', $ignore, 'The requirements directory must be gitignored');
+        assertContains('cloudflare-origin-secret', $ignore, 'The origin secret file name must be gitignored');
+
+        assertFalse(
+            is_dir($root . '/frontend/public/.well-known'),
+            'No .well-known directory may be committed under frontend/public: the build would ship or clobber it'
+        );
+    },
 ];

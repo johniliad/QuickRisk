@@ -37,6 +37,15 @@ export function Footer() {
           <Button variant="ghost" size="sm" onClick={() => setView('disclaimer')}>
             Full disclaimer
           </Button>
+          <a className="text-small font-semibold text-accent-strong" href="/LICENSE.txt">
+            Licence
+          </a>
+          <a
+            className="text-small font-semibold text-accent-strong"
+            href="/THIRD-PARTY-NOTICES.txt"
+          >
+            Third-party notices
+          </a>
           <a
             className="text-small font-semibold text-accent-strong"
             href="https://www.iliadis.net/"

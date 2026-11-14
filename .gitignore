@@ -19,6 +19,11 @@ quickrisk-config/
 quickrisk-state/
 *.local.php
 
+# Cloudflare origin shared secret — NEVER commit. The deployed .htaccess is
+# rendered from it at publish time; see requirements/ and tools/render-apache-policy.php.
+cloudflare-origin-secret
+**/cloudflare-origin-secret
+
 # The host's own web-server configuration: the project-root .htaccess holds cPanel
 # paths, the beta IP allow-list (real colleagues' addresses) and the DDNS hostname.
 # It lives only on the host. The versioned Apache policies are server/.htaccess,
@@ -87,10 +92,13 @@ ai-access-tokens.txt
 /api/storage/*
 !/api/storage/.gitkeep
 
-# Vibe coding markdown files
-requirements/*
-privatedocs
-docs
+# Vibe coding markdown files — local only, never published. The requirements
+# directory is deliberately outside version control; its content is enforced by
+# tracked code (server/.htaccess, tools/render-apache-policy.php, tools/deploy.sh)
+# and by tests/apache_policy.test.php, not by the document itself.
+/requirements/
+/privatedocs/
+/docs/
 
 #Development plan in markdown
 CISO_Board_Reporting_Development_Plan.md

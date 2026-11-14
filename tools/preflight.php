@@ -151,7 +151,8 @@ if ($qkModelPath === '') {
 }
 
 // ---------------------------------------------------------------------------
-// 3. The web-root .htaccess: headers, beta gate, and the line endings that break it.
+// 3. The web-root .htaccess: headers, origin gate, ACME exemption, error pages,
+//    the beta gate, and the line endings that break all of it.
 // ---------------------------------------------------------------------------
 echo "\nWeb-root .htaccess\n";
 
@@ -180,6 +181,64 @@ if (!is_file($qkHtaccessFile)) {
         qk_preflight_pass('connect-src permits the same-origin API calls');
     } else {
         qk_preflight_fail("the policy lacks connect-src 'self': every fetch from the app is blocked");
+    }
+
+    // The always-on Cloudflare origin gate. A deployed stub means nothing works;
+    // a missing gate means the origin answers anyone who finds its address.
+    if (str_contains($qkHtaccess, 'Fail-closed stub')) {
+        qk_preflight_fail('the origin gate is still the unrendered stub: every request is refused');
+    } elseif (preg_match('/RewriteCond\s+%\{HTTP:X-Origin-Secret\}\s+!\^[A-Za-z0-9_-]{32,128}\$/', $qkHtaccess) === 1) {
+        qk_preflight_pass('the Cloudflare origin gate is rendered');
+    } else {
+        qk_preflight_fail('no rendered Cloudflare origin gate: the origin answers anyone who finds it');
+    }
+
+    // /.well-known must stay reachable without the header, or renewal fails.
+    $qkWellKnownAt = strpos($qkHtaccess, 'RewriteRule ^\\.well-known/');
+    $qkGateAt = strpos($qkHtaccess, 'RewriteCond %{HTTP:X-Origin-Secret}');
+    if ($qkWellKnownAt === false) {
+        qk_preflight_fail('/.well-known is gated: Let\'s Encrypt renewal will fail with 403');
+    } elseif ($qkGateAt !== false && $qkWellKnownAt > $qkGateAt) {
+        qk_preflight_fail('the /.well-known exemption sits after the gate, so it never runs');
+    } elseif (!str_contains($qkHtaccess, 'RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$')) {
+        qk_preflight_fail('the /.well-known exemption is not limited to GET and HEAD');
+    } else {
+        qk_preflight_pass('/.well-known is exempt from the gate, for reading only');
+    }
+
+    if (is_dir($qkWebRoot . '/.well-known/acme-challenge')) {
+        qk_preflight_pass('the ACME challenge directory exists');
+    } else {
+        qk_preflight_warn('no .well-known/acme-challenge yet: cPanel creates it on the next renewal');
+    }
+
+    // Branded error documents: declared, and pointing at files that exist.
+    foreach ([403, 404, 500, 503] as $qkCode) {
+        if (!str_contains($qkHtaccess, 'ErrorDocument ' . $qkCode . ' /errors/' . $qkCode . '.html')) {
+            qk_preflight_warn('no branded ErrorDocument for ' . $qkCode);
+        } elseif (!is_file($qkWebRoot . '/errors/' . $qkCode . '.html')) {
+            qk_preflight_fail('ErrorDocument ' . $qkCode . ' points at a missing file: /errors/' . $qkCode . '.html');
+        } else {
+            qk_preflight_pass('the ' . $qkCode . ' error page exists');
+        }
+    }
+
+    // Live probe, only when an origin was supplied. A 403 on the ACME path is a
+    // renewal failure in waiting; anything else (404 for an absent probe) is fine.
+    if ($qkOption['origin'] !== '') {
+        $qkProbeUrl = rtrim($qkOption['origin'], '/') . '/.well-known/acme-challenge/qk-preflight-probe';
+        $qkProbeContext = stream_context_create([
+            'http' => ['method' => 'GET', 'timeout' => 6, 'ignore_errors' => true],
+        ]);
+        $qkProbeBody = @file_get_contents($qkProbeUrl, false, $qkProbeContext);
+        $qkProbeStatus = $http_response_header[0] ?? '';
+        if ($qkProbeBody === false || $qkProbeStatus === '') {
+            qk_preflight_warn('the ACME probe could not reach ' . $qkProbeUrl);
+        } elseif (str_contains($qkProbeStatus, ' 403')) {
+            qk_preflight_fail('the ACME probe returned 403: certificate renewal will fail');
+        } else {
+            qk_preflight_pass('the ACME probe is not gated (' . trim($qkProbeStatus) . ')');
+        }
     }
 
     if (str_contains($qkHtaccess, 'BETA ACCESS GATE')) {

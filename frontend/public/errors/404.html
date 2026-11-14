@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found | FAIR QuickRisk</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#075e65" />
+    <!--
+      Static Apache error document, served by ErrorDocument 404 in the web-root
+      .htaccess. Self-contained by design: one inline style block, no scripts, no
+      images and no third-party requests, so it still renders when anything else
+      is unavailable. It uses the design tokens of frontend/src/styles/index.css
+      (verified by tests/error_pages.test.php).
+    -->
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #142b3b;
+        --heading: #102a3a;
+        --muted: #526675;
+        --paper: #ffffff;
+        --canvas: #f3f7f8;
+        --border: #dce6e9;
+        --accent: #087e83;
+        --accent-strong: #075e65;
+        --accent-soft: #e7f4f2;
+        --focus: #8a4b00;
+        --warning: #8a4b00;
+        --warning-soft: #fdf3e3;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: var(--paper); color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 1rem; line-height: 1.7; -webkit-font-smoothing: antialiased;
+      }
+      h1, h2 { color: var(--heading); line-height: 1.2; }
+      h1 { font-size: clamp(2rem, 4.5vw, 3rem); margin: 0 0 1rem; }
+      h2 { font-size: 1.05rem; margin: 0 0 0.35rem; }
+      a { color: var(--accent-strong); text-underline-offset: 0.18em; }
+      a:hover { color: #03484d; }
+      :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+      .shell { width: min(70rem, calc(100% - 3rem)); margin-inline: auto; }
+      .skip-link {
+        position: absolute; left: 0.75rem; top: 0.75rem; z-index: 50;
+        padding: 0.7rem 1rem; border-radius: 0.25rem;
+        background: var(--heading); color: var(--paper); transform: translateY(-180%);
+      }
+      .skip-link:focus { transform: translateY(0); }
+      header { border-bottom: 1px solid var(--border); background: var(--paper); }
+      .masthead {
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        gap: 0.75rem; min-height: 82px; padding-block: 0.75rem;
+      }
+      .brand { display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); }
+      .brand-mark {
+        display: grid; place-items: center; width: 42px; height: 42px; border-radius: 0.25rem;
+        background: var(--accent-strong); color: #ffffff;
+        font-size: 0.88rem; font-weight: 700; letter-spacing: 0.04em;
+      }
+      .brand-name { display: block; font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+      .brand-accent { color: var(--accent-strong); }
+      .brand-tagline {
+        display: block; margin-top: 0.1rem; color: var(--muted);
+        font-size: 0.78rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase;
+      }
+      .masthead-link { color: var(--muted); font-size: 0.9rem; font-weight: 600; text-decoration: none; }
+      .masthead-link:hover { color: var(--accent-strong); }
+      main { padding-block: 3rem 3.5rem; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 0.5rem; margin: 0 0 1.25rem;
+        padding: 0.35rem 0.7rem; border: 1px solid #e8d3ae; border-radius: 999px;
+        background: var(--warning-soft); color: var(--warning);
+        font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      }
+      .badge-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #c8871b; }
+      .eyebrow {
+        margin: 0 0 0.6rem; color: var(--accent); font-size: 0.75rem;
+        font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+      }
+      .lede { max-width: 48rem; margin: 0 0 1.25rem; color: var(--muted); font-size: 1.06rem; }
+      .lede strong { color: var(--ink); }
+      .callout {
+        max-width: 48rem; margin: 2rem 0 0; padding: 1.15rem 1.4rem;
+        border: 1px solid var(--border); border-left: 4px solid var(--accent);
+        border-radius: 0.25rem; background: var(--accent-soft);
+      }
+      .callout p { margin: 0; }
+      .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 2.5rem; }
+      .button {
+        display: inline-flex; min-height: 46px; align-items: center; padding: 0.75rem 1.1rem;
+        border: 1px solid var(--accent-strong); border-radius: 0.25rem;
+        background: var(--accent-strong); color: #ffffff; font-weight: 650; text-decoration: none;
+      }
+      .button:hover { background: #03484d; color: #ffffff; }
+      .button-secondary {
+        display: inline-flex; min-height: 46px; align-items: center; padding: 0.75rem 1.1rem;
+        border: 1px solid var(--border); border-radius: 0.25rem;
+        background: var(--paper); color: var(--ink); font-weight: 600; text-decoration: none;
+      }
+      .button-secondary:hover { border-color: var(--accent); color: var(--accent-strong); }
+      .note { max-width: 48rem; margin: 2rem 0 0; color: var(--muted); font-size: 0.9rem; }
+      footer { border-top: 1px solid var(--border); background: var(--canvas); color: var(--muted); font-size: 0.9rem; }
+      footer .shell { padding-block: 1.5rem; }
+      footer p { margin: 0 0 0.5rem; }
+      footer p:last-child { margin-bottom: 0; }
+      .footer-links { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin: 0 0 0.75rem; padding: 0; list-style: none; }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header>
+      <div class="shell masthead">
+        <a class="brand" href="/" aria-label="FAIR QuickRisk home">
+          <span class="brand-mark" aria-hidden="true">QR</span>
+          <span>
+            <span class="brand-name">FAIR <span class="brand-accent">QuickRisk</span></span>
+            <span class="brand-tagline">Rapid quantitative cyber-risk estimation</span>
+          </span>
+        </a>
+        <a class="masthead-link" href="https://www.iliadis.net/">iliadis.net</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="shell">
+        <p class="badge"><span class="badge-dot" aria-hidden="true"></span>Error 404 · Page not found</p>
+        <p class="eyebrow">FAIR QuickRisk</p>
+        <h1>This page does not exist</h1>
+        <p class="lede">
+          The address you followed does not match any page in this application. FAIR QuickRisk has no
+          client-side router: every page has a fixed address, so an <strong>old bookmark</strong>, a
+          truncated link or a typed address will land here.
+        </p>
+
+        <div class="callout">
+          <h2>Where to go next</h2>
+          <p>
+            The assessment starts on the home page. The methodology, limitations and full disclaimer are
+            published on their own page, and the licence and third-party notices are linked below.
+          </p>
+        </div>
+
+        <div class="actions">
+          <a class="button" href="/">Go to the assessment</a>
+          <a class="button-secondary" href="/methodology.html">Read the methodology</a>
+        </div>
+
+        <p class="note">
+          The questionnaire and calculator do not retain your answers or results; nothing is stored in a
+          database, file, cookie or browser storage while you use them.
+        </p>
+      </div>
+    </main>
+
+    <footer>
+      <div class="shell">
+        <ul class="footer-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/methodology.html">Methodology</a></li>
+          <li><a href="/LICENSE.txt">Licence</a></li>
+          <li><a href="/THIRD-PARTY-NOTICES.txt">Third-party notices</a></li>
+          <li><a href="https://www.iliadis.net/">iliadis.net</a></li>
+        </ul>
+        <p>
+          FAIR QuickRisk is an independently developed tool by Dr. John Iliadis. It is not endorsed by,
+          affiliated with, or validated by the FAIR Institute, ENISA, Verizon, IBM, any regulator or any
+          other organisation referenced for contextual evidence.
+        </p>
+        <p>Model FAIR-QK-1.3 · application 1.3.0 · zero-retention questionnaire.</p>
+      </div>
+    </footer>
+  </body>
+</html>

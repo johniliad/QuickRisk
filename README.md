@@ -123,22 +123,27 @@ php tools/preflight.php --web-root="$HOME/public_html/quickrisk" --origin=https:
 
 Deployment is documented in `docs/DEPLOYMENT.md`, and the complete first-time runbook
 (including MySQL, the Live configuration file and the acceptance checks) is
-`docs/DEPLOYMENT_QUICKRISK_LIVE.md`. The short version:
+`docs/DEPLOYMENT_FIRST_TIME.md` and `docs/DEPLOYMENT_QUICKRISK_LIVE.md`. The short version:
 
 ```bash
-# 1. model files (outside the web root, read-only for PHP)
-rsync -a fairquickmodel/ ~/fairquickmodel/
+# 1 + 2. the model, the compiled application and the rendered web-server policy
+./tools/deploy.sh
 
-# 2. application files (web root)
-rsync -a frontend/dist/ ~/public_html/quickrisk/
-rsync -a server/ ~/public_html/quickrisk/
+# Without shell access (cPanel / FTP): assemble an upload tree, then upload its contents
+php tools/prepare-upload.php --append-beta-gate
 
 # 3. QuickRisk Live storage (once)
-mysql -u quickrisk_user -p quickrisk < database/001_initial_schema.sql
-mysql -u quickrisk_user -p quickrisk < database/002_seed_methodology.sql
-mysql -u quickrisk_user -p quickrisk < database/003_seed_scenarios.sql
-mysql -u quickrisk_user -p quickrisk < database/004_seed_scenarios_more.sql
+mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/001_initial_schema.sql
+mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/002_seed_methodology.sql
+mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/003_seed_scenarios.sql
+mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/004_seed_scenarios_more.sql
+mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/005_decision_lab.sql
 ```
+
+The web-root `.htaccess` is **rendered at publish time, never copied**: the versioned
+`server/.htaccess` is deliberately fail-closed, and `tools/render-apache-policy.php` injects
+the Cloudflare origin secret. Copying `server/.htaccess` by hand locks the site — that is the
+intended failure mode, not a bug.
 
 No database, no Node.js process and no background service is required for the questionnaire. The
 database is required only by QuickRisk Live; without it, the questionnaire works normally and Live
@@ -194,6 +199,45 @@ you actually use for calculations must be the one served by the PHP server above
 - Version 1.3.0 corrects defects found by an independent quantitative audit; the findings and
   the corrections made for each one are recorded in `docs/AUDIT_RESPONSE_FAIR-QK-1.1.md`.
 - Because no assessment is retained, a calibration change cannot alter any past result.
+
+## Origin access (Cloudflare only)
+
+The origin answers only traffic that Cloudflare forwards. A Cloudflare Transform Rule sets
+an `X-Origin-Secret` request header, and the deployed web-root policy refuses every request
+that does not carry it. There is exactly one exemption: RFC 8615 `/.well-known/`, which must
+stay reachable so that Let's Encrypt and cPanel AutoSSL can renew the certificate.
+
+- The secret is **never in this repository**. It is read at publish time from
+  `%USERPROFILE%\.quickrisk\cloudflare-origin-secret` or `QK_ORIGIN_SECRET`; on the host,
+  `~/quickrisk-config/cloudflare-origin-secret` (mode 600).
+- `server/.htaccess` contains a **fail-closed stub**, not a placeholder value: the repository
+  is public, and a committed placeholder would be a known bypass.
+- `tools/render-apache-policy.php` performs the substitution; `tools/deploy.sh` and
+  `tools/prepare-upload.php` both call it and refuse to publish without a valid secret.
+- Branded `ErrorDocument` pages for 403, 404, 500 and 503 ship in `frontend/public/errors/`.
+
+Verified by `tests/apache_policy.test.php` and `tests/error_pages.test.php`, and by the
+post-deployment checks in `tools/preflight.php`.
+
+## Licence
+
+FAIR QuickRisk is licensed under the **Apache License, Version 2.0** (`LICENSE`); the
+copyright and attribution statement is in `NOTICE`.
+
+The compiled browser assets bundle third-party packages. Their licence texts and attribution
+notices are reproduced in `THIRD-PARTY-NOTICES.txt`, served at `/THIRD-PARTY-NOTICES.txt`;
+`/LICENSE.txt` serves the Apache licence. Both are generated from the production dependency
+tree:
+
+```bash
+cd frontend
+npm run notices          # regenerate after a dependency change
+npm run verify:licenses  # fails when the published copies are stale
+```
+
+No copyleft dependency is bundled: `verify:licenses` fails the build if one appears.
+"FAIR" is a trademark of the FAIR Institute. This project is independent and is not endorsed,
+certified or validated by the FAIR Institute, ENISA, Verizon, IBM or any regulator.
 
 ## Contributing rules
 
