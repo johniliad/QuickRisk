@@ -59,10 +59,10 @@ export function LandingView() {
         <div className="grid gap-6">
           <div className="overflow-hidden rounded-card border border-border bg-paper">
             <img
-              src={`${import.meta.env.BASE_URL}images/quantify-cyber-risk-dashboard.png`}
+              src={`${import.meta.env.BASE_URL}images/quickrisk-hero-2026-11.jpg`}
               alt="QuickRisk — Quantify Cyber Risk: identify key risk scenarios, quantify likelihood and financial impact, prioritise what matters most."
-              width={2880}
-              height={1920}
+              width={1920}
+              height={1280}
               loading="eager"
               fetchPriority="high"
               className="block h-auto w-full"

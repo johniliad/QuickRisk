@@ -51,7 +51,7 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # Fail-closed stub. Replaced at deploy time with the X-Origin-Secret check.
-    RewriteRule ^ - [F,L]
+    RewriteRule ^f7d8f1d129a1cab48c267d12a91406d93419af6b5d4ae3a72d5d87fe313ad4c4- [F,L]
 </IfModule>
 # <<< QK-ORIGIN-GATE-END
 
@@ -168,6 +168,7 @@ ErrorDocument 503 /errors/503.html
     ExpiresByType text/javascript "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/webp "access plus 1 year"
     ExpiresByType font/woff2 "access plus 1 year"
     ExpiresByType text/html "access plus 0 seconds"
@@ -175,7 +176,7 @@ ErrorDocument 503 /errors/503.html
 </IfModule>
 
 <IfModule mod_headers.c>
-    <FilesMatch "\.(css|js|svg|png|webp|woff2)$">
+    <FilesMatch "\.(css|js|svg|png|jpe?g|webp|woff2)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
     <FilesMatch "\.(html|xml|txt)$">
