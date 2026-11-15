@@ -57,4 +57,5 @@ it against the domain, not against the document root.
   silently opens a beta site. The gate itself is never versioned. Full procedure:
   `docs/DEPLOYMENT_FIRST_TIME.md`, Step 4.
 - The notice inherits the web-root Content-Security-Policy. It complies by design: one inline
-  `<style>` block, allowed by `style-src 'unsafe-inline'`, and no external requests.
+  `<style>` block, allowed by its sha256 hash in `style-src` (the policy allows no inline
+  keyword), and no external requests.

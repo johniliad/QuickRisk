@@ -60,10 +60,11 @@ export function LandingView() {
           <div className="overflow-hidden rounded-card border border-border bg-paper">
             <img
               src={`${import.meta.env.BASE_URL}images/quantify-cyber-risk-dashboard.png`}
-              alt="Quantify Cyber Risk — example results dashboard"
-              width={1536}
-              height={1024}
+              alt="QuickRisk — Quantify Cyber Risk: identify key risk scenarios, quantify likelihood and financial impact, prioritise what matters most."
+              width={2880}
+              height={1920}
               loading="eager"
+              fetchPriority="high"
               className="block h-auto w-full"
             />
           </div>

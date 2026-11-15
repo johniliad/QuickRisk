@@ -20,6 +20,8 @@ declare(strict_types=1);
  * written by this application.
  */
 
+require_once __DIR__ . '/security_headers.php';
+
 $qkDefaults = [
     'environment' => 'production',
 
@@ -67,15 +69,15 @@ $qkDefaults = [
         'logCalculatedResults' => false,
     ],
 
-    'headers' => [
-        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma' => 'no-cache',
-        'X-Content-Type-Options' => 'nosniff',
-        'Referrer-Policy' => 'no-referrer',
-        'X-Frame-Options' => 'DENY',
-        'Cross-Origin-Resource-Policy' => 'same-origin',
-        'Permissions-Policy' => 'geolocation=(), microphone=(), camera=(), payment=()',
-    ],
+    'headers' => array_merge(
+        [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ],
+        // One policy for the PHP endpoints; server/.htaccess serves the same directive
+        // list to the static documents. HSTS is added per request, over TLS only.
+        QkSecurityHeaders::baseline()
+    ),
 ];
 
 $qkOverrideFile = getenv('QUICKRISK_CONFIG');

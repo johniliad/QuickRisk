@@ -24,7 +24,7 @@ PROJECT NOTICE
 ================================================================================
 
 FAIR QuickRisk
-Copyright 2026 Dr. John Iliadis
+Copyright 2026 Dr. John ILIADIS
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

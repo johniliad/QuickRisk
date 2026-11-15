@@ -183,6 +183,38 @@ if (!is_file($qkHtaccessFile)) {
         qk_preflight_fail("the policy lacks connect-src 'self': every fetch from the app is blocked");
     }
 
+    // The findings a passive scanner reports when these are missing or weakened. The
+    // renderer refuses to produce a policy without them; this checks the copy that is
+    // actually in the web root, including anything appended to it.
+    if (str_contains($qkHtaccess, 'Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"')) {
+        qk_preflight_pass('HSTS is one year and covers subdomains');
+    } elseif (preg_match('/Header\s+always\s+set\s+Strict-Transport-Security\s+"[^"]*max-age=0/i', $qkHtaccess) === 1) {
+        qk_preflight_fail('HSTS is disabled by max-age=0: browsers will keep using HTTP (check the beta gate and the CDN)');
+    } else {
+        qk_preflight_fail('HSTS is missing or shorter than one year: transport security is not enforced');
+    }
+
+    if (preg_match('/Header always set Content-Security-Policy "[^"]*unsafe-inline/', $qkHtaccess) === 1) {
+        qk_preflight_fail("the Content-Security-Policy allows 'unsafe-inline'");
+    } elseif (str_contains($qkHtaccess, 'sha256-')) {
+        qk_preflight_pass('the policy allows the static pages their inline style block by hash');
+    } else {
+        qk_preflight_fail('the policy carries no inline-style hashes: the branded error pages render unstyled');
+    }
+
+    if (str_contains($qkHtaccess, 'Header always unset Access-Control-Allow-Origin')) {
+        qk_preflight_pass('cross-origin grants are removed');
+    } else {
+        qk_preflight_fail('no Access-Control-Allow-Origin removal: a permissive CORS header may be served');
+    }
+
+    if (str_contains($qkHtaccess, 'Header always set X-Frame-Options "DENY"')
+        && str_contains($qkHtaccess, "frame-ancestors 'none'")) {
+        qk_preflight_pass('framing is refused by both header and policy');
+    } else {
+        qk_preflight_fail('the anti-clickjacking control is incomplete: need X-Frame-Options DENY and frame-ancestors none');
+    }
+
     // The always-on Cloudflare origin gate. A deployed stub means nothing works;
     // a missing gate means the origin answers anyone who finds its address.
     if (str_contains($qkHtaccess, 'Fail-closed stub')) {

@@ -105,28 +105,55 @@ ErrorDocument 503 /errors/503.html
 #   curl -sI https://HOST/ | grep -i 'content-security-policy'
 #
 # `always` stamps error responses too, so even the 403 holding notice carries them.
+#
+# The policy is the one written in includes/security_headers.php; tests/security_headers.test.php
+# compares the two directive lists, so a change must be made in both places.
 # ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
-    Header always set Referrer-Policy "no-referrer"
     Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
     Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
 
-    # The policy the application needs, in one header with one style-src. A second policy
-    # header — from a child .htaccess or a <meta http-equiv> tag — is enforced in addition
-    # to this one, so it can only make the page stricter, never relax it.
+    # Same-origin only. The pages call their own JSON endpoints, so no cross-origin read
+    # is ever granted. `unset` also removes a permissive header inherited from a parent
+    # policy, a provider default vhost or an earlier .htaccess in the same tree; leaving
+    # `Access-Control-Allow-Origin: *` in place would let any third-party page read the
+    # responses that this origin serves without authentication.
+    Header always unset Access-Control-Allow-Origin
+    Header always unset Access-Control-Allow-Methods
+    Header always unset Access-Control-Allow-Headers
+    Header always unset Access-Control-Allow-Credentials
+    Header always unset Access-Control-Expose-Headers
+    Header always unset Access-Control-Max-Age
+
+    # The policy the application needs, in one header with one style directive. A second
+    # policy header — from a child .htaccess or a <meta http-equiv> tag — is enforced in
+    # addition to this one, so it can only make the page stricter, never relax it.
     #
     #   script-src  'self'            the build is a single external module, no inline code
-    #   style-src   'unsafe-inline'   methodology.html, the holding notice and the React
-    #                                 charts and progress bars set inline styles at runtime
+    #   style-src   'self' + hashes   no inline keyword is allowed: the static documents
+    #                                 (methodology, the branded error pages, the holding
+    #                                 notice) style themselves with one inline <style> block
+    #                                 each, allowed by its sha256. tools/render-apache-policy.php
+    #                                 computes those hashes from the files it is about to
+    #                                 publish, so the values below are a fallback for a
+    #                                 manual copy.
     #   img-src     data:             inline SVG and data URIs in the charts
     #   connect-src 'self'            QuickRisk Live and Decision Lab same-origin JSON APIs
+    #   frame/object/child 'none'     nothing is embedded and no plugin content is loaded
     #   frame-ancestors 'none'        cannot be expressed in a <meta> tag at all
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    #   form-action 'self'            stated explicitly: it has no fallback directive
+    #   base-uri    'self'            no <base> tag can retarget relative URLs
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-Lg4WFrcK9kjeRs8LDXjPQAaeooAmmysE1Y0BZM7wpBI=' 'sha256-WF7buxXEshblQVVTUx1RDs+RjeA3bdwWOZi1hUZAu9U=' 'sha256-rwphtFjau7AFUxYhXuH9NNjMw2I/1skWcSeIG/HDvAs='; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
     # Safe on this host: includeSubDomains covers only *.quickrisk.iliadis.net, and every
-    # name below that domain is served over HTTPS. Raise max-age only once that is true.
+    # name below that domain is served over HTTPS. One year is the minimum browsers accept
+    # for preload, and the deployment verifier refuses anything shorter — in particular an
+    # edge value of max-age=0, which disables transport security for returning visitors.
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 

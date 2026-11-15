@@ -28,6 +28,34 @@ $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
 $path = (string) (parse_url($uri, PHP_URL_PATH) ?? '/');
 $path = rawurldecode($path);
 
+// ---------------------------------------------------------------------------
+// The same response security policy that server/.htaccess serves in production.
+//
+// The development server has no .htaccess, so without this the local site would be
+// missing the CSP, the framing, sniffing and transport headers — and a local security
+// scan would report findings that only exist because the harness is not Apache.
+// The policy itself lives in one place (server/includes/security_headers.php), so a
+// change cannot drift between the two.
+// ---------------------------------------------------------------------------
+$securityHeaderSource = dirname(__DIR__) . '/server/includes/security_headers.php';
+if (is_file($securityHeaderSource)) {
+    require_once $securityHeaderSource;
+}
+
+if (class_exists('QkSecurityHeaders')) {
+    if (!headers_sent()) {
+        foreach (QkSecurityHeaders::CORS_HEADERS as $corsHeader) {
+            header_remove($corsHeader);
+        }
+        foreach (QkSecurityHeaders::baseline() as $headerName => $headerValue) {
+            header($headerName . ': ' . $headerValue);
+        }
+        if (QkSecurityHeaders::isHttps()) {
+            header('Strict-Transport-Security: ' . QkSecurityHeaders::HSTS);
+        }
+    }
+}
+
 /**
  * Sends a minimal plain-text response and ends the request.
  */
@@ -119,13 +147,33 @@ if (preg_match('/\.(json|md|map|ts|tsx|jsx|lock|log|bak|sql|yml|yaml|ini|env|dis
 // Static files from the compiled frontend; anything else is a 404 (no SPA rewrite).
 // ---------------------------------------------------------------------------
 $target = $docRoot . str_replace('/', DIRECTORY_SEPARATOR, $path);
+
+/**
+ * Serves an HTML document through PHP.
+ *
+ * The built-in server discards headers set by a router script when it streams a file
+ * itself, so an HTML page served that way would arrive with no policy at all — exactly
+ * the "Content-Security-Policy header not set" and "missing anti-clickjacking header"
+ * findings, but only locally. Reading the file here keeps the development server's
+ * responses equivalent to the deployed ones.
+ */
+$serveHtml = static function (string $file): bool {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile($file);
+
+    return true;
+};
+
 if ($path !== '/' && is_file($target)) {
+    if (str_ends_with(strtolower($target), '.html')) {
+        return $serveHtml($target);
+    }
     // Returning false lets the built-in server stream the file with the right type.
     return false;
 }
 
 if ($path === '/' && is_file($docRoot . DIRECTORY_SEPARATOR . 'index.html')) {
-    return false;
+    return $serveHtml($docRoot . DIRECTORY_SEPARATOR . 'index.html');
 }
 
 return $deny(404, 'Not found');

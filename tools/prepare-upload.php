@@ -88,7 +88,14 @@ qk_upload_copy($qkRoot . '/server/api', $qkOut . '/api');
 qk_upload_copy($qkRoot . '/server/includes', $qkOut . '/includes');
 qk_upload_copy($qkRoot . '/server/live', $qkOut . '/live');
 
-$qkCommand = [PHP_BINARY, $qkRoot . '/tools/render-apache-policy.php', '--out=' . $qkOut . '/.htaccess'];
+$qkCommand = [
+    PHP_BINARY,
+    $qkRoot . '/tools/render-apache-policy.php',
+    '--out=' . $qkOut . '/.htaccess',
+    // The staged folder is what will be uploaded, so its HTML documents are the bytes
+    // whose inline <style> blocks must be added to the style directive as sha256 hashes.
+    '--web-root=' . $qkOut,
+];
 if (is_string($qkOptions['secret-file'])) {
     $qkCommand[] = '--secret-file=' . $qkOptions['secret-file'];
 }
@@ -113,6 +120,26 @@ foreach (['RewriteCond %{HTTP:X-Origin-Secret} !^', 'ErrorDocument 404 /errors/4
 }
 if (str_contains($qkPolicy, 'Fail-closed stub')) {
     qk_upload_abort('The rendered .htaccess still contains the fail-closed stub.');
+}
+
+// The same invariants the deployment script checks: a bundle that lost a header would
+// publish a site that a security scan reports as misconfigured.
+foreach ([
+    'Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"',
+    'Header always set X-Content-Type-Options "nosniff"',
+    'Header always set X-Frame-Options "DENY"',
+    'Header always set Referrer-Policy "no-referrer"',
+    'Header always unset Access-Control-Allow-Origin',
+] as $qkRequiredHeader) {
+    if (!str_contains($qkPolicy, $qkRequiredHeader)) {
+        qk_upload_abort('The rendered .htaccess is missing: ' . $qkRequiredHeader);
+    }
+}
+if (preg_match('/Header always set Content-Security-Policy "[^"]*unsafe-inline/', $qkPolicy) === 1) {
+    qk_upload_abort('The rendered Content-Security-Policy still allows unsafe-inline.');
+}
+if (!str_contains($qkPolicy, 'sha256-')) {
+    qk_upload_abort('The rendered Content-Security-Policy carries no inline-style hashes.');
 }
 
 foreach ([

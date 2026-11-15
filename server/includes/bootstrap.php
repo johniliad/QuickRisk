@@ -16,6 +16,8 @@ if (!defined('QUICKRISK_INCLUDES')) {
     define('QUICKRISK_INCLUDES', __DIR__);
 }
 
+require_once QUICKRISK_INCLUDES . '/security_headers.php';
+
 /** @var array<string,mixed> $QK_CONFIG */
 $QK_CONFIG = require QUICKRISK_INCLUDES . '/config.php';
 
@@ -28,6 +30,16 @@ error_reporting(E_ALL);
 // Zero-retention hardening: the assessment must never live in a PHP session.
 @ini_set('session.use_cookies', '0');
 @ini_set('session.auto_start', '0');
+@ini_set('session.use_only_cookies', '1');
+@ini_set('session.use_strict_mode', '1');
+
+// Defence in depth for the one cookie this application can set (the QuickRisk Live
+// anonymous session): if a future change ever starts a PHP session, or a host injects
+// one, its cookie is still HttpOnly, Secure and SameSite. The Live cookie itself is
+// set explicitly in includes/live/security.php with the same attributes.
+@ini_set('session.cookie_httponly', '1');
+@ini_set('session.cookie_secure', '1');
+@ini_set('session.cookie_samesite', 'Lax');
 
 require_once QUICKRISK_INCLUDES . '/logging.php';
 require_once QUICKRISK_INCLUDES . '/formatting.php';

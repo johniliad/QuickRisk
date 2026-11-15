@@ -4,6 +4,66 @@ All notable changes to FAIR QuickRisk are recorded here. Versions follow the rel
 identity in `fairquickmodel/manifest.json`; the model, schema and application versions move
 together, and a published version's meaning is never edited in place.
 
+## [Unreleased]
+
+### Security
+
+Remediation of the passive-scan findings reported against the published site. Each control
+lives in the layer that owns it, and each is pinned by a test or by the deployment gate.
+
+- **Cookies**: the only cookie the application sets (the QuickRisk Live anonymous session)
+  is `HttpOnly`, `Secure` and `SameSite=Lax`; `session.cookie_httponly`,
+  `session.cookie_secure` and `session.cookie_samesite` are also set in the bootstrap, so a
+  session that a future change or the host starts is hardened before its cookie is created.
+- **HSTS**: one year with `includeSubDomains` on every response, rendered into the deploy
+  policy. `tools/render-apache-policy.php` refuses a beta-gate fragment that restates a
+  security header — an appended `Strict-Transport-Security: max-age=0` or
+  `X-Frame-Options: SAMEORIGIN` wins over the policy and silently downgrades the site.
+- **Content-Security-Policy**: one policy for Apache, for the JSON endpoints
+  (`includes/security_headers.php`) and for the development server. `'unsafe-inline'` is
+  gone: the inline `<style>` blocks of `methodology.html`, the four branded error pages and
+  the holding notice are allowed by their sha256, computed by the renderer from the bytes
+  that are being published. `object-src`, `frame-src`, `child-src` and `worker-src` are
+  `'none'`; `frame-ancestors`, `form-action` and `base-uri` are stated explicitly.
+- **Cross-origin**: every `Access-Control-Allow-*` header is unset in the web-server policy
+  and removed by `QkHttp`, so an inherited `Access-Control-Allow-Origin: *` cannot reach a
+  response.
+- **X-Content-Type-Options**, **X-Frame-Options**, **Referrer-Policy**,
+  **Cross-Origin-Opener-Policy**, **Cross-Origin-Resource-Policy**,
+  **X-Permitted-Cross-Domain-Policies** and **Permissions-Policy** are set on every
+  response, including error documents and JSON replies, and are checked by the renderer.
+- **Subresource Integrity**: the build now adds `integrity="sha384-…"` to every emitted
+  `<script src>` and `<link rel="stylesheet">`, hashing the files on disk in `writeBundle`.
+  The HTML is not minified by any proxy, so the digests stay valid.
+- **Redirects**: the application issues none — no `Location` header and no `meta refresh`
+  anywhere — so the only 3xx a scanner sees is the host's or the CDN's HTTP-to-HTTPS
+  redirect.
+
+### Added
+
+- `tools/verify-live-headers.mjs` checks the headers a browser actually receives (HSTS,
+  CSP, framing, CORS, cookie flags, Subresource Integrity, the redirect body size) and
+  exits non-zero on a failure, so an edge setting such as HSTS `max-age=0` cannot pass a
+  release unnoticed.
+- `tests/security_headers.test.php` keeps the policy, the renderer, the build and the
+  application honest.
+- `SECURITY.md` states how to report a vulnerability privately (GitHub private advisories,
+  with the `iliadis.net` contact route as the secondary channel), what is in and out of
+  scope, the best-effort response targets, coordinated disclosure, safe harbour, and the
+  behaviour that is deliberate rather than defective (zero retention, synthetic SOC data,
+  same-origin only, strict policy, server-only calibration).
+- The README now opens with **About**, **So what?** (the problem in one sentence, a short
+  video demonstration, and what it solves for whom) and **Methodology** (the complete,
+  test-pinned description of the questionnaire model, its distributions, modifiers,
+  percentiles, confidence scoring, the QuickRisk Live overlay and the Decision Lab rules).
+
+### Fixed
+
+- `tools/render-apache-policy.php --secret-file` read the path as if it were the secret and
+  therefore always failed; it now reads the file.
+- The beta gate is merged by that renderer instead of `cat`, so a gate carrying its own
+  header lines stops the deploy rather than weakening the published policy.
+
 ## [1.3.1] — 2026-11-14
 
 Compliance release. The application version moves to 1.3.1; the model, schema, calibration,

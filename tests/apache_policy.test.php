@@ -39,16 +39,27 @@ return [
         foreach ([
             "default-src 'self'",
             "script-src 'self'",
-            "style-src 'self' 'unsafe-inline'",
+            "style-src 'self'",
             "img-src 'self' data:",
             "font-src 'self'",
             "connect-src 'self'",
+            "media-src 'none'",
+            "object-src 'none'",
+            "frame-src 'none'",
+            "child-src 'none'",
+            "worker-src 'none'",
+            "manifest-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
         ] as $directive) {
             assertContains($directive, $htaccess, 'The CSP must keep the directive ' . $directive);
         }
+
+        // No 'unsafe-inline': the inline <style> blocks of the static documents are
+        // allowed by their sha256 hash instead, and every script is an external module.
+        assertNotContains("'unsafe-inline'", $htaccess, 'The CSP must not allow inline styles or scripts');
+        assertContains('sha256-', $htaccess, 'The CSP must allow the inline style blocks by hash');
 
         // `always` also stamps error responses, which is what makes the 403 holding notice carry
         // the policy and lets the header be verified from any address.
@@ -106,10 +117,18 @@ return [
             }
         }
 
+        // The browser policy is defined once, in server/.htaccess. The PHP copy exists so that
+        // JSON responses carry the same policy (tests/security_headers.test.php compares the
+        // directive lists), and the renderer only validates it. Anywhere else — a vhost snippet,
+        // a <meta> tag, a second .htaccess — would be enforced as a second policy.
+        $allowed = ['server/.htaccess', 'server/includes/security_headers.php', 'tools/render-apache-policy.php'];
+        sort($defining);
+        sort($allowed);
+
         assertSame(
-            ['server/.htaccess'],
+            $allowed,
             $defining,
-            'The CSP must be defined in server/.htaccess and nowhere else; a copy in a vhost snippet or a <meta> tag would be enforced as a second policy'
+            'The CSP may appear only in the web-root policy, the PHP copy that serves the JSON responses, and the renderer that validates it'
         );
     },
 
@@ -151,7 +170,9 @@ return [
             'The deploy script must exclude the notice folder from the --delete sweep'
         );
 
-        // The gate is not versioned, so the deploy has to re-apply it after overwriting the file.
+        // The gate is not versioned, so the deploy has to merge it after overwriting the file.
+        // It is merged by the same renderer as the policy, which refuses a fragment that
+        // restates a security header (an appended header would win over the policy).
         assertContains(
             'beta-gate.htaccess',
             $deploy,
@@ -163,9 +184,14 @@ return [
             'The gate path must be overridable for a host that keeps it elsewhere'
         );
         assertContains(
-            'cat "$BETA_GATE" >> "$WEB_DIR/.htaccess"',
+            '--append "$BETA_GATE"',
             $deploy,
-            'The gate must be appended to the deployed .htaccess, after the versioned policy'
+            'The gate must be merged by the policy renderer, after the versioned policy'
+        );
+        assertContains(
+            '--web-root "$WEB_DIR"',
+            $deploy,
+            'The renderer must hash the documents that are being deployed'
         );
 
         // A deploy that lost the headers must fail loudly rather than publish an open, headerless site.
@@ -202,9 +228,12 @@ return [
             $htaccess,
             'No versioned file may contain the origin-secret condition or a placeholder value'
         );
+        // The style directive carries base64 sha256 hashes, which are public values; every
+        // other long token would be a credential and must never be committed.
+        $withoutHashes = (string) preg_replace('/sha256-[A-Za-z0-9+\/=]+/', '', $htaccess);
         assertSame(
             0,
-            preg_match('/[A-Za-z0-9]{32,}/', $htaccess),
+            preg_match('/[A-Za-z0-9]{32,}/', $withoutHashes),
             'No value that could be mistaken for a deployed secret may be committed'
         );
     },

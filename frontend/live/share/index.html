@@ -16,7 +16,11 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <p style="padding: 1.5rem; font-family: system-ui, sans-serif">
+      <!--
+        A utility class, not a style attribute: the Content-Security-Policy does not
+        allow inline styles, and an attribute would silently lose its padding.
+      -->
+      <p class="p-6 font-sans">
         This shared QuickRisk Live assessment requires JavaScript. It uses synthetic SOC data and is a
         read-only analytical demonstration.
       </p>

@@ -44,13 +44,39 @@ final class QkHttp
     ];
 
     /**
+     * Applies the security-header policy to the response.
+     *
+     * HSTS is added only when the request arrived over TLS, and every CORS header is
+     * removed before the policy is written so that an inherited
+     * `Access-Control-Allow-Origin` can never survive into a JSON response.
+     *
      * @param array<string,mixed> $config
+     * @param array<string,mixed>|null $server Request server variables (defaults to $_SERVER)
      */
-    public static function securityHeaders(array $config): void
+    public static function securityHeaders(array $config, ?array $server = null): void
     {
-        foreach ((array) ($config['headers'] ?? []) as $name => $value) {
-            self::setHeader((string) $name, (string) $value);
+        foreach (QkSecurityHeaders::CORS_HEADERS as $corsHeader) {
+            self::removeHeader($corsHeader);
         }
+
+        foreach (QkSecurityHeaders::forResponse($config, $server ?? $_SERVER) as $name => $value) {
+            if (QkSecurityHeaders::isCorsHeader($name)) {
+                continue;
+            }
+            self::setHeader($name, $value);
+        }
+    }
+
+    /**
+     * Removes a response header, safely ignoring the CLI SAPI and already-sent headers.
+     */
+    public static function removeHeader(string $name): void
+    {
+        if (PHP_SAPI === 'cli' || headers_sent()) {
+            return;
+        }
+
+        header_remove($name);
     }
 
     /**

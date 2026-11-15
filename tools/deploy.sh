@@ -92,16 +92,26 @@ if [ "$DEPLOY_APP" -eq 1 ]; then
   # The origin gate is RENDERED here, never copied: server/.htaccess is deliberately
   # fail-closed, so a raw copy would lock the site. The renderer refuses to write a
   # policy without a usable secret, and this deploy then stops.
-  php "$REPOSITORY_ROOT/tools/render-apache-policy.php" --out "$WEB_DIR/.htaccess" \
-    || { echo "The Cloudflare origin gate could not be rendered; the deploy was stopped." >&2; exit 1; }
-
+  #
+  # --web-root makes the renderer hash the inline <style> blocks of the HTML documents
+  # it is about to publish, so the style directive allows exactly those blocks instead
+  # of 'unsafe-inline'. Hashing the deployed bytes is what keeps the branded error
+  # pages styled if the line endings of the sources ever change.
+  #
   # The beta access gate is not versioned — it contains real addresses — so it lives in
-  # ~/quickrisk-config/ and is appended here on every run. Without this merge a deploy
-  # silently opens a beta site to the public, because the copy above overwrote the gate.
+  # ~/quickrisk-config/ and is appended by the same renderer on every run. Without this
+  # merge a deploy silently opens a beta site to the public, because the policy above
+  # overwrote the gate. The renderer refuses a gate that restates a security header:
+  # appended after the policy, such a line would win and downgrade the site (a
+  # max-age=0 transport header, SAMEORIGIN framing, a CORS wildcard).
   BETA_GATE="${QK_BETA_GATE:-$HOME/quickrisk-config/beta-gate.htaccess}"
+  RENDER_ARGS=(--out "$WEB_DIR/.htaccess" --web-root "$WEB_DIR")
   if [ -f "$BETA_GATE" ]; then
-    printf '\n' >> "$WEB_DIR/.htaccess"
-    cat "$BETA_GATE" >> "$WEB_DIR/.htaccess"
+    RENDER_ARGS+=(--append "$BETA_GATE")
+  fi
+  php "$REPOSITORY_ROOT/tools/render-apache-policy.php" "${RENDER_ARGS[@]}" \
+    || { echo "The Apache policy could not be rendered; the deploy was stopped." >&2; exit 1; }
+  if [ -f "$BETA_GATE" ]; then
     echo "         beta access gate merged from $BETA_GATE"
   else
     echo "         no beta access gate at $BETA_GATE: the site is publicly reachable"
@@ -131,11 +141,26 @@ if [ "$DEPLOY_APP" -eq 1 ]; then
   test -f "$WEB_DIR/THIRD-PARTY-NOTICES.txt" || { echo "The served third-party notices are missing." >&2; exit 1; }
   test -f "$WEB_DIR/errors/404.html" || { echo "The branded error pages are missing." >&2; exit 1; }
   # The security headers are served from the web-root .htaccess on shared hosting, so a
-  # truncated copy would leave the site without a CSP.
+  # truncated copy would leave the site without a CSP, or with a policy that a scanner
+  # reports as weak.
   grep -q 'Header always set Content-Security-Policy' "$WEB_DIR/.htaccess" \
     || { echo "The web-root .htaccess carries no Content-Security-Policy header." >&2; exit 1; }
   grep -q "connect-src 'self'" "$WEB_DIR/.htaccess" \
     || { echo "The Content-Security-Policy in the web-root .htaccess lacks connect-src 'self'." >&2; exit 1; }
+  grep -q 'style-src .*sha256-' "$WEB_DIR/.htaccess" \
+    || { echo "The Content-Security-Policy carries no inline-style hashes: the branded error pages would render unstyled." >&2; exit 1; }
+  if grep -q 'Header always set Content-Security-Policy .*unsafe-inline' "$WEB_DIR/.htaccess"; then
+    echo "The Content-Security-Policy still allows 'unsafe-inline'." >&2
+    exit 1
+  fi
+  grep -q 'Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"' "$WEB_DIR/.htaccess" \
+    || { echo "The web-root .htaccess does not carry one year of Strict-Transport-Security." >&2; exit 1; }
+  grep -q 'Header always set X-Content-Type-Options "nosniff"' "$WEB_DIR/.htaccess" \
+    || { echo "The web-root .htaccess carries no X-Content-Type-Options header." >&2; exit 1; }
+  grep -q 'Header always set X-Frame-Options "DENY"' "$WEB_DIR/.htaccess" \
+    || { echo "The web-root .htaccess carries no anti-clickjacking header." >&2; exit 1; }
+  grep -q 'Header always unset Access-Control-Allow-Origin' "$WEB_DIR/.htaccess" \
+    || { echo "The web-root .htaccess does not remove permissive CORS headers." >&2; exit 1; }
 
   # The origin gate, the error documents and the ACME exemption are release-critical:
   # a deploy that lost one of them fails here rather than on the live site.
@@ -158,12 +183,19 @@ Deployment complete.
 Next steps (documented in docs/DEPLOYMENT_FIRST_TIME.md):
   1. Ensure ~/quickrisk-config/config.php exists with the production origin allow-list
      and a random rate-limit salt.
-  2. Confirm the CSP and HSTS arrive, and that HTTPS is forced:
-       curl -sI https://HOST/ | grep -i 'content-security-policy'
-     On cPanel use Domains -> Force HTTPS Redirect for the redirect, and Metrics ->
-     Errors for the log. The headers come from the web-root .htaccess written above.
+  2. Confirm the headers a browser actually receives, from anywhere:
+       node tools/verify-live-headers.mjs --url https://HOST/
+     It fails on HSTS max-age=0, a missing or weakened CSP, a permissive CORS header,
+     a cookie without HttpOnly/Secure, a script without Subresource Integrity, or an
+     oversized redirect body. If HSTS is disabled, fix it at the edge: Cloudflare
+     SSL/TLS -> Edge Certificates -> HSTS, 12 months, include subdomains. The origin
+     policy already states one year; an edge value of max-age=0 overrides it.
+     Keep CDN JavaScript/CSS minification off: Subresource Integrity compares the
+     bytes the browser receives with the digest in the HTML.
   3. Confirm the beta gate state: a file at ~/quickrisk-config/beta-gate.htaccess closes
-     the site to everyone except its allow-list, and is merged by this script.
+     the site to everyone except its allow-list, and is merged by the renderer above.
+     It must not carry `Header` lines for transport, framing, referrer or cross-origin
+     headers: appended after the policy, they would win, so the renderer refuses them.
   4. Confirm the Cloudflare origin gate and the ACME exemption:
        curl -s -o /dev/null -w '%{http_code}\n' --resolve HOST:443:ORIGIN_IP https://HOST/
        curl -s -o /dev/null -w '%{http_code}\n' --resolve HOST:443:ORIGIN_IP \
