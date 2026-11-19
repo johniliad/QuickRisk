@@ -6,6 +6,12 @@ together, and a published version's meaning is never edited in place.
 
 ## [Unreleased]
 
+## [1.3.3] — 2026-11-19
+
+Documentation and Decision Lab hardening release. The application version moves to 1.3.3; the
+model, schema, calibration, methodology and disclaimer are unchanged (`FAIR-QK-1.3` / `1.3.0` /
+`CAL-1.3` / `METH-1.3` / `DISC-1.2`), and the 1.3.0 version record is left exactly as published.
+
 ### Security
 
 Remediation of the passive-scan findings reported against the published site. Each control
@@ -65,8 +71,25 @@ lives in the layer that owns it, and each is pinned by a test or by the deployme
   with an explanation in `notes`. The effective limits are echoed as
   `provenance.computeBudget`. The persistence endpoints are unaffected.
 
+### Documentation
+
+- `docs/README.md` lists only documentation published in the repository. The superseded 1.0 model
+  documentation and the internal site-integration note are no longer linked, and the index states
+  that historical model documentation is not included in the public repository.
+- `docs/SECURITY_AND_PRIVACY.md` names `docs/DEPLOYMENT_QUICKRISK_LIVE.md` as its deployment
+  companion and records the Cloudflare HSTS setting actually served
+  (`max-age=31536000; includeSubDomains`, verified 2026-11-19).
+- The manifest names the audit response that exists
+  (`docs/AUDIT_RESPONSE_FAIR-QK-1.1.md`) and its change summary states the disclaimer version
+  `DISC-1.2`.
+- `docs/RELEASE_CHECKLIST.md` records the Cloudflare HSTS verification and the scheduled
+  anonymous-session retention cleanup.
+
 ### Fixed
 
+- The committed origin-gate stub in `server/.htaccess` had been replaced by a literal token. It is
+  restored to the unconditional deny (`RewriteRule ^ - [F,L]`), so a policy that escapes the render
+  pipeline locks the origin instead of leaving it open; `tests/apache_policy.test.php` pins it.
 - `tools/render-apache-policy.php --secret-file` read the path as if it were the secret and
   therefore always failed; it now reads the file.
 - The beta gate is merged by that renderer instead of `cat`, so a gate carrying its own

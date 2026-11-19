@@ -51,7 +51,7 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # Fail-closed stub. Replaced at deploy time with the X-Origin-Secret check.
-    RewriteRule ^f7d8f1d129a1cab48c267d12a91406d93419af6b5d4ae3a72d5d87fe313ad4c4- [F,L]
+    RewriteRule ^ - [F,L]
 </IfModule>
 # <<< QK-ORIGIN-GATE-END
 
