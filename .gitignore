@@ -98,7 +98,6 @@ ai-access-tokens.txt
 # and by tests/apache_policy.test.php, not by the document itself.
 /requirements/
 /privatedocs/
-/docs/
 
 #Development plan in markdown
 CISO_Board_Reporting_Development_Plan.md
