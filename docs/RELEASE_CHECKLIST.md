@@ -1,6 +1,6 @@
-# Release checklist — FAIR QuickRisk v1.3.1
+# Release checklist — FAIR QuickRisk v1.3.3
 
-Model `FAIR-QK-1.3` · model version `1.3.0` · schema `1.3.0` · calibration `CAL-1.3` · methodology `METH-1.3` · disclaimer `DISC-1.2` · application `1.3.1`
+Model `FAIR-QK-1.3` · model version `1.3.0` · schema `1.3.0` · calibration `CAL-1.3` · methodology `METH-1.3` · disclaimer `DISC-1.2` · application `1.3.3`
 
 Tick every item before publishing. Items marked **(blocker)** must not be waived.
 
@@ -8,10 +8,11 @@ Tick every item before publishing. Items marked **(blocker)** must not be waived
 > compound-extreme plausibility review (item **M-14**) and the host-side verification items.
 > Everything in the audit-correction group (M-15 … M-22) is implemented and verified.
 >
-> **1.3.1 is a compliance patch.** It changes only the served licensing documents and the
-> application version. The model, schema, calibration, methodology, disclaimer and the 1.3.0
-> version record are unchanged, so no calibration review is reopened by it. It is published as a
-> pre-release alongside 1.3.0.
+> **1.3.3 is a documentation and Decision Lab hardening release.** It adds the Decision Lab compute
+> budget, corrects the published documentation set and restores the fail-closed origin-gate stub.
+> The model, schema, calibration, methodology, disclaimer and the 1.3.0 version record are
+> unchanged, so no calibration review is reopened by it. It is published as a pre-release
+> alongside 1.3.0.
 
 ## Model
 
@@ -212,6 +213,11 @@ Decision Lab methodology `1.0` · Board Risk Pack `1.0`
 | Deploy and upload script (1.3.1) | 2026-11-14 | build | `bash -n` clean; both paths render the gate and require `LICENSE.txt`, `NOTICE.txt`, the notices and the error pages |
 | Release v1.3.1 | 2026-11-14 | build | pre-release published; tag tree carries `LICENSE`, `NOTICE`, `NOTICE.txt`, the notices and the four error pages |
 | Cloudflare HSTS on the public host | 2026-11-19 | host | enabled; returns `Strict-Transport-Security: max-age=31536000; includeSubDomains` |
+| PHP test suite (1.3.3) | 2026-11-19 | build | 146 passed, 0 failed — includes the restored fail-closed origin-gate check |
+| Frontend test suite (1.3.3) | 2026-11-19 | build | 70 passed, 0 failed |
+| Frontend build (1.3.3) | 2026-11-19 | build | typecheck, boundary, storage, licence check, unit tests and Vite build all succeeded |
+| Model validation gate (1.3.3) | 2026-11-19 | build | passed; the 1.3.0 model, calibration and version record are unchanged |
+| Release v1.3.3 | 2026-11-19 | build | release commit and annotated tag `v1.3.3` created (not yet pushed) |
 | Compound-extreme plausibility review | *(pending)* | | **blocker** |
 | Zero-retention exit test on the production host | *(pending)* | | |
 | Legal review of the disclaimer | *(pending)* | | |
