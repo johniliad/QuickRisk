@@ -56,7 +56,8 @@ Because `L = TEF x S x A x (M + B x C)` is linear in `S` and in `A`, a treatment
 loss of *every* simulated year by the same factor `k = alpha x beta`. That gives:
 
 * **exact common random numbers** — the treated figures use the same draws as the baseline;
-* no second simulation, so 1,024 portfolios are evaluated in one request;
+* no second simulation, so a portfolio request is bounded by the compute budget (§5) instead of by
+  resimulating, and every evaluated portfolio reuses the same draws;
 * `k` is computed from the *engine's own* scaled inputs (`QkModifiers::applyRange` plus analytic
   input means), so the treatment path cannot drift from the model;
 * when a documented input clamp binds, the analysis reports `clampWarning` instead of pretending
@@ -85,8 +86,12 @@ never added. Across groups, effects multiply.
 | High-end loss | `P90 <= highEndLimit` |
 | Exceedance | `P(loss > annualLossLimit) <= maxExceedanceProbability` |
 
-**Portfolio ranking** — enumerate every subset of the candidates (<= 10 candidates = 1,024
-portfolios, <= 4,096 evaluated), then: drop constraint violations, sort by total first-year cost,
+**Portfolio ranking** — enumerate every subset of the candidates within the anonymous compute budget
+of 30 candidate treatments and 256 portfolios (§5). When the candidates imply more subsets than the
+budget allows, the budget is spent in a deterministic order — the empty portfolio, then every single
+treatment, then every pair, then every triple — so a high-numbered candidate is never silently
+skipped; the response sets `truncated` and explains the bound in `notes`. Then: drop constraint
+violations, sort by total first-year cost,
 tie-break on lower EAL, then lower P90, then shorter implementation delay. If nothing qualifies:
 
 > No evaluated portfolio satisfies the selected risk appetite within the stated constraints.
@@ -155,6 +160,24 @@ same-origin, JSON-only, require the `X-QuickRisk-Live: 1` header and are rate-li
 sharing and custom treatments additionally require the anonymous session and the CSRF header, and
 every query is scoped to that session.
 
+### Compute budget (anonymous)
+
+Decision Lab has no accounts, so every compute request is anonymous and one server-side budget
+applies to all of them. The values live in `QK_DECISION_DEFAULTS`
+(`server/includes/decision/config.php`) and a deployment may override them through the `decision`
+key of its override file; `qk_decision_compute_budget()` resolves the effective numbers.
+
+| Limit | Value | Behaviour when exceeded |
+| --- | --- | --- |
+| Iterations per request | 10,000 | `422 VALIDATION_ERROR` naming the budget (floor 1,000) |
+| Candidate treatments per request | 30 | `422 VALIDATION_ERROR` naming the budget |
+| Portfolios enumerated per request | 256 | enumeration bounded, `truncated: true`, explained in `notes` |
+
+The effective limits are returned as `provenance.computeBudget` on every compute response, so a
+saved analysis records the budget it was produced under. The persistence endpoints (save, read,
+archive, share) are not part of the budget: they store or return a result, they never run the
+engine.
+
 ---
 
 ## 6. Persistence
@@ -174,18 +197,20 @@ Migration `005_decision_lab.sql`, in the same `iliadis_quickrisk` database as mi
 ## 7. Tests and observed output
 
 ```bash
-php tests/run-tests.php decision      # 12 Decision Lab tests
+php tests/run-tests.php decision      # 16 Decision Lab tests
 php tools/decision-smoke.php          # full compute path, no web server and no database
 ```
 
-The twelve tests pin: no treatment reproduces the baseline exactly; the paired vectors match the
+The sixteen tests pin: no treatment reproduces the baseline exactly; the paired vectors match the
 published assessment figures; the same seed is deterministic and a different seed moves the
 realisation; a treatment acts only on its own scenarios and only through the named driver; overlap
 never combines as independence; appetite evaluates only configured criteria and measures the
 probability at the configured threshold; cost, efficiency and delay stay separate; the portfolio
 rule is deterministic and recommends the cheapest qualifying portfolio; nothing is recommended when
 nothing qualifies; the budget constraint marks portfolios infeasible; the Pareto frontier contains
-no dominated point; the published break-even value satisfies the appetite.
+no dominated point; the published break-even value satisfies the appetite; and the anonymous compute
+budget is the documented 10,000 iterations, 30 candidate treatments and 256 portfolios — rejecting a
+request above it, bounding the enumeration, and never skipping a candidate when it does.
 
 Reference profile (seed 20261107, 2,000 iterations):
 

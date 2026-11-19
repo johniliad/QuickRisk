@@ -82,10 +82,17 @@ const QK_DECISION_DEFAULTS = [
     // A later treatment in the same mechanism group is assumed to deliver only this share of
     // its standalone effect (35% overlap). Documented, configurable per treatment.
     'sameGroupIndependentCoverage' => 0.65,
-    // Maximum number of candidate treatments for exhaustive enumeration (2^10 portfolios).
-    'maxCandidates' => 10,
-    // Absolute portfolios enumerated in one request (hard safety limit).
-    'maxPortfolios' => 4096,
+    // Server-side compute budget for a Decision Lab compute request. Decision Lab has no
+    // accounts: every compute request is anonymous, so one budget applies to all of them
+    // rather than to a class of caller. It bounds the work a single request can cause.
+    // Maximum simulated iterations one request may ask for.
+    'maxIterations' => 10000,
+    // Maximum candidate treatments accepted in one request. More are rejected, never silently
+    // dropped from the request.
+    'maxCandidates' => 30,
+    // Maximum portfolios enumerated in one request. When the candidate set implies more
+    // subsets than this, the budget is spent deterministically and the response says so.
+    'maxPortfolios' => 256,
     // A portfolio that is not within appetite is still labelled "high value" if it removes at
     // least this share of the baseline expected annual loss.
     'highValueReductionShare' => 0.15,
@@ -130,4 +137,26 @@ function qk_decision_config(array $appConfig): array
     }
 
     return array_replace(QK_DECISION_DEFAULTS, $override);
+}
+
+/**
+ * The effective server-side compute budget for one Decision Lab compute request.
+ *
+ * Exposed as a function so the handler, the engine and the tests read the same numbers and a
+ * deployment override can only tighten or relax a documented budget rather than invent one.
+ *
+ * @param array<string,mixed> $config
+ * @return array{minIterations:int,maxIterations:int,maxCandidates:int,maxPortfolios:int}
+ */
+function qk_decision_compute_budget(array $config): array
+{
+    $minimumIterations = max(1, (int) ($config['minimumIterations'] ?? 1000));
+    $maximumIterations = max($minimumIterations, (int) ($config['maxIterations'] ?? 10000));
+
+    return [
+        'minIterations' => $minimumIterations,
+        'maxIterations' => $maximumIterations,
+        'maxCandidates' => max(0, (int) ($config['maxCandidates'] ?? 30)),
+        'maxPortfolios' => max(1, (int) ($config['maxPortfolios'] ?? 256)),
+    ];
 }

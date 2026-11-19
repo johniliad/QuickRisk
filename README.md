@@ -278,7 +278,9 @@ Because the loss is linear in those inputs, a treatment scales every simulated y
 factor `k`, which allows:
 
 - exact common random numbers: treated figures reuse the baseline draws, with no second simulation;
-- all subsets of up to ten candidate treatments evaluated in one request (1,024 portfolios);
+- candidate treatments compared from that one sample within an anonymous server-side compute budget:
+  10,000 iterations, 30 candidate treatments and 256 portfolios per request (a larger request is
+  rejected, and a bounded enumeration says so instead of dropping a candidate);
 - effect uncertainty expressed as a three-point triangular estimate, realised from a seed derived
   from `(simulationSeed, treatmentId, version)`;
 - overlap handled by independent coverage (later treatments in the same mechanism group deliver

@@ -432,12 +432,25 @@ function qk_decision_portfolio_search(
     array $constraints,
     array $config
 ): array {
-    $maxCandidates = (int) ($config['maxCandidates'] ?? 10);
+    $maxCandidates = max(0, (int) ($config['maxCandidates'] ?? 30));
+    $suppliedCandidates = count($candidates);
     $candidates = array_slice($candidates, 0, $maxCandidates);
-    $maxPortfolios = (int) ($config['maxPortfolios'] ?? 4096);
+    $candidateLimitApplied = count($candidates) < $suppliedCandidates;
+    $maxPortfolios = max(1, (int) ($config['maxPortfolios'] ?? 256));
     $count = count($candidates);
     $total = 1 << $count;
     $truncated = $total > $maxPortfolios;
+
+    $notes = [];
+    if ($candidateLimitApplied) {
+        $notes[] = 'Only the first ' . $maxCandidates
+            . ' candidate treatments were considered: the anonymous compute budget allows no more in one request.';
+    }
+    if ($truncated) {
+        $notes[] = 'The candidates imply ' . number_format($total) . ' portfolios, but the anonymous compute budget'
+            . ' allows ' . number_format($maxPortfolios) . '. The budget was spent on the empty portfolio, then every'
+            . ' single treatment, then the smallest combinations, so the recommendation is bounded by that budget.';
+    }
 
     $thresholds = qk_decision_thresholds($vectors, $appetite);
     $baselineFactors = [];
@@ -455,7 +468,7 @@ function qk_decision_portfolio_search(
         : null;
 
     $portfolios = [];
-    for ($mask = 0; $mask < $total && $mask < $maxPortfolios; $mask++) {
+    foreach (qk_decision_portfolio_masks($count, $maxPortfolios) as $mask) {
         $subset = [];
         for ($index = 0; $index < $count; $index++) {
             if (($mask & (1 << $index)) !== 0) {
@@ -510,10 +523,72 @@ function qk_decision_portfolio_search(
         'truncated' => $truncated,
         'candidatesConsidered' => $count,
         'appetiteDefined' => $criteria !== [],
-        'notes' => $truncated
-            ? ['The candidate set was truncated to the configured maximum of ' . $maxCandidates . ' treatments.']
-            : [],
+        'notes' => $notes,
     ];
+}
+
+/**
+ * The treatment masks one portfolio search evaluates.
+ *
+ * When every subset fits inside the budget, the masks are returned in ascending order, which is
+ * the historical enumeration order. When they do not, the budget is spent deterministically:
+ * the empty portfolio first, then every single treatment, then every pair, then every triple,
+ * and so on, stopping when the budget is exhausted. Cardinality-first ordering matters because
+ * truncating ascending masks would silently ignore the highest-numbered candidates: with thirty
+ * candidates and a budget of 256, ascending truncation would never evaluate candidate thirty.
+ *
+ * @return array<int,int>
+ */
+function qk_decision_portfolio_masks(int $count, int $maxPortfolios): array
+{
+    $total = 1 << $count;
+    if ($total <= $maxPortfolios) {
+        return range(0, $total - 1);
+    }
+
+    $masks = [];
+    for ($cardinality = 0; $cardinality <= $count && count($masks) < $maxPortfolios; $cardinality++) {
+        qk_decision_collect_masks($count, $cardinality, 0, 0, $maxPortfolios, $masks);
+    }
+
+    return $masks;
+}
+
+/**
+ * Appends the masks of one cardinality, in ascending mask order, until the budget is reached.
+ *
+ * @param array<int,int> $masks
+ */
+function qk_decision_collect_masks(
+    int $count,
+    int $cardinality,
+    int $start,
+    int $mask,
+    int $limit,
+    array &$masks
+): void {
+    if (count($masks) >= $limit) {
+        return;
+    }
+    if ($cardinality === 0) {
+        $masks[] = $mask;
+
+        return;
+    }
+
+    for ($index = $start; $index <= $count - $cardinality; $index++) {
+        qk_decision_collect_masks(
+            $count,
+            $cardinality - 1,
+            $index + 1,
+            $mask | (1 << $index),
+            $limit,
+            $masks
+        );
+        if (count($masks) >= $limit) {
+            return;
+        }
+    }
 }
 
 /**

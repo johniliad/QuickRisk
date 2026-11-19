@@ -313,7 +313,11 @@ export function DecisionLabView() {
         }),
       );
       setPortfolios(result);
-      setMessage(`Evaluated ${result.evaluated} portfolios.`);
+      setMessage(
+        result.truncated && result.notes.length > 0
+          ? `Evaluated ${result.evaluated} portfolios. ${result.notes.join(' ')}`
+          : `Evaluated ${result.evaluated} portfolios.`,
+      );
     } catch (caught) {
       setError(caught instanceof DecisionApiError ? caught.message : 'The portfolios could not be evaluated.');
     } finally {

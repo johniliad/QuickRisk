@@ -16,8 +16,8 @@
 > before control effectiveness (§4.3); Unknown answers use a documented mixture prior whose
 > central effect is disclosed and bounded (§4.1, §3); and the model now states that it
 > reports an annualised exposure approximation rather than realised annual loss totals
-> (§2, §11). The previous document, `MODEL_DOCUMENTATION_FAIR-QK-1.0.md`, describes the
-> superseded model and is retained only as history.
+> (§2, §11). Historical model documentation for the superseded 1.0 model is not included in the
+> public repository.
 
 Regenerate the resolved tables at any time with:
 

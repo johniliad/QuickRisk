@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/server/includes/decision/decision_engine.php';
 require_once dirname(__DIR__) . '/server/includes/decision/treatment_library.php';
 require_once dirname(__DIR__) . '/server/includes/decision/treatment_adapter.php';
+require_once dirname(__DIR__) . '/server/includes/decision/handlers.php';
 require_once dirname(__DIR__) . '/server/includes/fair_engine.php';
 
 /** A representative appetite that the modeled baseline exceeds. */
@@ -432,6 +433,113 @@ return [
 
         assertSame('within', $statusAt($breakEven), 'The reported break-even must satisfy the appetite');
         assertSame('above', $statusAt(max(0.0, $breakEven - 0.03)), 'Slightly less effectiveness must not satisfy it');
+    },
+
+    'decision lab: the anonymous compute budget is the documented one' => function (): void {
+        $budget = qk_decision_compute_budget(qk_decision_config(qk_config()));
+
+        assertSame(10000, $budget['maxIterations'], 'The compute budget must cap iterations at 10,000');
+        assertSame(30, $budget['maxCandidates'], 'The compute budget must allow at most 30 candidate treatments');
+        assertSame(256, $budget['maxPortfolios'], 'The compute budget must allow at most 256 portfolios');
+        assertSame(1000, $budget['minIterations'], 'The documented iteration floor must be unchanged');
+    },
+
+    'decision lab: a compute request above the iteration budget is rejected' => function (): void {
+        $server = [
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_HOST' => 'test.local',
+            'HTTP_ORIGIN' => 'https://test.local',
+            'HTTP_X_QUICKRISK_LIVE' => '1',
+            'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '192.0.2.10',
+            'SCRIPT_NAME' => '/live/api/decision-compute.php',
+            'REQUEST_SCHEME' => 'https',
+            'SERVER_PORT' => '443',
+        ];
+        $payload = array_merge(qk_test_payload(qk_test_profile()), [
+            'action' => 'baseline',
+            'seed' => 20261107,
+            'iterations' => 10001,
+        ]);
+
+        try {
+            qk_decision_compute($server, qk_config(), (string) json_encode($payload));
+            qk_fail('A request above the iteration budget must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'An iteration count above the budget must be a validation error');
+            assertContains('10000', $error->getMessage(), 'The rejection must state the iteration budget');
+        }
+    },
+
+    'decision lab: a compute request above the candidate budget is rejected' => function (): void {
+        $server = [
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_HOST' => 'test.local',
+            'HTTP_ORIGIN' => 'https://test.local',
+            'HTTP_X_QUICKRISK_LIVE' => '1',
+            'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '192.0.2.10',
+            'SCRIPT_NAME' => '/live/api/decision-compute.php',
+            'REQUEST_SCHEME' => 'https',
+            'SERVER_PORT' => '443',
+        ];
+        $payload = array_merge(qk_test_payload(qk_test_profile()), [
+            'action' => 'baseline',
+            'seed' => 20261107,
+            'iterations' => 1000,
+            'treatments' => array_fill(0, 31, ['source' => 'curated', 'id' => 'edr']),
+        ]);
+
+        try {
+            qk_decision_compute($server, qk_config(), (string) json_encode($payload));
+            qk_fail('A request above the candidate budget must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'Too many candidate treatments must be a validation error');
+            assertContains('30', $error->getMessage(), 'The rejection must state the candidate budget');
+        }
+    },
+
+    'decision lab: portfolio enumeration stops at the budget without skipping a candidate' => function (): void {
+        $masks = qk_decision_portfolio_masks(30, 256);
+        assertSame(256, count($masks), 'The portfolio budget must bound the enumeration');
+        assertSame($masks, array_values(array_unique($masks)), 'Every enumerated portfolio must be distinct');
+        assertSame(0, $masks[0], 'The empty portfolio must be evaluated first');
+
+        $template = qk_decision_curated_treatment('edr');
+        assertTrue($template !== null, 'The fixture treatment must exist');
+        $candidates = [];
+        for ($index = 0; $index < 30; $index++) {
+            $candidate = (array) $template;
+            $candidate['id'] = 'budget-candidate-' . $index;
+            $candidates[] = $candidate;
+        }
+        $realised = qk_decision_realise_effects($candidates, 20261107);
+        $run = qk_decision_test_compare([], null, 20261107, 1000);
+
+        $search = qk_decision_portfolio_search($run['vectors'], $candidates, $realised, null, [], $run['config']);
+
+        assertSame(256, $search['evaluated'], 'The search must evaluate exactly the portfolio budget');
+        assertSame(30, $search['candidatesConsidered'], 'All thirty candidates must be inside the budget');
+        assertSame(true, $search['truncated'], 'The search must report that the enumeration was bounded');
+
+        $ids = array_column($search['portfolios'], 'id');
+        foreach (range(0, 29) as $index) {
+            assertTrue(
+                in_array('p' . (1 << $index), $ids, true),
+                'Every single-treatment portfolio must be evaluated, including candidate ' . $index
+            );
+        }
+
+        $considered = [];
+        foreach ($search['portfolios'] as $portfolio) {
+            foreach ($portfolio['treatmentIds'] as $treatmentId) {
+                $considered[$treatmentId] = true;
+            }
+        }
+        assertSame(30, count($considered), 'No candidate may be silently ignored by the budget');
+
+        $notes = implode(' ', array_map('strval', $search['notes']));
+        assertContains('anonymous compute budget', $notes, 'A bounded enumeration must be explained');
     },
 
 ];

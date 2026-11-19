@@ -3,7 +3,7 @@
 Requirements basis: requirements v2 §21 (security), §22 (privacy and zero-retention),
 §23 (disclaimer and mandatory acknowledgement), plus
 `requirements/QuickRisk_Live_Base_Requirements.md` for the QuickRisk Live module.
-Companion documents: `docs/ZERO_RETENTION_PROOF.md`, `docs/DEPLOYMENT.md` and
+Companion documents: `docs/ZERO_RETENTION_PROOF.md`, `docs/DEPLOYMENT_QUICKRISK_LIVE.md` and
 `docs/QUICKRISK_LIVE.md`.
 
 > **Scope note.** Sections 1–9 describe the QuickRisk questionnaire and calculator, which remain
@@ -28,7 +28,7 @@ automated test.
 
 | Requirement | Implementation |
 |---|---|
-| HTTPS only | `QkCsrf::assertHttps()` rejects non-TLS requests when `requireHttps` is enabled; `Strict-Transport-Security: max-age=31536000; includeSubDomains` is served from the web-root policy on every response, and from PHP over TLS |
+| HTTPS only | `QkCsrf::assertHttps()` rejects non-TLS requests when `requireHttps` is enabled; `Strict-Transport-Security: max-age=31536000; includeSubDomains` is served from the web-root policy on every response, and from PHP over TLS. The Cloudflare edge returns the same value (verified 2026-11-19) |
 | `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` | `QkHttp::CACHE_HEADERS` and the configured `headers` map, asserted by a test |
 | `Pragma: no-cache` | Same |
 | Secure security headers | `Content-Security-Policy` (no inline keyword; inline style blocks by sha256), `X-Content-Type-Options`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy: same-origin`, `X-Permitted-Cross-Domain-Policies: none`, `Permissions-Policy`, and every `Access-Control-Allow-*` header removed |

@@ -56,6 +56,14 @@ lives in the layer that owns it, and each is pinned by a test or by the deployme
   video demonstration, and what it solves for whom) and **Methodology** (the complete,
   test-pinned description of the questionnaire model, its distributions, modifiers,
   percentiles, confidence scoring, the QuickRisk Live overlay and the Decision Lab rules).
+- **Decision Lab compute budget**: because Decision Lab has no accounts, one server-side budget
+  now applies to every compute request — 10,000 iterations, 30 candidate treatments and 256
+  enumerated portfolios. A request above the iteration or candidate limit is rejected with `422`
+  and a message naming the budget; a candidate set that implies more portfolios than the budget
+  allows is enumerated deterministically (empty portfolio, then every single treatment, then the
+  smallest combinations) so no candidate is silently skipped, and the response sets `truncated`
+  with an explanation in `notes`. The effective limits are echoed as
+  `provenance.computeBudget`. The persistence endpoints are unaffected.
 
 ### Fixed
 

@@ -48,7 +48,12 @@ function qk_decision_resolved_treatments(array $payload, array $appConfig, int $
         throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'The treatments must be a list.');
     }
     if (count($selections) > $maximum) {
-        throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'Too many treatments were selected for one analysis.');
+        throw new QkLiveHttpError(
+            422,
+            'VALIDATION_ERROR',
+            'Too many treatments were selected for one analysis. The anonymous compute budget allows at most '
+                . $maximum . ' candidate treatments in one request.'
+        );
     }
 
     $treatments = [];
@@ -108,6 +113,9 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
 {
     $liveConfig = qk_live_config($appConfig);
     $config = qk_decision_config($appConfig);
+    // One budget for every compute request: this endpoint has no accounts, so a caller cannot
+    // be identified as anything other than anonymous.
+    $budget = qk_decision_compute_budget($config);
     qk_live_rate_limit($liveConfig, $server, 'decision');
     qk_live_assert_same_origin($server, $appConfig);
     qk_live_assert_json_request($server, $liveConfig, $rawBody);
@@ -131,12 +139,20 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         ? (int) qk_decision_number($payload['seed'], 'The simulation seed', 1.0, 2147483646.0)
         : random_int(1, 2147483646);
     $requestedIterations = isset($payload['iterations'])
-        ? (int) qk_decision_number($payload['iterations'], 'The iteration count', 1000.0, 50000.0)
-        : (int) $config['iterations'];
+        ? (int) qk_decision_number(
+            $payload['iterations'],
+            'The iteration count',
+            (float) $budget['minIterations'],
+            (float) $budget['maxIterations']
+        )
+        : max(
+            $budget['minIterations'],
+            min((int) $config['iterations'], $budget['maxIterations'])
+        );
 
     $appetite = qk_decision_appetite($payload['appetite'] ?? null);
     $constraints = qk_decision_constraints($payload['constraints'] ?? null);
-    $treatments = qk_decision_resolved_treatments($payload, $appConfig, (int) $config['maxCandidates']);
+    $treatments = qk_decision_resolved_treatments($payload, $appConfig, $budget['maxCandidates']);
 
     $vectors = FairEngine::lossVectors($model, $validated, $seed, $requestedIterations);
     $realised = qk_decision_realise_effects($treatments, $seed);
@@ -150,6 +166,11 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         'effectModel' => QK_DECISION_EFFECT_MODEL,
         'simulationSeed' => $seed,
         'iterations' => (int) $vectors['meta']['iterations'],
+        'computeBudget' => [
+            'maxIterations' => $budget['maxIterations'],
+            'maxCandidates' => $budget['maxCandidates'],
+            'maxPortfolios' => $budget['maxPortfolios'],
+        ],
         'planningHorizonYears' => (int) $config['planningHorizonYears'],
         'sameGroupIndependentCoverage' => (float) $config['sameGroupIndependentCoverage'],
         'generatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -175,7 +196,7 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         $candidates = qk_decision_resolved_treatments(
             ['treatments' => $payload['candidateTreatments'] ?? $payload['treatments'] ?? []],
             $appConfig,
-            (int) $config['maxCandidates']
+            $budget['maxCandidates']
         );
         $portfolioRealised = qk_decision_realise_effects($candidates, $seed);
         $search = qk_decision_portfolio_search(

@@ -92,7 +92,7 @@ Tick every item before publishing. Items marked **(blocker)** must not be waived
 
 ## Website
 
-- [x] Navigation link planned for the main site (`docs/ILIADIS_INTEGRATION.md`)
+- [x] Navigation link planned for the main site
 - [x] Sitemap entries (`frontend/public/sitemap.xml`)
 - [x] Canonical URL (`frontend/index.html`)
 - [x] Metadata: title, description, author, robots, theme colour
@@ -139,12 +139,13 @@ Methodology `1.0` · scenarios seeded by migrations 003–004
 - [ ] `~/quickrisk-config/config.php` created with real credentials, origin and salt
 - [ ] `node tools/verify-live-headers.mjs --url https://quickrisk.iliadis.net/` passes every check (HSTS one year, CSP without `'unsafe-inline'`, framing, no CORS grant, Subresource Integrity, small redirect body)
 - [ ] `node tools/verify-live-headers.mjs --url https://quickrisk.iliadis.net/ --check-cookie` shows the session cookie as `HttpOnly`, `Secure` and `SameSite`
-- [ ] Cloudflare HSTS is enabled (SSL/TLS → Edge Certificates → HSTS, 12 months, include subdomains) and the public response is not `max-age=0`; no CDN JavaScript/CSS minification is enabled (it would invalidate Subresource Integrity)
+- [x] Cloudflare HSTS is enabled (SSL/TLS → Edge Certificates → HSTS, 12 months, include subdomains); the public response returns `Strict-Transport-Security: max-age=31536000; includeSubDomains` (verified 2026-11-19)
+- [ ] No CDN JavaScript/CSS minification is enabled (it would invalidate Subresource Integrity)
 - [ ] The beta gate carries no `Header` lines (the renderer refuses them: appended after the policy they would downgrade HSTS, framing or CORS)
 - [ ] `curl -sI https://quickrisk.iliadis.net/` returns the Content-Security-Policy (it ships in the web-root `.htaccess`, not the vhost) with `connect-src 'self'` and quoted `'sha256-…'` inline-style hashes, plus `Strict-Transport-Security`
 - [ ] `/live/api/session.php` and `/live/api/scenarios.php` return `ok: true` on the production host
 - [ ] One real save → share → revoke cycle performed on the production host
-- [ ] Retention cleanup scheduled (`DELETE FROM anonymous_sessions WHERE expires_at < UTC_TIMESTAMP()`)
+- [x] Retention cleanup scheduled (`DELETE FROM anonymous_sessions WHERE expires_at < UTC_TIMESTAMP()`)
 - [ ] Beta gate in place at `~/quickrisk-config/beta-gate.htaccess`, merged by the last deploy (the script prints whether it merged one) and verified from inside and outside the allow-list
 - [ ] Temporary holding notice withdrawn before general availability: delete `~/quickrisk-config/beta-gate.htaccess`, redeploy, and delete `$WEBROOT/UnderConstruction/`
 
@@ -210,6 +211,7 @@ Decision Lab methodology `1.0` · Board Risk Pack `1.0`
 | Model validation gate (1.3.1) | 2026-11-14 | build | passed; the 1.3.0 model, calibration and version record are unchanged |
 | Deploy and upload script (1.3.1) | 2026-11-14 | build | `bash -n` clean; both paths render the gate and require `LICENSE.txt`, `NOTICE.txt`, the notices and the error pages |
 | Release v1.3.1 | 2026-11-14 | build | pre-release published; tag tree carries `LICENSE`, `NOTICE`, `NOTICE.txt`, the notices and the four error pages |
+| Cloudflare HSTS on the public host | 2026-11-19 | host | enabled; returns `Strict-Transport-Security: max-age=31536000; includeSubDomains` |
 | Compound-extreme plausibility review | *(pending)* | | **blocker** |
 | Zero-retention exit test on the production host | *(pending)* | | |
 | Legal review of the disclaimer | *(pending)* | | |
