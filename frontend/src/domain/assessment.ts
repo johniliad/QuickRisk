@@ -18,6 +18,8 @@ export type View =
   | 'scenario-detail'
   | 'methodology'
   | 'report'
+  | 'board-brief'
+  | 'saved-packs'
   | 'live'
   | 'live-history'
   | 'live-executive'
@@ -25,6 +27,13 @@ export type View =
   | 'decision-lab'
   | 'decision-history'
   | 'history';
+
+/**
+ * `full` asks all five scenarios. `quick` asks the organisation profile and one scenario,
+ * and the remaining scenarios are submitted as `Unknown` — the model's own way of saying
+ * "no evidence", which widens the range instead of inventing a value.
+ */
+export type AssessmentScope = 'full' | 'quick';
 
 export interface QuestionStep {
   readonly key: string;
@@ -84,6 +93,25 @@ export function buildQuestionSteps(model: PublicModel): readonly QuestionStep[] 
   }
 
   return steps;
+}
+
+/**
+ * The steps a visitor is actually asked.
+ *
+ * A quick check keeps the organisation profile and one scenario. Filtering the same ordered
+ * list (rather than building a second one) means Back/Next, progress and the milestone
+ * boundary all keep working on the reduced sequence without special cases.
+ */
+export function activeStepsFor(
+  steps: readonly QuestionStep[],
+  scope: AssessmentScope,
+  quickScenarioCode: string | null,
+): readonly QuestionStep[] {
+  if (scope !== 'quick' || quickScenarioCode === null) {
+    return steps;
+  }
+
+  return steps.filter((step) => step.kind === 'profile' || step.scenarioCode === quickScenarioCode);
 }
 
 export function questionnaireProgress(

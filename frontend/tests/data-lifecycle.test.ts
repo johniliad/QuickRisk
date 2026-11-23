@@ -20,6 +20,7 @@ import {
   RESULTS_MEMORY_NOTE,
   SAVED_SESSION_LABEL,
   SESSION_SAVE_NOTE,
+  TRUST_STRIP_ITEMS,
   UNSAVED_CHANGES_LABEL,
   UNSAVED_SESSION_LABEL,
   branchPosition,
@@ -347,5 +348,34 @@ describe('branch position banner', () => {
 
     expect(HISTORY_BRANCH_NOTE).toContain('two independent branches');
     expect(HISTORY_BRANCH_NOTE).toContain('Neither branch reads the other');
+  });
+});
+
+/**
+ * The landing page now states the storage promise in one line rather than a wall of prose.
+ * The strip is only honest if each claim still opens the page that states it in full.
+ */
+describe('landing trust strip', () => {
+  it('carries the three claims the entry page makes', () => {
+    expect(TRUST_STRIP_ITEMS.map((item) => item.label)).toEqual([
+      'Zero-retention by default',
+      'Synthetic SOC signals',
+      'Indicative FAIR-QK model',
+    ]);
+  });
+
+  it('routes every claim to a reference modal that explains it', () => {
+    const modals = new Set(TRUST_STRIP_ITEMS.map((item) => item.modal));
+
+    expect(modals).toEqual(new Set(['privacy', 'methodology']));
+    for (const item of TRUST_STRIP_ITEMS) {
+      expect(item.label.length).toBeGreaterThan(10);
+      expect(['privacy', 'methodology', 'disclaimer']).toContain(item.modal);
+    }
+  });
+
+  it('uses a unique key per claim so the strip cannot collapse two claims into one', () => {
+    const keys = TRUST_STRIP_ITEMS.map((item) => item.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

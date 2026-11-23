@@ -55,6 +55,13 @@ function qk_decision_thresholds(array $vectors, ?array $appetite): array
  * @param array<int,float> $thresholds
  * @return array<string,mixed>
  */
+function qk_decision_threshold_key(float $threshold): string
+{
+    $formatted = rtrim(rtrim(sprintf('%.12F', $threshold), '0'), '.');
+
+    return $formatted === '' || $formatted === '-0' ? '0' : $formatted;
+}
+
 function qk_decision_summary(array $losses, array $thresholds): array
 {
     $sorted = QkPercentile::sorted($losses);
@@ -64,7 +71,7 @@ function qk_decision_summary(array $losses, array $thresholds): array
     $counts = [];
     foreach ($thresholds as $threshold) {
         $probability = QkPercentile::probabilityGreaterThan($sorted, (float) $threshold);
-        $key = (string) (int) $threshold;
+        $key = qk_decision_threshold_key((float) $threshold);
         $exceedance[$key] = $probability;
         $counts[$key] = (int) round($probability * $iterations);
     }
@@ -180,6 +187,24 @@ function qk_decision_appetite_criteria(?array $appetite): array
 }
 
 /**
+ * Criteria that may be used to select a treatment portfolio.
+ *
+ * Only expected annual loss is additive across scenarios and therefore comparable for every
+ * candidate without a joint-dependence model. High-end loss and exceedance probabilities remain
+ * available for the exact selected/recommended comparison, but they must not drive the optimizer.
+ *
+ * @param array<string,mixed>|null $appetite
+ * @return array<int,array<string,mixed>>
+ */
+function qk_decision_portfolio_appetite_criteria(?array $appetite): array
+{
+    return array_values(array_filter(
+        qk_decision_appetite_criteria($appetite),
+        static fn (array $criterion): bool => $criterion['id'] === 'annualLoss'
+    ));
+}
+
+/**
  * Evaluates configured appetite criteria against a summary.
  *
  * @param array<string,mixed> $summary
@@ -208,7 +233,8 @@ function qk_decision_evaluate_appetite_criteria(array $summary, array $criteria)
             $actual = (float) $summary['p90'];
         } else {
             $threshold = (float) $criterion['threshold'];
-            $actual = (float) ($summary['thresholdProbabilities'][(string) (int) $threshold] ?? 0.0);
+            $key = qk_decision_threshold_key($threshold);
+            $actual = (float) ($summary['thresholdProbabilities'][$key] ?? 0.0);
         }
 
         $passes = $actual <= (float) $criterion['limit'] + 1.0e-9;
@@ -401,12 +427,13 @@ function qk_decision_rank_compare(array $left, array $right): int
     if ($byEal !== 0) {
         return $byEal;
     }
-    $byP90 = (float) $left['treated']['p90'] <=> (float) $right['treated']['p90'];
-    if ($byP90 !== 0) {
-        return $byP90;
+    $byDelay = (int) $left['cost']['implementationDelayDays'] <=> (int) $right['cost']['implementationDelayDays'];
+    if ($byDelay !== 0) {
+        return $byDelay;
     }
 
-    return (int) $left['cost']['implementationDelayDays'] <=> (int) $right['cost']['implementationDelayDays'];
+    // Final deterministic tie-break: portfolio id, which is the candidate mask.
+    return strcmp((string) $left['id'], (string) $right['id']);
 }
 
 
@@ -414,7 +441,8 @@ function qk_decision_rank_compare(array $left, array $right): int
  * Exhaustive enumeration of treatment portfolios.
  *
  * Deterministic: candidates are used in the supplied order, masks are evaluated in ascending
- * order, and ranking uses the documented tie-breakers (cost, EAL, P90, implementation delay).
+ * order, and ranking uses the documented tie-breakers (cost, EAL, implementation delay, id).
+ * Joint P90 and exceedance probability are deliberately not portfolio-decision inputs.
  *
  * @param array<string,mixed> $vectors
  * @param array<int,array<string,mixed>> $candidates
@@ -458,7 +486,23 @@ function qk_decision_portfolio_search(
         $baselineFactors[(string) $scenario['code']] = 1.0;
     }
     $baseline = qk_decision_portfolio_metrics($vectors, $baselineFactors, $thresholds);
-    $criteria = qk_decision_appetite_criteria($appetite);
+    $allCriteria = qk_decision_appetite_criteria($appetite);
+    $criteria = qk_decision_portfolio_appetite_criteria($appetite);
+    $portfolioAppetiteDefined = $criteria !== [];
+    if (!$portfolioAppetiteDefined) {
+        $notes[] = 'No expected-annual-loss appetite criterion is configured, so no portfolio recommendation is made.';
+    }
+    $excludedCriteria = array_values(array_map(
+        static fn (array $criterion): string => (string) $criterion['id'],
+        array_filter(
+            $allCriteria,
+            static fn (array $criterion): bool => $criterion['id'] !== 'annualLoss'
+        )
+    ));
+    if ($excludedCriteria !== []) {
+        $notes[] = 'Portfolio selection uses expected annual loss only. High-end loss and exceedance '
+            . 'criteria are evaluated for the exact comparison but not used to select portfolios.';
+    }
 
     $budget = is_numeric($constraints['maxInitialInvestment'] ?? null)
         ? (float) $constraints['maxInitialInvestment']
@@ -510,7 +554,7 @@ function qk_decision_portfolio_search(
         ];
     }
 
-    $labelled = qk_decision_label_portfolios($portfolios, $config);
+    $labelled = qk_decision_label_portfolios($portfolios, $config, $portfolioAppetiteDefined);
 
     return [
         'baseline' => $baseline,
@@ -522,8 +566,15 @@ function qk_decision_portfolio_search(
         'evaluated' => count($portfolios),
         'truncated' => $truncated,
         'candidatesConsidered' => $count,
-        'appetiteDefined' => $criteria !== [],
-        'notes' => $notes,
+        'appetiteDefined' => $allCriteria !== [],
+        'portfolioAppetiteDefined' => $portfolioAppetiteDefined,
+        'appetiteBasis' => 'expected-annual-loss-only',
+        'portfolioCriteria' => array_values(array_map(
+            static fn (array $criterion): string => (string) $criterion['id'],
+            $criteria
+        )),
+        'excludedCriteria' => $excludedCriteria,
+        'notes' => array_values(array_unique($notes)),
     ];
 }
 
@@ -594,10 +645,10 @@ function qk_decision_collect_masks(
 /**
  * Applies the deterministic recommendation labels.
  *
- * Labels (documented in docs/QUICKRISK_DECISION_LAB.md):
+ * Labels (documented in requirements/QUICKRISK_DECISION_LAB.md):
  *   Recommended               lowest-cost feasible portfolio meeting every configured criterion
  *   Viable alternative        another feasible portfolio that also meets appetite
- *   High value / above appetite  on the Pareto frontier but still above appetite
+ *   High value / above appetite  on the Pareto frontier but still above the EAL criterion
  *   Dominated                 a cheaper portfolio is no riskier
  *   Infeasible                violates a stated constraint (budget or implementation deadline)
  *
@@ -605,8 +656,11 @@ function qk_decision_collect_masks(
  * @param array<string,mixed> $config
  * @return array<string,mixed>
  */
-function qk_decision_label_portfolios(array $portfolios, array $config): array
-{
+function qk_decision_label_portfolios(
+    array $portfolios,
+    array $config,
+    bool $portfolioAppetiteDefined = true
+): array {
     $feasible = [];
     foreach ($portfolios as $portfolio) {
         if ($portfolio['constraintViolations'] === []) {
@@ -614,10 +668,12 @@ function qk_decision_label_portfolios(array $portfolios, array $config): array
         }
     }
 
-    $within = array_values(array_filter(
-        $feasible,
-        static fn (array $portfolio): bool => $portfolio['withinAppetite'] === true
-    ));
+    $within = $portfolioAppetiteDefined
+        ? array_values(array_filter(
+            $feasible,
+            static fn (array $portfolio): bool => $portfolio['withinAppetite'] === true
+        ))
+        : [];
     usort($within, 'qk_decision_rank_compare');
     $recommendedId = $within[0]['id'] ?? null;
 
@@ -630,13 +686,13 @@ function qk_decision_label_portfolios(array $portfolios, array $config): array
             $reason = implode(' ', $portfolio['constraintViolations']);
         } elseif ($portfolio['id'] === $recommendedId) {
             $label = 'recommended';
-            $reason = 'Lowest-cost evaluated portfolio that satisfies the stated risk appetite and constraints.';
+            $reason = 'Lowest-cost evaluated portfolio that meets the expected annual-loss criterion and constraints.';
         } elseif ($portfolio['withinAppetite'] === true) {
             $label = 'viable';
-            $reason = 'Also satisfies the stated risk appetite, at a different cost or trade-off.';
+            $reason = 'Also meets the expected annual-loss criterion, at a different cost or trade-off.';
         } elseif (in_array($portfolio['id'], $paretoIds, true)) {
             $label = 'high_value';
-            $reason = 'Best available trade-off among the evaluated options, but still above the stated risk appetite.';
+            $reason = 'Best available cost and residual-EAL trade-off, but still above the expected annual-loss criterion.';
         } else {
             $label = 'dominated';
             $reason = 'Another evaluated portfolio is no more expensive and no riskier.';
@@ -659,9 +715,9 @@ function qk_decision_label_portfolios(array $portfolios, array $config): array
         'portfolios' => $labelled,
         'recommendedId' => $recommendedId,
         'paretoIds' => $paretoIds,
-        'noneSatisfies' => $recommendedId === null,
-        'noneSatisfiesMessage' => $recommendedId === null
-            ? 'No evaluated portfolio satisfies the selected risk appetite within the stated constraints.'
+        'noneSatisfies' => $portfolioAppetiteDefined && $recommendedId === null,
+        'noneSatisfiesMessage' => $portfolioAppetiteDefined && $recommendedId === null
+            ? 'No evaluated portfolio meets the expected annual-loss criterion within the stated constraints.'
             : '',
     ];
 }

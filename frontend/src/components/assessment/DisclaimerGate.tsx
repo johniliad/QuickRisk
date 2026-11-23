@@ -4,8 +4,9 @@ import { PageShell, SectionHeading } from '@/components/layout/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, Separator } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/field';
+import { isQuestionnaireComplete } from '@/domain/assessment';
 import { publicModel } from '@/model';
-import { useAssessmentStore } from '@/state/assessmentStore';
+import { stepsForScope, useAssessmentStore } from '@/state/assessmentStore';
 
 const ACKNOWLEDGEMENT_ID = 'disclaimer-acknowledgement';
 
@@ -15,14 +16,31 @@ const ACKNOWLEDGEMENT_ID = 'disclaimer-acknowledgement';
  * The assessment cannot start until the disclaimer is acknowledged. The
  * acknowledgement lives in browser memory only: it is not stored, not timestamped on
  * the server and not associated with any record.
+ *
+ * When the answers in the tab are already complete — the 60-second sample, or an
+ * assessment the visitor has finished but not calculated — the gate offers the
+ * calculation directly instead of walking eighteen answered questions again. The
+ * acknowledgement is still required; nothing is calculated on the visitor's behalf.
  */
 export function DisclaimerGate() {
   const acknowledged = useAssessmentStore((state) => state.disclaimerAcknowledged);
   const acknowledgeDisclaimer = useAssessmentStore((state) => state.acknowledgeDisclaimer);
   const startAssessment = useAssessmentStore((state) => state.startAssessment);
+  const calculateLoadedAnswers = useAssessmentStore((state) => state.calculateLoadedAnswers);
   const setView = useAssessmentStore((state) => state.setView);
+  const scope = useAssessmentStore((state) => state.scope);
+  const quickScenarioCode = useAssessmentStore((state) => state.quickScenarioCode);
+  const organisationAnswers = useAssessmentStore((state) => state.organisationAnswers);
+  const scenarioAnswers = useAssessmentStore((state) => state.scenarioAnswers);
+
+  const answersComplete = isQuestionnaireComplete(
+    stepsForScope(scope, quickScenarioCode),
+    organisationAnswers,
+    scenarioAnswers,
+  );
 
   const { disclaimer, positioning } = publicModel.content;
+
 
   return (
     <PageShell>
@@ -71,15 +89,30 @@ export function DisclaimerGate() {
                 Required. Acknowledgement version {publicModel.version.disclaimerVersion}. Held in this page only.
               </p>
               <div className="grid gap-2">
+                {answersComplete ? (
+                  <>
+                    <p className="m-0 text-small font-semibold text-heading">
+                      The answers in this tab are already complete.
+                    </p>
+                    <p className="m-0 text-small text-muted">
+                      Calculate them directly, or open the questionnaire to review them first.
+                    </p>
+                  </>
+                ) : null}
                 <Button
                   size="lg"
                   disabled={!acknowledged}
-                  onClick={startAssessment}
+                  onClick={answersComplete ? calculateLoadedAnswers : startAssessment}
                   aria-describedby="disclaimer-acknowledgement-help"
                 >
-                  Start assessment
+                  {answersComplete ? 'Calculate these answers' : 'Start assessment'}
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </Button>
+                {answersComplete ? (
+                  <Button variant="ghost" onClick={startAssessment}>
+                    Review the answers first
+                  </Button>
+                ) : null}
                 <Button variant="ghost" onClick={() => setView('landing')}>
                   Back to overview
                 </Button>

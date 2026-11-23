@@ -204,4 +204,41 @@ return [
         $high = qk_test_calculate($payload, 1, 5000000);
         assertSame(50000, $high['meta']['iterations'], 'The maximum iteration count must be enforced');
     },
+
+    'engine: the analytic expectation reconciles with a clamped extreme sample' => function (): void {
+        $model = qk_test_model();
+        $profile = qk_test_profile([
+            'QP2' => 'EXTREME',
+            'QP6' => 'VERY_LOW',
+            'QP8' => 'GT10M',
+        ]);
+        $answers = qk_test_scenario_answers('VERY_LIKELY', 'CRITICAL');
+        $response = qk_test_calculate(
+            qk_test_payload($profile, $answers),
+            20261029,
+            50000
+        );
+
+        foreach ($model->scenarioOrder() as $code) {
+            $scenario = $model->scenario($code);
+            $likelihoodCode = (string) $scenario['likelihoodQuestion']['code'];
+            $impactCode = (string) $scenario['impactQuestion']['code'];
+            $analytic = FairEngine::analyticExpectedAnnualLoss(
+                $model,
+                $code,
+                $profile,
+                [
+                    $likelihoodCode => (string) $answers[$code][$likelihoodCode],
+                    $impactCode => (string) $answers[$code][$impactCode],
+                ]
+            );
+            $sampled = (float) qk_test_scenario($response, $code)['statistics']['expectedAnnualLoss'];
+            assertRelativeClose(
+                $sampled,
+                $analytic,
+                0.03,
+                'The clamped analytic expectation must reconcile with the sample for ' . $code
+            );
+        }
+    },
 ];

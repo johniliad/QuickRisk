@@ -37,9 +37,14 @@ function qk_decision_realise_effects(array $treatments, int $seed): array
 {
     $effects = [];
     $draws = [];
+    $seen = [];
 
     foreach ($treatments as $treatment) {
         $id = (string) $treatment['id'];
+        if (isset($seen[$id])) {
+            throw new InvalidArgumentException('A treatment identity may appear only once in an analysis: ' . $id);
+        }
+        $seen[$id] = true;
         $version = (string) ($treatment['version'] ?? '1.0');
         $treatmentSeed = (int) (abs(crc32($seed . '|' . $id . '|' . $version)) % 2147483647);
         $rng = new QkDistributions($treatmentSeed === 0 ? 1 : $treatmentSeed);
@@ -218,14 +223,22 @@ function qk_decision_scenario_factors(array $vectors, array $treatments, array $
         ];
 
         $originalSusceptibility = (float) $scenario['inputExpectations']['susceptibility'];
-        $originalAnchor = (float) $scenario['inputExpectations']['lossMagnitudeAnchor'];
+        $lossClamp = [
+            'min' => (float) ($scenario['clamps']['lossMagnitude']['min'] ?? 1000.0),
+            'max' => (float) ($scenario['clamps']['lossMagnitude']['max'] ?? 500000000.0),
+        ];
+        $originalMagnitude = (float) ($scenario['inputExpectations']['lossMagnitude'] ?? 0.0);
+        if ($originalMagnitude <= 0.0) {
+            $originalMagnitude = FairEngine::expectedLossMagnitude((array) $scenario['ranges'], $lossClamp);
+        }
+        $treatedRanges = (array) $scenario['ranges'];
+        $treatedRanges['lossMagnitudeAnchor'] = $inputs['anchor'];
+        $treatedMagnitude = FairEngine::expectedLossMagnitude($treatedRanges, $lossClamp);
 
         $alpha = $originalSusceptibility > 0.0
             ? FairEngine::inputExpectation($inputs['susceptibility']) / $originalSusceptibility
             : 1.0;
-        $beta = $originalAnchor > 0.0
-            ? FairEngine::inputExpectation($inputs['anchor']) / $originalAnchor
-            : 1.0;
+        $beta = $originalMagnitude > 0.0 ? $treatedMagnitude / $originalMagnitude : 1.0;
 
         // Report when the documented input bounds, rather than the treatment, limit the effect.
         $clamped = false;
@@ -235,12 +248,26 @@ function qk_decision_scenario_factors(array $vectors, array $treatments, array $
         if ($magnitudeMultiplier < 1.0 && abs($beta - $magnitudeMultiplier) > 1.0e-6 * max($magnitudeMultiplier, 1.0e-9)) {
             $clamped = true;
         }
-        if ($clamped) {
-            $clampWarning = true;
+        $componentCapBound = qk_decision_component_cap_reachable(
+            (array) $scenario['ranges'],
+            $lossClamp
+        ) || qk_decision_component_cap_reachable($treatedRanges, $lossClamp);
+        $inputClampBound = $clamped;
+        if ($componentCapBound) {
+            $clamped = true;
             $notes[] = sprintf(
-                'In %s, the modelled effect is limited by the documented input bounds for at least one driver.',
+                'In %s, a sampled primary or secondary loss component can reach the documented cap, so applying the treatment as a factor to paired yearly losses is an approximation.',
                 $code
             );
+        }
+        if ($clamped) {
+            $clampWarning = true;
+            if ($inputClampBound) {
+                $notes[] = sprintf(
+                    'In %s, the modelled effect is limited by the documented input bounds for at least one driver.',
+                    $code
+                );
+            }
         }
 
         $byScenario[$code] = [
@@ -258,6 +285,59 @@ function qk_decision_scenario_factors(array $vectors, array $treatments, array $
         'byScenario' => $byScenario,
         'notes' => array_values(array_unique($notes)),
         'clampWarning' => $clampWarning,
+    ];
+}
+
+/**
+ * True when either sampled component can reach the common min/max loss-magnitude clamp.
+ *
+ * @param array<string,mixed> $ranges
+ * @param array{min:float,max:float} $clamp
+ */
+function qk_decision_component_cap_reachable(array $ranges, array $clamp): bool
+{
+    $pairs = [
+        ['lossMagnitudeAnchor', 'impactMultiplier'],
+        ['lossMagnitudeAnchor', 'secondaryLossMultiplier'],
+    ];
+    foreach ($pairs as [$leftKey, $rightKey]) {
+        $left = (array) ($ranges[$leftKey] ?? []);
+        $right = (array) ($ranges[$rightKey] ?? []);
+        $leftBounds = qk_decision_input_bounds($left);
+        $rightBounds = qk_decision_input_bounds($right);
+        if ($leftBounds['min'] * $rightBounds['min'] < (float) $clamp['min']
+            || $leftBounds['max'] * $rightBounds['max'] > (float) $clamp['max']) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Minimum and maximum support of a triangular or weighted-mixture input.
+ *
+ * @param array<string,mixed> $input
+ * @return array{min:float,max:float}
+ */
+function qk_decision_input_bounds(array $input): array
+{
+    if (($input['kind'] ?? 'triangular') !== 'mixture' || (array) ($input['components'] ?? []) === []) {
+        return [
+            'min' => (float) ($input['min'] ?? 0.0),
+            'max' => (float) ($input['max'] ?? 0.0),
+        ];
+    }
+    $minimum = INF;
+    $maximum = -INF;
+    foreach ((array) $input['components'] as $component) {
+        $minimum = min($minimum, (float) ($component['min'] ?? 0.0));
+        $maximum = max($maximum, (float) ($component['max'] ?? 0.0));
+    }
+
+    return [
+        'min' => is_finite($minimum) ? $minimum : 0.0,
+        'max' => is_finite($maximum) ? $maximum : 0.0,
     ];
 }
 

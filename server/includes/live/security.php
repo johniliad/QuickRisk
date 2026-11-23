@@ -169,7 +169,12 @@ function qk_live_rate_limit(array $liveConfig, array $server, string $action): v
     ];
 
     try {
-        QkRateLimiter::assertWithinLimit($settings, $action . '|' . qk_live_client_identifier($server));
+        // QkRateLimiter reads its settings under `rateLimit`; a flat array would silently fall
+        // back to the 30-request default instead of applying the per-action limit.
+        QkRateLimiter::assertWithinLimit(
+            ['rateLimit' => $settings],
+            $action . '|' . qk_live_client_identifier($server)
+        );
     } catch (QkRequestException $exception) {
         throw new QkLiveHttpError(429, 'RATE_LIMITED', 'Too many requests. Please wait a moment and try again.');
     }

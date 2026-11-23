@@ -102,8 +102,8 @@ export function JourneyMap() {
   const questionCount = publicModel.profileQuestions.length + publicModel.scenarios.length * 2;
 
   return (
-    <section aria-labelledby="journey-heading" className="mt-12 grid gap-4">
-      <h2 id="journey-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+    <section aria-labelledby="journey-heading" className="mt-10 grid gap-4">
+      <h2 id="journey-heading" className="m-0 text-title font-bold text-heading">
         Your journey in three steps
       </h2>
       <p className="m-0 max-w-[48rem] text-muted">

@@ -5,7 +5,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        'rounded-card border border-border bg-paper p-5 shadow-card sm:p-6',
+        'rounded-card border border-border bg-paper p-4 shadow-card sm:p-5',
         className,
       )}
       {...props}
@@ -14,7 +14,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-3 flex flex-col gap-1', className)} {...props} />;
+  return <div className={cn('mb-2 flex flex-col gap-1', className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
@@ -30,11 +30,11 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
 }
 
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mt-4 flex flex-wrap items-center gap-3', className)} {...props} />;
+  return <div className={cn('mt-3 flex flex-wrap items-center gap-3', className)} {...props} />;
 }
 
 export function Separator({ className }: { className?: string }) {
-  return <hr className={cn('my-4 border-0 border-t border-border', className)} />;
+  return <hr className={cn('my-3 border-0 border-t border-border', className)} />;
 }
 
 export function DefinitionList({ children }: { children: ReactNode }) {

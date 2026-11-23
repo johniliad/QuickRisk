@@ -198,6 +198,33 @@ return [
         );
     },
 
+    'decision lab: a probability appetite requires a loss threshold' => function (): void {
+        try {
+            qk_decision_appetite(['maxExceedanceProbability' => 0.25]);
+            qk_fail('A probability appetite without a loss threshold must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'The incomplete appetite must return 422');
+            assertTrue(
+                str_contains($error->getMessage(), 'loss threshold'),
+                'The error must explain that a loss threshold is required'
+            );
+        }
+
+        $annual = qk_decision_appetite([
+            'annualLossLimit' => 250000.0,
+            'maxExceedanceProbability' => 0.25,
+        ]);
+        assertSame(250000.0, (float) $annual['annualLossLimit'], 'The annual threshold must be retained');
+        assertSame(0.25, (float) $annual['maxExceedanceProbability'], 'The probability must be retained');
+
+        $explicit = qk_decision_appetite([
+            'exceedanceThreshold' => 600000.0,
+            'maxExceedanceProbability' => 0.25,
+        ]);
+        assertSame(600000.0, (float) $explicit['exceedanceThreshold'], 'An explicit threshold must be accepted');
+        assertSame(0.25, (float) $explicit['maxExceedanceProbability'], 'The probability must be retained');
+    },
+
     'decision lab: appetite evaluates only the configured criteria' => function (): void {
         $three = qk_decision_test_compare([], qk_decision_test_appetite(250000.0, 900000.0))['result'];
         assertSame('above', $three['appetite']['baseline']['status'], 'The fixture must start above appetite');
@@ -326,9 +353,9 @@ return [
         assertSame(true, $search['noneSatisfies'], 'An impossible appetite must not produce a recommendation');
         assertSame(null, $search['recommendedId'], 'No portfolio may be recommended');
         assertContains(
-            'No evaluated portfolio satisfies',
+            'No evaluated portfolio meets the expected annual-loss criterion',
             (string) $search['noneSatisfiesMessage'],
-            'The message must state that no portfolio satisfies the appetite'
+            'The message must state that no portfolio meets the portfolio-level criterion'
         );
         foreach ($search['portfolios'] as $portfolio) {
             assertTrue($portfolio['label'] !== 'recommended', 'No portfolio may be labelled recommended');
@@ -363,7 +390,14 @@ return [
         $candidates = qk_decision_test_candidates(['edr', 'immutable-backup', 'privileged-mfa']);
         $realised = qk_decision_realise_effects($candidates, 20261107);
 
-        $search = qk_decision_portfolio_search($run['vectors'], $candidates, $realised, null, [], $run['config']);
+        $search = qk_decision_portfolio_search(
+            $run['vectors'],
+            $candidates,
+            $realised,
+            ['annualLossLimit' => 1000000.0],
+            [],
+            $run['config']
+        );
 
         assertTrue(count($search['paretoIds']) > 1, 'The frontier must contain more than one point');
         $byId = [];
@@ -516,7 +550,14 @@ return [
         $realised = qk_decision_realise_effects($candidates, 20261107);
         $run = qk_decision_test_compare([], null, 20261107, 1000);
 
-        $search = qk_decision_portfolio_search($run['vectors'], $candidates, $realised, null, [], $run['config']);
+        $search = qk_decision_portfolio_search(
+            $run['vectors'],
+            $candidates,
+            $realised,
+            ['annualLossLimit' => 1000000.0],
+            [],
+            $run['config']
+        );
 
         assertSame(256, $search['evaluated'], 'The search must evaluate exactly the portfolio budget');
         assertSame(30, $search['candidatesConsidered'], 'All thirty candidates must be inside the budget');
@@ -540,6 +581,126 @@ return [
 
         $notes = implode(' ', array_map('strval', $search['notes']));
         assertContains('anonymous compute budget', $notes, 'A bounded enumeration must be explained');
+    },
+
+    'decision lab: portfolio selection uses expected annual loss only' => function (): void {
+        $appetite = [
+            'annualLossLimit' => 1000000.0,
+            'highEndLimit' => 1.0,
+            'maxExceedanceProbability' => 0.0001,
+        ];
+        $criteria = qk_decision_portfolio_appetite_criteria($appetite);
+        assertSame(['annualLoss'], array_column($criteria, 'id'), 'Only EAL may select a portfolio');
+
+        $run = qk_decision_test_compare([]);
+        $candidates = qk_decision_test_candidates(['edr', 'immutable-backup']);
+        $realised = qk_decision_realise_effects($candidates, 20261107);
+        $search = qk_decision_portfolio_search(
+            $run['vectors'],
+            $candidates,
+            $realised,
+            $appetite,
+            [],
+            $run['config']
+        );
+
+        assertSame(true, $search['portfolioAppetiteDefined'], 'The EAL criterion must be available');
+        assertSame('expected-annual-loss-only', $search['appetiteBasis'], 'The portfolio basis must be explicit');
+        assertSame(['annualLoss'], $search['portfolioCriteria'], 'Only EAL must be used');
+        assertSame(
+            ['highEndLoss', 'exceedanceProbability'],
+            $search['excludedCriteria'],
+            'The joint-distribution criteria must be recorded as excluded'
+        );
+        assertTrue($search['recommendedId'] !== null, 'An impossible P90 criterion must not block an EAL recommendation');
+    },
+
+    'decision lab: portfolio ranking does not use joint P90' => function (): void {
+        $base = [
+            'id' => 'p1',
+            'cost' => ['initialInvestment' => 100.0, 'annualOperatingCost' => 10.0, 'implementationDelayDays' => 30],
+            'treated' => ['expectedAnnualLoss' => 500.0, 'p90' => 1.0],
+        ];
+        $higherP90 = $base;
+        $higherP90['id'] = 'p2';
+        $higherP90['treated']['p90'] = 999999.0;
+
+        assertTrue(
+            qk_decision_rank_compare($base, $higherP90) < 0,
+            'Equal cost, EAL and delay must be ordered deterministically without P90'
+        );
+    },
+
+    'decision lab: portfolios require an annual-loss limit' => function (): void {
+        $server = [
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_HOST' => 'test.local',
+            'HTTP_ORIGIN' => 'https://test.local',
+            'HTTP_X_QUICKRISK_LIVE' => '1',
+            'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '192.0.2.10',
+            'SCRIPT_NAME' => '/live/api/decision-compute.php',
+            'REQUEST_SCHEME' => 'https',
+            'SERVER_PORT' => '443',
+        ];
+        $payload = array_merge(qk_test_payload(qk_test_profile()), [
+            'action' => 'portfolios',
+            'seed' => 20261107,
+            'iterations' => 1000,
+            'appetite' => ['highEndLimit' => 900000.0],
+            'treatments' => [],
+            'candidateTreatments' => [['source' => 'curated', 'id' => 'edr']],
+        ]);
+
+        try {
+            qk_decision_compute($server, qk_config(), (string) json_encode($payload));
+            qk_fail('Portfolio evaluation without an annual-loss limit must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'The missing portfolio criterion must be a validation error');
+            assertContains('annual loss limit', $error->getMessage(), 'The error must name the required criterion');
+        }
+    },
+
+    'decision lab: a reachable loss cap is disclosed as a treatment approximation' => function (): void {
+        $model = qk_test_model();
+        $config = qk_decision_config(qk_config());
+        $profile = qk_test_profile([
+            'QP2' => 'EXTREME',
+            'QP6' => 'VERY_LOW',
+            'QP8' => 'GT10M',
+        ]);
+        $validated = QkValidation::validatePayload(
+            $model,
+            qk_test_payload($profile, qk_test_scenario_answers('VERY_LIKELY', 'CRITICAL'))
+        );
+        $vectors = FairEngine::lossVectors($model, $validated, 20261107, 2000);
+        $treatments = [qk_decision_curated_treatment('immutable-backup')];
+        $realised = qk_decision_realise_effects($treatments, 20261107);
+        $result = qk_decision_compare($vectors, $treatments, $realised, null, $config);
+
+        assertSame(true, $result['factors']['clampWarning'], 'The reachable component cap must be disclosed');
+        $notes = implode(' ', $result['factors']['notes']);
+        assertContains('paired yearly losses is an approximation', $notes, 'The approximation must be explained');
+    },
+
+    'decision lab: fractional exceedance thresholds keep distinct keys' => function (): void {
+        $summary = qk_decision_summary(
+            [499999.0, 500000.5, 500001.0],
+            [500000.4, 500000.6]
+        );
+
+        assertRelativeClose(
+            2.0 / 3.0,
+            (float) $summary['thresholdProbabilities'][qk_decision_threshold_key(500000.4)],
+            1.0e-12,
+            'The lower fractional threshold must retain its own probability'
+        );
+        assertRelativeClose(
+            1.0 / 3.0,
+            (float) $summary['thresholdProbabilities'][qk_decision_threshold_key(500000.6)],
+            1.0e-12,
+            'The upper fractional threshold must retain its own probability'
+        );
     },
 
 ];

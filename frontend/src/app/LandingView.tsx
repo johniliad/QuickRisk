@@ -1,49 +1,66 @@
-import { ArrowRight, Clock, FileCheck2, Lock } from 'lucide-react';
-import { DisclaimerBlock, PrivacyNotice } from '@/components/layout/DisclaimerBlock';
+import { Clock, FileCheck2, Lock } from 'lucide-react';
 import { PageShell } from '@/components/layout/SectionHeading';
-import { Alert } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EntryActions } from '@/components/landing/EntryActions';
 import { JourneyMap } from '@/components/landing/JourneyMap';
 import { RoleCards } from '@/components/landing/RoleCards';
 import { SampleResultsPreview } from '@/components/landing/SampleResultsPreview';
-import { lifecycleFor, retentionSentence } from '@/content/dataLifecycle';
+import { TRUST_STRIP_ITEMS, type ReferenceModalKey } from '@/content/dataLifecycle';
+import { LANDING_HERO_HEADLINE, LANDING_HERO_LEAD } from '@/content/landingJourney';
 import { publicModel } from '@/model';
-import { useAssessmentStore } from '@/state/assessmentStore';
 
 /**
  * Landing page.
  *
- * Positioned as a first-party iliadis.net tool: what it does, how long it takes, what
- * it is not, and what happens to the answers. The mandatory disclaimer gate is one
- * deliberate click away.
+ * The page used to open with the retention prose, the disclaimer and a single
+ * "Start the assessment" button, so a visitor had to read several hundred words and commit
+ * to eighteen questions before seeing a number. It now opens with what the tool produces,
+ * a one-line trust strip whose claims open the reference modals, and three ways in ordered
+ * by cost — sample, one scenario, all five.
+ *
+ * Everything the earlier page promised that matters — the three-step journey, the fork
+ * between Live and Decision Lab, the audiences, the sample output — still follows below.
  */
-export function LandingView() {
-  const setView = useAssessmentStore((state) => state.setView);
+export function LandingView({
+  onShowReference,
+}: {
+  onShowReference: (modal: ReferenceModalKey) => void;
+}) {
   const { positioning, limitations } = publicModel.content;
   const { version } = publicModel;
 
   return (
     <PageShell>
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:items-center">
-        <div className="grid gap-4">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+        <div className="grid gap-3">
           <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
             {positioning.tagline}
           </p>
-          <h1 className="m-0 max-w-[42rem] text-[var(--text-display)] font-bold leading-[1.12] tracking-[-0.03em] text-heading">
-            {positioning.headline}
+          <h1 className="m-0 max-w-[44rem] text-display font-bold leading-[1.12] tracking-[-0.03em] text-heading">
+            {LANDING_HERO_HEADLINE}
           </h1>
-          <p className="m-0 max-w-[42rem] text-[1.1rem] text-muted">{positioning.subheadline}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button size="lg" onClick={() => setView('disclaimer')}>
-              Start the assessment
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Button>
-            <Button variant="secondary" size="lg" onClick={() => setView('methodology')}>
-              Read the methodology
-            </Button>
-          </div>
+          <p className="m-0 max-w-[44rem] text-[1.1rem] text-ink">{LANDING_HERO_LEAD}</p>
+          <p className="m-0 max-w-[44rem] text-small text-muted">{positioning.subheadline}</p>
+
+          <ul className="m-0 flex list-none flex-wrap items-center gap-x-2 gap-y-1 p-0 text-small">
+            {TRUST_STRIP_ITEMS.map((item, index) => (
+              <li key={item.key} className="flex items-center gap-2">
+                {index === 0 ? null : (
+                  <span aria-hidden="true" className="text-muted">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="rounded-control font-semibold text-accent-strong underline decoration-accent-strong/40 underline-offset-2 hover:bg-accent-soft"
+                  onClick={() => onShowReference(item.modal)}
+                >
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+
           <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-1 text-small text-muted">
             <span className="inline-flex items-center gap-1">
               <Clock aria-hidden="true" className="size-4" />
@@ -60,7 +77,13 @@ export function LandingView() {
           </p>
         </div>
 
-        <div className="grid gap-6">
+        {/*
+          The source is a 3:2 landscape marketing poster with a logo lockup, headline and the
+          credit line baked into its corners. The frame takes the image's own aspect ratio, so
+          nothing is cropped. With the concise headline, the output summary spans both columns
+          below rather than leaving a tall, empty column beside the poster.
+        */}
+        <div>
           <div className="overflow-hidden rounded-card border border-border bg-paper">
             <img
               src={`${import.meta.env.BASE_URL}images/quickrisk-hero-2026-11.jpg`}
@@ -72,28 +95,33 @@ export function LandingView() {
               className="block h-auto w-full"
             />
           </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>What you will receive</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2 text-small">
-              <p className="m-0">Expected annual loss for each of five scenarios, in euros.</p>
-              <p className="m-0">A typical-year to bad-year (1 in 10) range that shows how uncertain the estimate is.</p>
-              <p className="m-0">Probability of exceeding €100k, €500k, €1m, €5m and €10m.</p>
-              <p className="m-0">An estimate-precision indicator and a print-friendly report.</p>
-              <p className="m-0 text-muted">
-                Results are estimates produced from your assumptions. They are not a forecast, an audit or
-                professional advice.
-              </p>
-            </CardContent>
-          </Card>
         </div>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>What you will receive</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-2 text-small md:grid-cols-2 md:gap-x-6">
+            <p className="m-0">Expected annual loss for each of five scenarios, in euros.</p>
+            <p className="m-0">
+              A typical-year to bad-year (1 in 10) range that shows how uncertain the estimate is.
+            </p>
+            <p className="m-0">Probability of exceeding €100k, €500k, €1m, €5m and €10m.</p>
+            <p className="m-0">An estimate-precision indicator and a print-friendly report.</p>
+            <p className="m-0 text-muted md:col-span-2">
+              Results are estimates produced from your assumptions. They are not a forecast, an audit or
+              professional advice.
+            </p>
+          </CardContent>
+        </Card>
       </section>
+
+      <EntryActions />
 
       <JourneyMap />
 
-      <section className="mt-12 grid gap-4" aria-labelledby="scenarios-heading">
-        <h2 id="scenarios-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+      <section className="mt-10 grid gap-4" aria-labelledby="scenarios-heading">
+        <h2 id="scenarios-heading" className="m-0 text-title font-bold text-heading">
           The five assessed scenarios
         </h2>
         <p className="m-0 max-w-[48rem] text-muted">
@@ -111,148 +139,24 @@ export function LandingView() {
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="mt-12 grid gap-4" aria-labelledby="how-heading">
-        <h2 id="how-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
-          How it works
-        </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>1. A short questionnaire</CardTitle>
-            </CardHeader>
-            <CardContent className="text-small text-muted">
-              {publicModel.profileQuestions.length} organisation-profile questions, then two questions for each of
-              the five scenarios. One decision at a time, with a clear progress indicator and Unknown available
-              throughout.
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>2. Server-side simulation</CardTitle>
-            </CardHeader>
-            <CardContent className="text-small text-muted">
-              Your answers are translated into ranges rather than single numbers, and the server runs{' '}
-              {version.defaultIterations.toLocaleString('en-GB')} simulated trials per scenario using a simplified
-              FAIR-informed model. The result is an annualised exposure estimate, not a realised annual loss total.
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>3. An executive view</CardTitle>
-            </CardHeader>
-            <CardContent className="text-small text-muted">
-              A ranked dashboard, scenario detail showing the assumptions you provided, threshold probabilities,
-              modelled components, an input-sensitivity view and a printable report.
-            </CardContent>
-          </Card>
-        </div>
+        <p className="m-0 max-w-[52rem] text-small text-muted">
+          {limitations.title}{' '}
+          <button
+            type="button"
+            className="font-semibold text-accent-strong underline"
+            onClick={() => onShowReference('disclaimer')}
+          >
+            Open the full scope, limitations and disclaimer
+          </button>
+          .
+        </p>
       </section>
 
       <RoleCards />
 
-      <section className="mt-12 grid gap-4" aria-labelledby="beyond-heading">
-        <h2 id="beyond-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
-          Beyond the assessment
-        </h2>
-        <p className="m-0 max-w-[48rem] text-muted">
-          Two optional tools go deeper, and both start from your assessment. They are separate screens with
-          their own data handling, and neither one runs without a completed assessment.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>QuickRisk Live</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2 text-small text-muted">
-              <p className="m-0">
-                Overlay synthetic SOC observations and simulated response actions on your baseline exposure, and
-                record a timeline of observations.
-              </p>
-              <p className="m-0 text-micro">Available after your assessment.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Decision Lab</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2 text-small text-muted">
-              <p className="m-0">
-                Compare treatments such as MFA, EDR or segmentation, test portfolios against a stated risk
-                appetite and prepare a Board Risk Pack.
-              </p>
-              <p className="m-0 text-micro">Available after your assessment.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>What you can keep</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2 text-small text-muted">
-              <p className="m-0">
-                <span className="font-semibold text-ink">Assessment: </span>
-                {lifecycleFor('assessment').outputs.join('; ')} Nothing is stored.
-              </p>
-              <p className="m-0">
-                <span className="font-semibold text-ink">Live and Decision Lab: </span>
-                a saved snapshot, a printable report and a read-only link you can revoke.
-              </p>
-              <p className="m-0 text-micro">{retentionSentence()}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
       <SampleResultsPreview />
 
-      <section className="mt-12 grid gap-4 lg:grid-cols-2" aria-labelledby="boundaries-heading">
-        <div className="grid gap-3">
-          <h2 id="boundaries-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
-            What it is not
-          </h2>
-          <Alert tone="warning" title={limitations.title}>
-            <ul className="m-0 grid gap-1 pl-5">
-              {limitations.items.slice(0, 5).map((item) => (
-                <li key={item.slice(0, 40)}>{item}</li>
-              ))}
-            </ul>
-          </Alert>
-          <p className="m-0 flex flex-wrap gap-2">
-            <Badge tone="neutral">FAIR-informed</Badge>
-            <Badge tone="neutral">Not a full FAIR analysis</Badge>
-            <Badge tone="neutral">No statutory-fine prediction</Badge>
-            <Badge tone="neutral">No cross-scenario correlation</Badge>
-          </p>
-        </div>
-        <div className="grid gap-3">
-          <h2 className="m-0 text-[var(--text-title)] font-bold text-heading">Your data</h2>
-          <Card>
-            <CardContent>
-              <PrivacyNotice showDetail />
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section className="mt-12 grid gap-4" aria-labelledby="disclaimer-preview-heading">
-        <h2 id="disclaimer-preview-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
-          Before you begin
-        </h2>
-        <DisclaimerBlock variant="short" />
-        <p className="m-0 max-w-[48rem] text-small text-muted">
-          The full disclaimer must be acknowledged before the assessment can start. The acknowledgement is held in
-          this page only and is never stored.
-        </p>
-        <div>
-          <Button size="lg" onClick={() => setView('disclaimer')}>
-            Read the disclaimer and start
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Button>
-        </div>
-      </section>
-
-      <p className="mt-10 text-micro text-muted">
+      <p className="mt-8 text-micro text-muted">
         {positioning.attribution.before}
         <a className="text-accent-strong underline" href={positioning.attribution.url}>
           {positioning.attribution.name}

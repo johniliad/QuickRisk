@@ -6,16 +6,27 @@ import { QuestionnaireView } from '@/components/assessment/QuestionnaireView';
 import { DataLifecycleModal } from '@/components/layout/DataLifecycleModal';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
-import { PageShell } from '@/components/layout/SectionHeading';
+import { DisclaimerModal, MethodologyModal } from '@/components/layout/ReferenceModals';
+import { PageShell, SectionHeading } from '@/components/layout/SectionHeading';
 import { SessionStatusBar } from '@/components/layout/SessionStatusBar';
 import { StartOverConfirmModal } from '@/components/layout/StartOverConfirmModal';
 import { MethodologyView } from '@/components/results/MethodologyView';
 import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { ViewLoadingFallback } from '@/components/ui/view-loading-fallback';
+import type { ReferenceModalKey } from '@/content/dataLifecycle';
+import {
+  BOARD_BRIEF_EMPTY_BODY,
+  BOARD_BRIEF_EMPTY_TITLE,
+  BOARD_BRIEF_LEDE,
+  BOARD_BRIEF_TITLE,
+  SAVED_PACKS_LEDE,
+  SAVED_PACKS_TITLE,
+} from '@/content/workspaceNav';
 import { questionnaireProgress } from '@/domain/assessment';
 import { lazyWithRetry } from '@/lib/lazyChunk';
-import { questionSteps, useAssessmentStore } from '@/state/assessmentStore';
+import { stepsForScope, useAssessmentStore } from '@/state/assessmentStore';
 import { publicModel } from '@/model';
 
 /**
@@ -88,6 +99,8 @@ export function App() {
   const selectedScenarioCode = useAssessmentStore((state) => state.selectedScenarioCode);
   const organisationAnswers = useAssessmentStore((state) => state.organisationAnswers);
   const scenarioAnswers = useAssessmentStore((state) => state.scenarioAnswers);
+  const scope = useAssessmentStore((state) => state.scope);
+  const quickScenarioCode = useAssessmentStore((state) => state.quickScenarioCode);
   const selectScenario = useAssessmentStore((state) => state.selectScenario);
   const setView = useAssessmentStore((state) => state.setView);
   const discardAssessment = useAssessmentStore((state) => state.discardAssessment);
@@ -100,8 +113,26 @@ export function App() {
   // bar, so they live in the shell rather than in a single screen.
   const [startOverOpen, setStartOverOpen] = useState(false);
   const [dataHandlingOpen, setDataHandlingOpen] = useState(false);
+  // Reference material moved out of primary navigation: methodology and the disclaimer are
+  // modals now, and data handling reuses the existing lifecycle dialog so the two cannot
+  // drift into saying different things.
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
 
-  const answered = questionnaireProgress(questionSteps, organisationAnswers, scenarioAnswers, 0).answered;
+  const openReference = (modal: ReferenceModalKey) => {
+    if (modal === 'privacy') {
+      setDataHandlingOpen(true);
+      return;
+    }
+    if (modal === 'methodology') {
+      setMethodologyOpen(true);
+      return;
+    }
+    setDisclaimerOpen(true);
+  };
+
+  const activeSteps = stepsForScope(scope, quickScenarioCode);
+  const answered = questionnaireProgress(activeSteps, organisationAnswers, scenarioAnswers, 0).answered;
   const hasAnswers = Object.keys(organisationAnswers).length > 0 || Object.keys(scenarioAnswers).length > 0;
 
   // Warn before an accidental refresh or close while answers exist in memory only.
@@ -127,6 +158,13 @@ export function App() {
       preloadResultViews();
     }
   }, [status]);
+
+  // A view change replaces the page content, so the visitor must start at the top of it.
+  // Without this, choosing an entry path kept the browser at the previous scroll position
+  // and the disclaimer (or the next screen) appeared halfway down the window.
+  useEffect(() => {
+    globalThis.scrollTo(0, 0);
+  }, [view]);
 
   const renderView = () => {
     if (view === 'results' || view === 'scenario-detail' || view === 'report') {
@@ -256,8 +294,56 @@ export function App() {
             <UnifiedHistoryView />
           </PageShell>
         );
+      /**
+       * The two tabs that had no screen of their own before.
+       *
+       * Board Brief prints the result already in this tab, so its empty state is the honest
+       * one: a result computed in memory is the only input it has. Saved Packs reuses the
+       * unified history, which already lists both branches with archive and revoke controls.
+       */
+      case 'board-brief':
+        if (results === null) {
+          return (
+            <PageShell>
+              <div className="grid gap-6">
+                <SectionHeading as="h1" eyebrow="Workspace" title={BOARD_BRIEF_EMPTY_TITLE} lede={BOARD_BRIEF_EMPTY_BODY} />
+                <div>
+                  <Button onClick={() => setView('landing')}>
+                    Go to the Risk Calculator entry
+                  </Button>
+                </div>
+              </div>
+            </PageShell>
+          );
+        }
+        return (
+          <PageShell>
+            <div className="grid gap-4">
+              <SectionHeading as="h1" eyebrow="Workspace" title={BOARD_BRIEF_TITLE} lede={BOARD_BRIEF_LEDE} />
+              <ReportView response={results} onBack={() => setView('results')} />
+            </div>
+          </PageShell>
+        );
+      case 'saved-packs':
+        return (
+          <PageShell>
+            <div className="grid gap-6">
+              {/*
+                No second level-one heading: the saved-work list owns the page title. The
+                tab name and its purpose line sit above it, so the workspace is still named.
+              */}
+              <div className="grid gap-1">
+                <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
+                  Workspace · {SAVED_PACKS_TITLE}
+                </p>
+                <p className="m-0 max-w-[46rem] text-small text-muted">{SAVED_PACKS_LEDE}</p>
+              </div>
+              <UnifiedHistoryView />
+            </div>
+          </PageShell>
+        );
       default:
-        return <LandingView />;
+        return <LandingView onShowReference={openReference} />;
     }
   };
 
@@ -266,6 +352,8 @@ export function App() {
       <Header
         onStartOver={() => setStartOverOpen(true)}
         onShowDataHandling={() => setDataHandlingOpen(true)}
+        onShowMethodology={() => setMethodologyOpen(true)}
+        onShowDisclaimer={() => setDisclaimerOpen(true)}
       />
       <SessionStatusBar
         onStartOver={() => setStartOverOpen(true)}
@@ -293,7 +381,7 @@ export function App() {
       <StartOverConfirmModal
         open={startOverOpen}
         answered={answered}
-        total={questionSteps.length}
+        total={activeSteps.length}
         hasAnswers={hasAnswers}
         hasResults={results !== null}
         onCancel={() => setStartOverOpen(false)}
@@ -301,6 +389,17 @@ export function App() {
           setStartOverOpen(false);
           discardAssessment();
         }}
+      />
+
+      <MethodologyModal
+        open={methodologyOpen}
+        onClose={() => setMethodologyOpen(false)}
+        onOpenFullMethodology={() => setView('methodology')}
+      />
+      <DisclaimerModal
+        open={disclaimerOpen}
+        onClose={() => setDisclaimerOpen(false)}
+        onOpenFullDisclaimer={() => setView('disclaimer')}
       />
     </div>
   );

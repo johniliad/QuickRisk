@@ -16,10 +16,10 @@ export function SectionHeading({
   id?: string;
   className?: string;
 }) {
-  const size = Tag === 'h1' ? 'text-[var(--text-display)]' : Tag === 'h2' ? 'text-[var(--text-title)]' : 'text-[var(--text-section)]';
+  const size = Tag === 'h1' ? 'text-display' : Tag === 'h2' ? 'text-title' : 'text-section';
 
   return (
-    <div className={cn('grid gap-2', className)}>
+    <div className={cn('grid gap-1.5', className)}>
       {eyebrow === undefined ? null : (
         <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">{eyebrow}</p>
       )}
@@ -35,7 +35,7 @@ export function SectionHeading({
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <main id="main" className="qk-shell py-8 sm:py-10">
+    <main id="main" className="qk-shell py-6 sm:py-8">
       {children}
     </main>
   );

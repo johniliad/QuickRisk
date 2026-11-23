@@ -86,7 +86,7 @@ export function MethodologyView() {
           <section key={section.id} className="grid gap-2" aria-labelledby={`methodology-${section.id}`}>
             <h2
               id={`methodology-${section.id}`}
-              className="m-0 text-[var(--text-section)] font-semibold text-heading"
+              className="m-0 text-section font-semibold text-heading"
             >
               {section.heading}
             </h2>
@@ -106,7 +106,7 @@ export function MethodologyView() {
         ))}
 
         <section className="grid gap-3" aria-labelledby="glossary-heading">
-          <h2 id="glossary-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="glossary-heading" className="m-0 text-section font-semibold text-heading">
             Glossary in plain language
           </h2>
           <p className="m-0 max-w-[52rem] text-small text-muted">{terminology.intro}</p>
@@ -121,7 +121,7 @@ export function MethodologyView() {
         </section>
 
         <section className="grid gap-3" aria-labelledby="limitations-heading">
-          <h2 id="limitations-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="limitations-heading" className="m-0 text-section font-semibold text-heading">
             {limitations.title}
           </h2>
           <ul className="m-0 grid max-w-[52rem] gap-1 pl-5">
@@ -132,7 +132,7 @@ export function MethodologyView() {
         </section>
 
         <section className="grid gap-3" aria-labelledby="out-of-scope-heading">
-          <h2 id="out-of-scope-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="out-of-scope-heading" className="m-0 text-section font-semibold text-heading">
             Explicitly out of scope in v1
           </h2>
           <ul className="m-0 grid max-w-[52rem] gap-1 pl-5">
@@ -143,7 +143,7 @@ export function MethodologyView() {
         </section>
 
         <section className="grid gap-3" aria-labelledby="evidence-heading">
-          <h2 id="evidence-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="evidence-heading" className="m-0 text-section font-semibold text-heading">
             Contextual evidence sources
           </h2>
           <ul className="m-0 grid max-w-[52rem] gap-2 pl-5 text-small">
@@ -168,7 +168,7 @@ export function MethodologyView() {
         </section>
 
         <section className="grid gap-3" aria-labelledby="versioning-heading">
-          <h2 id="versioning-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="versioning-heading" className="m-0 text-section font-semibold text-heading">
             Active model version
           </h2>
           <ul className="m-0 grid gap-1 pl-5 text-small">

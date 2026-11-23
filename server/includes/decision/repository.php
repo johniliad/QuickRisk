@@ -106,11 +106,20 @@ final class QkDecisionPdoRepository implements QkDecisionRepository
     public function listDecisions(int $sessionId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT * FROM decision_assessments
-             WHERE session_id = :session_id AND status <> :archived
-             ORDER BY updated_at DESC LIMIT 100'
+            'SELECT d.*, EXISTS(
+                 SELECT 1 FROM decision_share_links s
+                 WHERE s.decision_id = d.id AND s.revoked_at IS NULL
+                   AND (s.expires_at IS NULL OR s.expires_at > :now)
+             ) AS has_active_share
+             FROM decision_assessments d
+             WHERE d.session_id = :session_id AND d.status <> :archived
+             ORDER BY d.updated_at DESC LIMIT 100'
         );
-        $statement->execute([':session_id' => $sessionId, ':archived' => 'archived']);
+        $statement->execute([
+            ':session_id' => $sessionId,
+            ':archived' => 'archived',
+            ':now' => gmdate('Y-m-d H:i:s'),
+        ]);
 
         $rows = [];
         foreach ($statement->fetchAll() as $row) {
@@ -123,10 +132,19 @@ final class QkDecisionPdoRepository implements QkDecisionRepository
     public function findDecision(int $sessionId, string $publicId): ?array
     {
         $statement = $this->pdo->prepare(
-            'SELECT * FROM decision_assessments
-             WHERE session_id = :session_id AND public_id = :public_id LIMIT 1'
+            'SELECT d.*, EXISTS(
+                 SELECT 1 FROM decision_share_links s
+                 WHERE s.decision_id = d.id AND s.revoked_at IS NULL
+                   AND (s.expires_at IS NULL OR s.expires_at > :now)
+             ) AS has_active_share
+             FROM decision_assessments d
+             WHERE d.session_id = :session_id AND d.public_id = :public_id LIMIT 1'
         );
-        $statement->execute([':session_id' => $sessionId, ':public_id' => $publicId]);
+        $statement->execute([
+            ':session_id' => $sessionId,
+            ':public_id' => $publicId,
+            ':now' => gmdate('Y-m-d H:i:s'),
+        ]);
         $row = $statement->fetch();
 
         return is_array($row) ? $this->hydrate($row, true) : null;
@@ -170,9 +188,14 @@ final class QkDecisionPdoRepository implements QkDecisionRepository
              INNER JOIN decision_assessments d ON d.id = s.decision_id
              WHERE s.token_hash = :token_hash AND s.revoked_at IS NULL
                AND (s.expires_at IS NULL OR s.expires_at > :now)
+               AND d.status <> :archived
              LIMIT 1'
         );
-        $statement->execute([':token_hash' => $tokenHash, ':now' => $now]);
+        $statement->execute([
+            ':token_hash' => $tokenHash,
+            ':now' => $now,
+            ':archived' => 'archived',
+        ]);
         $row = $statement->fetch();
 
         return is_array($row) ? $this->hydrate($row, true) : null;
@@ -290,8 +313,9 @@ final class QkDecisionPdoRepository implements QkDecisionRepository
             'initialInvestment' => (float) $row['initial_investment'],
             'annualOperatingCost' => (float) $row['annual_operating_cost'],
             'status' => (string) $row['status'],
-            'createdAt' => (string) $row['created_at'],
-            'updatedAt' => (string) $row['updated_at'],
+            'hasActiveShare' => (int) ($row['has_active_share'] ?? 0) === 1,
+            'createdAt' => $this->isoTimestamp((string) $row['created_at']),
+            'updatedAt' => $this->isoTimestamp((string) $row['updated_at']),
         ];
 
         if ($withResult) {
@@ -302,6 +326,14 @@ final class QkDecisionPdoRepository implements QkDecisionRepository
         }
 
         return $hydrated;
+    }
+
+    /** Converts a database DATETIME to the UTC ISO form the browser consumes. */
+    private function isoTimestamp(string $value): string
+    {
+        $timestamp = strtotime($value . ' UTC');
+
+        return $timestamp === false ? $value : gmdate('Y-m-d\TH:i:s\Z', $timestamp);
     }
 }
 

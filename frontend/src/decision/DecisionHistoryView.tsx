@@ -202,7 +202,7 @@ export function DecisionHistoryView() {
           <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
             Decision Lab history
           </p>
-          <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">Saved decision analyses</h1>
+          <h1 className="m-0 text-title font-bold text-heading">Saved decision analyses</h1>
           <p className="m-0 text-small text-muted">
             {sessionLabel === null
               ? 'Your anonymous session is being prepared.'

@@ -208,6 +208,11 @@ function qk_render_gate(string $policy, string $secret): string
         . "<IfModule mod_rewrite.c>\n"
         . "    RewriteEngine On\n"
         . "    # Rendered by tools/render-apache-policy.php. Never version this value.\n"
+        . "    # Internal error-document subrequests are exempt so that a refused request is\n"
+        . "    # answered by the branded /errors/403.html page, not by Apache's bare fallback.\n"
+        . "    # REDIRECT_STATUS is set by Apache during an internal redirect and cannot be\n"
+        . "    # forged by a client, so every top-level request is still gated.\n"
+        . '    RewriteCond %{ENV:REDIRECT_STATUS} ^$' . "\n"
         . '    RewriteCond %{HTTP:X-Origin-Secret} !^' . $secret . "$\n"
         . "    RewriteRule ^ - [F,L]\n"
         . "</IfModule>\n"
@@ -226,6 +231,19 @@ function qk_render_validate(string $rendered, string $secret): void
     }
     if (str_contains($rendered, 'Fail-closed stub')) {
         $problems[] = 'the fail-closed stub is still present';
+    }
+    // The gate must not swallow its own error document. Apache serves
+    // ErrorDocument /errors/403.html through an internal subrequest, so a gate that
+    // denies subrequests too leaves the visitor on a bare Apache page.
+    $subrequestAt = strpos($rendered, 'RewriteCond %{ENV:REDIRECT_STATUS} ^$');
+    $secretAt = strpos($rendered, 'RewriteCond %{HTTP:X-Origin-Secret} !^');
+    if ($subrequestAt === false) {
+        $problems[] = 'the origin gate must exempt internal error-document subrequests (RewriteCond %{ENV:REDIRECT_STATUS} ^$)';
+    } elseif ($secretAt === false || $subrequestAt > $secretAt) {
+        $problems[] = 'the REDIRECT_STATUS exemption must come before the X-Origin-Secret condition, or it never runs';
+    }
+    if (substr_count($rendered, 'RewriteRule ^ - [F,L]') !== 1) {
+        $problems[] = 'the gate must keep exactly one unconditional deny: RewriteRule ^ - [F,L]';
     }
     if (substr_count($rendered, $begin) !== 1) {
         $problems[] = 'the gate begin marker is missing or duplicated';

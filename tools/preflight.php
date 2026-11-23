@@ -221,6 +221,22 @@ if (!is_file($qkHtaccessFile)) {
         qk_preflight_fail('the origin gate is still the unrendered stub: every request is refused');
     } elseif (preg_match('/RewriteCond\s+%\{HTTP:X-Origin-Secret\}\s+!\^[A-Za-z0-9_-]{32,128}\$/', $qkHtaccess) === 1) {
         qk_preflight_pass('the Cloudflare origin gate is rendered');
+
+        // The gate must not deny its own error document. Apache serves
+        // ErrorDocument /errors/403.html as an internal subrequest, so a policy that
+        // gates subrequests answers every refusal with Apache's bare page.
+        $qkSubrequestAt = strpos($qkHtaccess, 'RewriteCond %{ENV:REDIRECT_STATUS} ^$');
+        $qkSecretAt = strpos($qkHtaccess, 'RewriteCond %{HTTP:X-Origin-Secret}');
+        if ($qkSubrequestAt === false) {
+            qk_preflight_fail(
+                'the gate does not exempt internal error-document subrequests: refused visitors see Apache\'s '
+                . 'bare "Additionally, a 403 Forbidden error was encountered while trying to use an ErrorDocument"'
+            );
+        } elseif ($qkSecretAt !== false && $qkSubrequestAt > $qkSecretAt) {
+            qk_preflight_fail('the REDIRECT_STATUS exemption sits after the origin gate, so the branded 403 page never renders');
+        } else {
+            qk_preflight_pass('the branded error pages stay reachable through the origin gate');
+        }
     } else {
         qk_preflight_fail('no rendered Cloudflare origin gate: the origin answers anyone who finds it');
     }

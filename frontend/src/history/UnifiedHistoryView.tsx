@@ -26,7 +26,7 @@ export function UnifiedHistoryView() {
     <div className="grid gap-6">
       <div className="grid gap-3">
         <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">Saved work</p>
-        <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">Your saved work</h1>
+        <h1 className="m-0 text-title font-bold text-heading">Your saved work</h1>
         <p className="m-0 max-w-[46rem] text-small text-muted">
           Everything you have saved is listed here and belongs to this browser&apos;s anonymous session. It
           expires after {LIVE_SESSION_RETENTION_DAYS} days, and clearing cookies ends access immediately.

@@ -18,8 +18,8 @@ const roleIcons: Record<LandingRoleKey, typeof Briefcase> = {
 
 export function RoleCards() {
   return (
-    <section aria-labelledby="roles-heading" className="mt-12 grid gap-4">
-      <h2 id="roles-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+    <section aria-labelledby="roles-heading" className="mt-10 grid gap-4">
+      <h2 id="roles-heading" className="m-0 text-title font-bold text-heading">
         Who is this for?
       </h2>
       <p className="m-0 max-w-[48rem] text-muted">

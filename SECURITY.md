@@ -15,10 +15,10 @@ data" is synthetic. Neither is a vulnerability.
 | The current application version on the published site | Yes |
 | Older application versions, and older model, schema or calibration versions | No |
 
-Fixes ship in the current version. Every result states the model identifier, model version,
-schema version, calibration version and methodology version, and the footer of the compiled
-site states the application version, so a report can name exactly which build and model were
-affected.
+Fixes ship in the current version. Every on-screen result states the model identifier, model version,
+schema version and calibration version; the printable report adds the methodology version. The
+footer of the compiled site states the application version, so a report can name exactly which build
+and model were affected.
 
 ## How to report a vulnerability
 
@@ -95,7 +95,7 @@ In scope:
   (`/api/calculate.php`, `/live/api/*`).
 - The source at <https://github.com/johniliad/QuickRisk> — server code, model files, build
   tooling, tests and the shipped Apache policy.
-- Authentication and authorisation of QuickRisk Live sessions and share links.
+- Authentication and authorisation of QuickRisk Live and Decision Lab sessions, saved analyses and share links.
 - Cross-site scripting, injection, request forgery, cache and header weaknesses, data
   exposure, access-control mistakes and unsafe deserialisation.
 - Anything that lets one visitor read, alter or delete another visitor's saved assessment or
@@ -122,15 +122,17 @@ Out of scope:
 - **The questionnaire stores nothing.** Answers and results are processed in memory for one
   request and discarded; there is no session, cookie, database row, log line or result URL.
   “A result disappeared when I refreshed the page” is the intended zero-retention behaviour.
-  See `docs/ZERO_RETENTION_PROOF.md`.
-- **QuickRisk Live stores only what the user explicitly saves**, under an anonymous session
-  with an opaque `HttpOnly; Secure; SameSite` cookie, hashed server-side. There is no name,
-  email, address or account.
-- **There is no cross-origin access.** The API is same-origin only, POST-only, size-limited
-  and rate-limited, and it deliberately grants no CORS origin.
+  See `requirements/ZERO_RETENTION_PROOF.md`.
+- **QuickRisk Live and Decision Lab store only what the user explicitly saves**, under an
+  anonymous session with an opaque `HttpOnly; Secure; SameSite` cookie, hashed server-side. There
+  is no name, email, address or account. Decision Lab stores the computed decision snapshot, not
+  the questionnaire answers.
+- **There is no cross-origin access.** The questionnaire calculation endpoint and the Live/Decision
+  Lab APIs are same-origin only and rate-limited. The calculation endpoint is POST-only; the
+  read-only Live/Decision endpoints use GET. No CORS origin is granted.
 - **The Content-Security-Policy is strict on purpose.** A blocked inline script or style, or
   a style attribute that loses its effect, is the policy working: `'unsafe-inline'` is not
-  allowed, and the static pages are allowed their own stylesheet by sha256 hash.
+  allowed, and each static page's inline `<style>` block is allowed by its sha256 hash.
 - **`parameters.json` is not public.** It holds calibration values and is read only by the
   server; a request that returned it would be a finding, not a feature.
 

@@ -45,7 +45,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
           <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
             {reportLabels.subtitle}
           </p>
-          <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">{reportLabels.title}</h1>
+          <h1 className="m-0 text-title font-bold text-heading">{reportLabels.title}</h1>
           <p className="m-0 max-w-[48rem] text-small text-muted">
             Prepared {formatTimestamp(response.meta.calculatedAt)} UTC · {response.meta.modelId} (model{' '}
             {response.meta.modelVersion}, calibration {response.meta.calibrationVersion}) ·{' '}
@@ -56,7 +56,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </header>
 
         <section className="qk-print-block grid gap-3" aria-labelledby="report-summary">
-          <h2 id="report-summary" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-summary" className="m-0 text-section font-semibold text-heading">
             Executive summary
           </h2>
           <p className="m-0">
@@ -81,7 +81,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-block grid gap-3" aria-labelledby="report-ranking">
-          <h2 id="report-ranking" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-ranking" className="m-0 text-section font-semibold text-heading">
             Scenario ranking
           </h2>
           <TableWrap>
@@ -134,7 +134,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-block grid gap-3" aria-labelledby="report-sensitivity">
-          <h2 id="report-sensitivity" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-sensitivity" className="m-0 text-section font-semibold text-heading">
             Sensitivity of the expected annual loss
           </h2>
           <p className="m-0 text-small text-muted">{response.portfolio.sensitivity.method}</p>
@@ -164,7 +164,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-page-break grid gap-4" aria-labelledby="report-detail">
-          <h2 id="report-detail" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-detail" className="m-0 text-section font-semibold text-heading">
             Scenario detail
           </h2>
           {response.scenarios.map((scenario) => (
@@ -201,7 +201,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-page-break grid gap-3" aria-labelledby="report-methodology">
-          <h2 id="report-methodology" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-methodology" className="m-0 text-section font-semibold text-heading">
             Methodology
           </h2>
           <p className="m-0">{methodology.summary}</p>
@@ -225,7 +225,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-block grid gap-2" aria-labelledby="report-limitations">
-          <h2 id="report-limitations" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-limitations" className="m-0 text-section font-semibold text-heading">
             Limitations
           </h2>
           <ul className="m-0 grid gap-1 pl-5 text-small">
@@ -236,7 +236,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-block grid gap-3" aria-labelledby="report-model-info">
-          <h2 id="report-model-info" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-model-info" className="m-0 text-section font-semibold text-heading">
             Model and version information
           </h2>
           <ul className="m-0 grid gap-1 pl-5 text-small">
@@ -258,7 +258,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
         </section>
 
         <section className="qk-print-page-break grid gap-4" aria-labelledby="report-legal">
-          <h2 id="report-legal" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="report-legal" className="m-0 text-section font-semibold text-heading">
             Privacy and disclaimer
           </h2>
           <PrivacyNotice />

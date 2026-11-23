@@ -18,7 +18,11 @@
       "threatEventFrequency": { "min": 0.001, "max": 100.0 },
       "susceptibility": { "min": 0.005, "max": 0.99 },
       "impactMultiplier": { "min": 0.05, "max": 60.0 },
-      "lossMagnitude": { "min": 1000.0, "max": 500000000.0 },
+      "lossMagnitude": {
+        "min": 1000.0,
+        "max": 500000000.0,
+        "scope": "each primary and secondary loss component independently"
+      },
       "secondaryLossProbability": { "min": 0.01, "max": 0.99 }
     }
   },

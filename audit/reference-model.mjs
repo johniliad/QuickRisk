@@ -165,6 +165,65 @@ export function sampleInput(rng, input) {
   return triangular(rng, input.components[input.components.length - 1]);
 }
 
+function triangularQuantile(input, probability) {
+  const { min, mode, max } = normaliseRange(input.min, input.mode, input.max);
+  if (max - min <= 1e-12) return min;
+  const u = clamp(probability, 1e-12, 1 - 1e-12);
+  const split = (mode - min) / (max - min);
+  return u < split
+    ? min + Math.sqrt(u * (max - min) * (mode - min))
+    : max - Math.sqrt((1 - u) * (max - min) * (max - mode));
+}
+
+/** Quantile of a triangular or weighted-mixture input on [0, 1]. */
+export function inputQuantile(input, probability) {
+  if (input.kind !== 'mixture') return triangularQuantile(input, probability);
+  const u = clamp(probability, 1e-12, 1 - 1e-12);
+  let cumulative = 0;
+  for (const component of input.components) {
+    const next = cumulative + component.weight;
+    if (u < next) {
+      return triangularQuantile(component, (u - cumulative) / component.weight);
+    }
+    cumulative = next;
+  }
+  return triangularQuantile(input.components[input.components.length - 1], 0.999999999999);
+}
+
+/**
+ * Independent midpoint integration of E[clamp(X * Y)] for two independent inputs.
+ * This matches the component-level cap applied by the sampled model.
+ */
+function inputMinimum(input) {
+  return input.kind === 'mixture'
+    ? Math.min(...input.components.map((component) => component.min))
+    : input.min;
+}
+
+function inputMaximum(input) {
+  return input.kind === 'mixture'
+    ? Math.max(...input.components.map((component) => component.max))
+    : input.max;
+}
+
+function expectedClampedProduct(left, right, bounds) {
+  if (inputMinimum(left) * inputMinimum(right) >= bounds.min
+      && inputMaximum(left) * inputMaximum(right) <= bounds.max) {
+    return inputMean(left) * inputMean(right);
+  }
+
+  const points = 24;
+  let total = 0;
+  for (let leftIndex = 0; leftIndex < points; leftIndex += 1) {
+    const x = inputQuantile(left, (leftIndex + 0.5) / points);
+    for (let rightIndex = 0; rightIndex < points; rightIndex += 1) {
+      const y = inputQuantile(right, (rightIndex + 0.5) / points);
+      total += clamp(x * y, bounds.min, bounds.max);
+    }
+  }
+  return total / (points * points);
+}
+
 /**
  * Applies a multiplier and a widening factor, with the model's widening mean-shift cap.
  *
@@ -380,6 +439,7 @@ export function summarise(values, extra) {
 
 export function simulateScenario(scenarioCode, profile, answers, seed, iterations) {
   const input = buildScenarioInputs(scenarioCode, profile, answers);
+  const bounds = parameters.sampling.clamps;
   const rng = new Mt19937(seed);
   const annual = [];
   const tefValues = [];
@@ -396,12 +456,16 @@ export function simulateScenario(scenarioCode, profile, answers, seed, iteration
     const lef = tef * susceptibility;
     const anchor = triangular(rng, input.anchorRange);
     const impactMultiplier = sampleInput(rng, input.impactRange);
-    const primary = anchor * impactMultiplier;
+    const primary = clamp(anchor * impactMultiplier, bounds.lossMagnitude.min, bounds.lossMagnitude.max);
 
     const secondaryProbability = triangular(rng, input.secondaryProbabilityRange);
     let secondary = 0;
     if (rng.uniform() < secondaryProbability) {
-      secondary = anchor * triangular(rng, input.secondaryMultiplierRange);
+      secondary = clamp(
+        anchor * triangular(rng, input.secondaryMultiplierRange),
+        bounds.lossMagnitude.min,
+        bounds.lossMagnitude.max,
+      );
       secondaryOccurrences += 1;
     }
     const magnitude = primary + secondary;
@@ -449,59 +513,13 @@ export function simulateAssessment(profile, scenarioAnswers, seed, iterations, s
 // primary and secondary terms but does not invalidate this sum of expectations.
 export function analyticExpectedAnnualLoss(scenarioCode, profile, answers) {
   const input = buildScenarioInputs(scenarioCode, profile, answers);
+  const bounds = parameters.sampling.clamps.lossMagnitude;
   const tef = inputMean(input.tefRange);
   const susceptibility = triangularMean(input.susceptibilityRange);
-  const anchor = triangularMean(input.anchorRange);
-  const impact = inputMean(input.impactRange);
-  const secondaryProbability = triangularMean(input.secondaryProbabilityRange);
-  const secondaryMultiplier = triangularMean(input.secondaryMultiplierRange);
-  return tef * susceptibility * (anchor * impact + anchor * secondaryMultiplier * secondaryProbability);
-}
-
-/**
- * Analytic standard deviation of the modelled annualised exposure, derived independently by
- * law of total variance over the four sampled factors (frequency, susceptibility, anchor and
- * impact multiplier). Used to check that the reported Monte Carlo percentiles are consistent
- * with the model's own first two moments.
- */
-export function analyticMoments(scenarioCode, profile, answers) {
-  const input = buildScenarioInputs(scenarioCode, profile, answers);
-  const meanTef = inputMean(input.tefRange);
-  const meanSusceptibility = triangularMean(input.susceptibilityRange);
-  const meanAnchor = triangularMean(input.anchorRange);
-  const meanImpact = inputMean(input.impactRange);
-  const meanSecondaryProbability = triangularMean(input.secondaryProbabilityRange);
-  const meanSecondaryMultiplier = triangularMean(input.secondaryMultiplierRange);
-
-  const meanLef = meanTef * meanSusceptibility;
-  const meanMagnitude = meanAnchor * (meanImpact + meanSecondaryMultiplier * meanSecondaryProbability);
-  const mean = meanLef * meanMagnitude;
-
-  const varianceTef = inputVariance(input.tefRange);
-  const varianceSusceptibility = triangularVariance(input.susceptibilityRange);
-  const varianceAnchor = triangularVariance(input.anchorRange);
-  const varianceImpact = inputVariance(input.impactRange);
-
-  const secondMomentLef =
-    (varianceTef + meanTef ** 2) * (varianceSusceptibility + meanSusceptibility ** 2);
-
-  const magnitudeSecondMoment =
-    meanAnchor ** 2 * (meanImpact ** 2 + varianceImpact)
-    + 2 * meanAnchor ** 2 * meanImpact * meanSecondaryMultiplier * meanSecondaryProbability
-    + meanAnchor ** 2 * (meanSecondaryMultiplier ** 2 + triangularVariance(input.secondaryMultiplierRange))
-      * meanSecondaryProbability ** 2
-    + meanAnchor ** 2 * meanSecondaryMultiplier ** 2 * meanSecondaryProbability * (1 - meanSecondaryProbability);
-
-  const secondMoment = secondMomentLef * magnitudeSecondMoment;
-  const variance = Math.max(0, secondMoment - mean ** 2);
-
-  return {
-    mean,
-    variance,
-    standardDeviation: Math.sqrt(variance),
-    coefficientOfVariation: mean > 0 ? Math.sqrt(variance) / mean : 0,
-    varianceAnchor,
-  };
+  const primary = expectedClampedProduct(input.anchorRange, input.impactRange, bounds);
+  const secondary = triangularMean(input.secondaryProbabilityRange)
+    * expectedClampedProduct(input.anchorRange, input.secondaryMultiplierRange, bounds);
+  return tef * susceptibility * (primary + secondary);
 }
 
 export const defaultProfile = Object.freeze({

@@ -66,6 +66,16 @@ final class QkLiveResponse
         if ($error instanceof QkLiveHttpError) {
             return self::error($error->status, $error->errorCode, $error->getMessage());
         }
+        if ($error instanceof QkValidationException) {
+            return self::error(422, $error->errorCode(), $error->getMessage());
+        }
+        if ($error instanceof QkModelException) {
+            return self::error(
+                503,
+                'MODEL_UNAVAILABLE',
+                'The risk model is temporarily unavailable. Please try again later.'
+            );
+        }
         if ($error instanceof QkLiveDbUnavailable) {
             return self::error(503, 'STORAGE_UNAVAILABLE', 'QuickRisk Live storage is temporarily unavailable.');
         }

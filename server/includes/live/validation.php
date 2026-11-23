@@ -168,6 +168,47 @@ function qk_live_validate_timeline($timeline, int $maximumEvents): array
 }
 
 /**
+ * Rejects a timeline whose events belong to another scenario or baseline.
+ *
+ * This is structural identity validation, not recalculation: the server still does not
+ * reproduce the TypeScript risk formulas.
+ *
+ * @param array<int,array<string,mixed>> $timeline
+ */
+function qk_live_assert_timeline_matches_assessment(
+    array $timeline,
+    string $scenarioId,
+    float $baselineEal,
+    string $methodologyVersion
+): void {
+    foreach ($timeline as $event) {
+        $state = (array) ($event['state'] ?? []);
+        $result = (array) ($event['result'] ?? []);
+        if ((string) ($state['scenarioId'] ?? '') !== $scenarioId) {
+            throw new QkLiveHttpError(
+                422,
+                'VALIDATION_ERROR',
+                'A timeline state belongs to a different scenario than the assessment.'
+            );
+        }
+        if (abs((float) ($result['baselineEal'] ?? 0.0) - $baselineEal) > 0.01) {
+            throw new QkLiveHttpError(
+                422,
+                'VALIDATION_ERROR',
+                'A timeline result was calculated against a different baseline exposure.'
+            );
+        }
+        if ((string) ($result['methodologyVersion'] ?? '') !== $methodologyVersion) {
+            throw new QkLiveHttpError(
+                422,
+                'VALIDATION_ERROR',
+                'A timeline result uses a different methodology version.'
+            );
+        }
+    }
+}
+
+/**
  * Validates a complete save or update payload and returns the normalised record.
  *
  * @param array<string,mixed> $payload
@@ -197,6 +238,13 @@ function qk_live_validate_assessment_payload(array $payload, array $liveConfig):
     if ($methodologyVersion !== (string) $result['methodologyVersion']) {
         throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'The methodology version does not match the risk result.');
     }
+
+    qk_live_assert_timeline_matches_assessment(
+        $timeline,
+        $scenarioId,
+        $baselineEal,
+        $methodologyVersion
+    );
 
     $baselineSource = $payload['baselineSource'] ?? [];
     if (!is_array($baselineSource)) {

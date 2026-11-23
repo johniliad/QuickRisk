@@ -63,7 +63,7 @@ export function ResultsDashboard({
 
       <section className="grid gap-4" aria-labelledby="next-steps-heading">
         <div className="grid gap-2">
-          <h2 id="next-steps-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+          <h2 id="next-steps-heading" className="m-0 text-section font-semibold text-heading">
             Your exposure is ready. What next?
           </h2>
           <DataStatusNote label="In this tab only" detail={RESULTS_MEMORY_NOTE} />
@@ -153,7 +153,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-4" aria-labelledby="scenario-table-heading">
-        <h2 id="scenario-table-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="scenario-table-heading" className="m-0 text-section font-semibold text-heading">
           Scenario results
         </h2>
         <ScenarioTable
@@ -170,14 +170,14 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-4" aria-labelledby="thresholds-heading">
-        <h2 id="thresholds-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="thresholds-heading" className="m-0 text-section font-semibold text-heading">
           Probability of exceeding financial thresholds
         </h2>
         <ThresholdTable scenarios={response.scenarios} thresholds={thresholds} symbol={symbol} />
       </section>
 
       <section className="grid gap-6" aria-labelledby="charts-heading">
-        <h2 id="charts-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="charts-heading" className="m-0 text-section font-semibold text-heading">
           Visualisation
         </h2>
         <Alert tone="info" title={publicModel.content.annualisationNotice.title}>
@@ -206,7 +206,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-6" aria-labelledby="sensitivity-heading">
-        <h2 id="sensitivity-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="sensitivity-heading" className="m-0 text-section font-semibold text-heading">
           Sensitivity: which inputs matter most
         </h2>
         <Card>
@@ -218,7 +218,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-4" aria-labelledby="scenario-cards-heading">
-        <h2 id="scenario-cards-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="scenario-cards-heading" className="m-0 text-section font-semibold text-heading">
           Scenario summaries
         </h2>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -266,7 +266,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-4" aria-labelledby="distribution-heading">
-        <h2 id="distribution-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="distribution-heading" className="m-0 text-section font-semibold text-heading">
           Simulated loss distribution by scenario
         </h2>
         <div className="grid gap-6 xl:grid-cols-2">
@@ -281,7 +281,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-4" aria-labelledby="uncertainty-heading">
-        <h2 id="uncertainty-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="uncertainty-heading" className="m-0 text-section font-semibold text-heading">
           Uncertainty and estimate precision
         </h2>
         <Alert
@@ -311,7 +311,7 @@ export function ResultsDashboard({
       </section>
 
       <section className="grid gap-6" aria-labelledby="results-disclaimer-heading">
-        <h2 id="results-disclaimer-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+        <h2 id="results-disclaimer-heading" className="m-0 text-section font-semibold text-heading">
           Disclaimer and retention
         </h2>
         <DisclaimerBlock variant="short" />

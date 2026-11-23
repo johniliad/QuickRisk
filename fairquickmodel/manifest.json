@@ -43,8 +43,8 @@
   },
   "documentation": {
     "modelDocumentation": "docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md",
-    "releaseChecklist": "docs/RELEASE_CHECKLIST.md",
-    "zeroRetentionProof": "docs/ZERO_RETENTION_PROOF.md",
-    "auditReport": "docs/AUDIT_RESPONSE_FAIR-QK-1.1.md"
+    "releaseChecklist": "requirements/RELEASE_CHECKLIST.md",
+    "zeroRetentionProof": "requirements/ZERO_RETENTION_PROOF.md",
+    "auditReport": "requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md"
   }
 }

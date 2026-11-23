@@ -1,4 +1,4 @@
-# QuickRisk Live
+# FAIR QuickRisk
 
 ## About
 
@@ -105,7 +105,7 @@ What is simplified is stated in §13.
 | TEF | 0.001 – 100 events/year | Prevents degenerate extremes; never binds in realistic answers |
 | Susceptibility | 0.005 – 0.99 | It is a probability, so it must not reach 0 or 1 |
 | Impact multiplier | 0.05 – 60 | Bounds the interval arithmetic of anchor × multiplier |
-| Loss magnitude | €1,000 – €500,000,000 | Stops absurd magnitudes compounding through modifiers |
+| Loss magnitude | €1,000 – €500,000,000 per component | The cap applies independently to each sampled primary and secondary magnitude, so a modifier chain cannot move either component outside the published bound |
 | Secondary-loss probability | 0.01 – 0.99 | Keeps the Bernoulli draw meaningful |
 | Randomness | Seeded PRNG, one stream per scenario | The same request shape gives the same distribution; the seed is never stored |
 
@@ -248,7 +248,7 @@ externally validated. A complete set of answers therefore shows "Medium", never 
   in place.
 - The questionnaire and its results are **zero-retention**: processed in memory for one request
   and discarded. No database row, file, PHP session, cookie, browser storage, cache entry or log
-  line is written, and no result URL exists. See `docs/ZERO_RETENTION_PROOF.md`.
+  line is written, and no result URL exists. See `requirements/ZERO_RETENTION_PROOF.md`.
 
 ### 11. QuickRisk Live overlay
 
@@ -268,7 +268,7 @@ realTimeEAL = baselineEAL × multiplier
 Invariants: telemetry 0 with any controls gives ×1.00 (the baseline is preserved); telemetry 100
 with no controls gives ×4.00; telemetry 100 with full controls gives ×0.20. Bands: 0–19 Low,
 20–44 Medium, 45–74 High, 75–100 Critical. The engine is a pure TypeScript module with published
-test vectors (`docs/QUICKRISK_LIVE.md`), and **the SOC data is synthetic** — no production SIEM,
+test vectors (`requirements/QUICKRISK_LIVE.md`), and **the SOC data is synthetic** — no production SIEM,
 EDR, SOAR or SOC feed is connected.
 ### 12. Decision Lab and Board Risk Pack
 
@@ -285,15 +285,26 @@ factor `k`, which allows:
   from `(simulationSeed, treatmentId, version)`;
 - overlap handled by independent coverage (later treatments in the same mechanism group deliver
   only 0.65 by default), never by adding percentages;
-- deterministic decision rules: appetite tests on EAL, P90 and exceedance probability; portfolio
-  ranking by cost then EAL then P90 then delivery time; `Recommended`, `Viable alternative`,
-  `High value / above appetite`, `Dominated` and `Infeasible` labels, each with a one-sentence
-  reason; break-even effectiveness by bisection on real runs, rounded up; and a Risk Reduction
-  Efficiency ratio (`ΔEAL / annualised cost`, never called ROI).
+- deterministic decision rules: the exact comparison may test EAL, P90 and exceedance probability,
+  but **portfolio selection uses expected annual loss only** and requires an annual-loss limit.
+  High-end loss and exceedance criteria depend on a joint scenario-dependence model, so they are
+  displayed and evaluated for the exact comparison but excluded from portfolio ranking and
+  recommendation;
+- portfolio ranking by cost, then EAL, then delivery time, then a deterministic portfolio id;
+  `Recommended`, `Viable alternative`, `High value / above appetite`, `Dominated` and `Infeasible`
+  labels, each with a one-sentence reason; break-even effectiveness by bisection on real runs,
+  rounded up; and a Risk Reduction Efficiency ratio (`ΔEAL / annualised cost`, never called ROI).
+
+Decision Lab sends the published assessment seed and the iteration count the results response
+reports, so the server replays the results page configuration. The assessment is seeded randomly per
+request, so the two figures are draws from the same model and agree to within Monte Carlo noise;
+when the returned baseline is further from the portfolio figure than noise explains, the screen
+states that the answers changed and asks for the assessment to be recalculated.
 
 A nine-month rollout earns a transition year rather than an immediate full benefit. If a
-documented input clamp binds, the analysis says so (`clampWarning`) instead of pretending the
-effect is exact.
+documented input clamp or component loss cap binds, the analysis says so (`clampWarning`) instead
+of pretending the effect is exact. A reachable component cap makes the paired-year magnitude
+scaling an approximation, and that limitation is stated in the Decision Lab and Board Pack.
 
 ### 13. What the method deliberately does not do
 
@@ -301,7 +312,8 @@ effect is exact.
   fixed factor set.
 - Only five scenarios are assessed; other material scenarios are out of scope.
 - Scenario dependencies and correlations are not modelled, so no joint portfolio percentile is
-  reported and the total is not a portfolio P90.
+  reported and the total is not a portfolio P90. Decision Lab likewise does not use joint P90 or
+  exceedance probability to select a treatment portfolio.
 - One magnitude is sampled per trial, so figures are an annualised exposure approximation and not
   realised annual loss totals; a year with no loss event is not a zero-loss outcome.
 - Secondary loss is one occurrence probability and one magnitude distribution per scenario.
@@ -316,14 +328,14 @@ effect is exact.
 
 ```bash
 php tools/validate-model.php          # model structure, bands, clauses and limits
-php tests/run-tests.php               # engine, baseline, validation, audit corrections, headers
+php tests/run-tests.php               # full PHP suite, including Live and Decision Lab
 php tools/simulate-assessment.php     # one end-to-end assessment, printed
 php tools/benchmark.php               # timing at 5,000 and 50,000 iterations
 php tools/dump-model.php              # the effective model after loading and overrides
 ```
 
 Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md` (calibration review and classification),
-`docs/AUDIT_RESPONSE_FAIR-QK-1.1.md` (what the independent audit found and what changed), and
+`requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md` (what the independent audit found and what changed), and
 `/methodology.html` (the same explanation, in plain language, for users).
 
 ---
@@ -338,6 +350,15 @@ Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md` (calibration review and cla
   telemetry into a Real-Time Risk Index, a bounded SOC Threat Multiplier and an illustrative
   real-time EAL, with anonymous sessions, assessment history, timelines, shareable read-only
   assessments, a six-scenario demonstration library and an executive report.
+- **Decision Lab** (optional add-on): a treatment-analysis layer over the same model, with a
+  curated and session-owned treatment library, deterministic portfolio rules, a Risk Reduction
+  Efficiency ratio, saved analyses, shareable Board Risk Packs and a read-only owner history.
+- Three workspace tabs — **Risk Calculator**, **Board Brief** and **Saved Packs** — with
+  methodology, data handling and the disclaimer available as dialogs rather than as separate
+  destinations.
+- Three entry paths on the entry page: a server-calculated 60-second sample, a one-scenario quick
+  check (the other four scenarios are submitted as `Unknown`) and the full five-scenario
+  assessment.
 - A static React/TypeScript frontend, compiled to plain HTML/CSS/JavaScript, with no
   Node.js runtime in production.
 
@@ -351,35 +372,51 @@ Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md` (calibration review and cla
 ## QuickRisk Live in one paragraph
 
 QuickRisk estimates baseline cyber-loss exposure. QuickRisk Live demonstrates how current SOC
-observations and response actions could change the operational risk state. Its risk engine is a
-pure TypeScript module (the only numerical implementation); PHP and MySQL only validate, store
-and return what the engine calculated. Methodology v1.0, coefficients and the four mandatory test
-vectors are documented in `docs/QUICKRISK_LIVE.md`. **The SOC data is synthetic: no production
-SIEM, EDR, SOAR or SOC feed is connected.**
+observations and response actions could change the operational risk state. Its Live risk engine is
+a pure TypeScript module (the only Live numerical implementation); for Live, PHP and MySQL only
+validate, store and return what that engine calculated. Methodology v1.0, coefficients and the four
+mandatory test vectors are documented in `requirements/QUICKRISK_LIVE.md`. **The SOC data is synthetic: no
+production SIEM, EDR, SOAR or SOC feed is connected.**
 
-## Two retention models, deliberately
+## Three retention models, deliberately
 
-| | QuickRisk questionnaire | QuickRisk Live |
-|---|---|---|
-| Storage | none (in memory only) | MySQL, anonymous session |
-| Identity | none | none |
-| Lifetime | page lifetime | session TTL (default 30 days) |
-| Sharing | none | explicit read-only link, revocable |
+| | QuickRisk questionnaire | QuickRisk Live | Decision Lab |
+|---|---|---|---|
+| Storage | none (in memory only) | MySQL, anonymous session | MySQL, anonymous session |
+| Identity | none | none (no name, email, organisation) | none (no name, email, organisation) |
+| Lifetime | page lifetime | session TTL (default 30 days) | session TTL (default 30 days) |
+| Sharing | none | explicit read-only link, revocable | explicit read-only Board Risk Pack link, revocable |
 
 Assessment answers and results for the questionnaire are processed transiently and are **not
 persisted by the application** — not in a database, file, PHP session, cookie, browser storage,
 cache, queue, log, report or third-party service. There is no account, no assessment token, no
-save/resume and no persistent results URL. See `docs/ZERO_RETENTION_PROOF.md` for the evidence and
-the exit test. QuickRisk Live is the one deliberate exception, and it stores only anonymous
-technical state that the user explicitly saves.
+save/resume and no persistent results URL. See `requirements/ZERO_RETENTION_PROOF.md` for the evidence and
+the exit test. QuickRisk Live and Decision Lab are the two deliberate exceptions: each stores only
+anonymous technical state the user explicitly saves. Decision Lab stores the computed comparison,
+portfolio search and treatment selection, not the questionnaire answers, and cannot recompute a
+saved analysis from them.
+
+The interface states these three models rather than leaving them to the documentation. The header
+carries three workspace tabs — **Risk Calculator** (the questionnaire, the results and both
+simulation branches), **Board Brief** (the print-ready summary of the result in this tab) and
+**Saved Packs** (the saved-work list with archive and revoke controls) — while methodology, data
+handling and the disclaimer open as dialogs rather than as destinations. Above them the
+Assess → Results → Explore stepper keeps Live and Decision Lab unavailable until a baseline
+exists. A persistent status line says what the tab is currently holding; a "Where your data goes"
+dialog lists, per surface, what is stored, what deletes it and what can be exported; and "Start
+over" confirms exactly what will be discarded. The entry page offers three paths — a
+server-calculated 60-second sample, a one-scenario quick check and the full five-scenario
+assessment — and says that none of them stores anything. The wording is defined once in
+`frontend/src/content/dataLifecycle.ts` and pinned by `frontend/tests/data-lifecycle.test.ts` and
+`frontend/tests/journey.test.ts`, so an interface change cannot silently contradict
+`tests/zero_retention.test.php`.
 
 ---
 
 ## Repository layout
 
 ```text
-requirements/                          normative requirements document
-FAIR_QuickRisk_DEVELOPMENT_PLAN_v2.md  development plan
+requirements/                          local working notes (git-ignored; not published)
 fairquickmodel/                        authoritative model -> deployed to ~/fairquickmodel/
   manifest.json                        identifiers, versions, iterations, thresholds
   content.json                         disclaimer, methodology, privacy, positioning
@@ -387,26 +424,29 @@ fairquickmodel/                        authoritative model -> deployed to ~/fair
   answer-options.json                  answer option sets
   scenarios.json                       scenario presentation and wording
   parameters.json                      CALIBRATION - server only, never sent to the browser
-  versions/1.0.0.json                  model version record
+  versions/1.3.0.json                  active model version record (1.0.0 is superseded)
 server/                                PHP -> deployed to ~/public_html/quickrisk/
-  api/calculate.php                    the only QuickRisk endpoint (POST, JSON, no-store)
+  api/calculate.php                    the questionnaire endpoint (POST, JSON, no-store)
   includes/                            config, model loader, engine, validation, hardening
   includes/live/                       QuickRisk Live: config, db, repository, validation, handlers
-  live/api/*.php                       QuickRisk Live endpoints (same-origin JSON)
+  includes/decision/                   Decision Lab: config, engine, validation, treatment library
+  live/api/*.php                       Live and Decision Lab endpoints (same-origin JSON)
   live/api/.htaccess                   allow-list for those endpoints
   .htaccess                            deny rules, headers, caching policy
-database/                              QuickRisk Live migrations and scenario seeds
+database/                              QuickRisk Live and Decision Lab migrations and seeds
   001_initial_schema.sql               anonymous_sessions, assessments, events, shares, library
   002_seed_methodology.sql             methodology_versions row for 1.0
   003_seed_scenarios.sql               Ransomware Outbreak
   004_seed_scenarios_more.sql          the other five demonstration scenarios
+  005_decision_lab.sql                 treatment library, custom treatments, saved analyses, shares
 frontend/                              React + TypeScript + Vite (build-time only)
   shared/publicModel.ts                build-time model adapter (public files only)
   src/                                 domain, state, api, validation, components, styles
   src/live/                            QuickRisk Live: engine, store, api client, views
   live/share/index.html                the read-only share shell (second HTML entry)
-  public/                              robots.txt, sitemap.xml, static methodology page,
-                                       live/share/.htaccess (the one rewrite rule)
+  public/                              robots.txt, sitemap.xml, the static methodology page,
+                                       the licence and notice copies, the branded error pages and
+                                       live/share/.htaccess (the share-token rewrite rules)
 static-pages/                          hand-deployed pages, outside the build and never shipped
   UnderConstruction.html               temporary holding notice (self-contained, noindex)
 images/                                the README banner and the GitHub social-preview card
@@ -414,7 +454,9 @@ images/                                the README banner and the GitHub social-p
 tests/                                 PHP test suite (no framework required)
 tools/                                 validation, audit dump, benchmark, baseline, guards,
                                        live-smoke.php, serve-local.mjs, local-router.php
-docs/                                  deployment, model documentation, proofs, checklist
+docs/                                  deployment runbook, model documentation, security and
+                                       privacy notes (the plans, proofs and release checklist are
+                                       held in requirements/)
 ```
 
 ## Build and verify
@@ -426,6 +468,7 @@ Requirements: Node.js LTS and npm for the frontend; PHP 8.x for the API, tests a
 cd frontend
 npm ci
 npm run build            # emits frontend/dist (static assets only, no source maps)
+npm run test:e2e         # browser UI tests; install Chromium first if no local browser
 
 # PHP: engine tests, model validation gate and an end-to-end smoke test
 php tests/run-tests.php
@@ -433,16 +476,17 @@ php tools/validate-model.php
 php tools/simulate-assessment.php
 php tools/benchmark.php
 
-# QuickRisk Live: request flow end to end against the in-memory repository (no MySQL needed)
+# QuickRisk Live and Decision Lab: request/compute paths end to end
 php tools/live-smoke.php
+php tools/decision-smoke.php
 
 # On the host: check the deployed configuration, database and web-root .htaccess
 php tools/preflight.php --web-root="$HOME/public_html/quickrisk" --origin=https://quickrisk.iliadis.net
 ```
 
-Deployment is documented in `docs/DEPLOYMENT.md`, and the complete first-time runbook
-(including MySQL, the Live configuration file and the acceptance checks) is
-`docs/DEPLOYMENT_FIRST_TIME.md` and `docs/DEPLOYMENT_QUICKRISK_LIVE.md`. The short version:
+Deployment is documented in `requirements/DEPLOYMENT_FIRST_TIME.md` and
+`docs/DEPLOYMENT_QUICKRISK_LIVE.md`; the runbook includes MySQL, the Live and Decision Lab
+configuration file and the acceptance checks. The short version:
 
 ```bash
 # 1 + 2. the model, the compiled application and the rendered web-server policy
@@ -451,12 +495,12 @@ Deployment is documented in `docs/DEPLOYMENT.md`, and the complete first-time ru
 # Without shell access (cPanel / FTP): assemble an upload tree, then upload its contents
 php tools/prepare-upload.php --append-beta-gate
 
-# 3. QuickRisk Live storage (once)
-mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/001_initial_schema.sql
-mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/002_seed_methodology.sql
-mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/003_seed_scenarios.sql
-mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/004_seed_scenarios_more.sql
-mysql -u iliadis_quickrisk_user -p iliadis_quickrisk < database/005_decision_lab.sql
+# 3. QuickRisk Live and Decision Lab storage (once; run as a MySQL administrator)
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/001_initial_schema.sql
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/002_seed_methodology.sql
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/003_seed_scenarios.sql
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/004_seed_scenarios_more.sql
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/005_decision_lab.sql
 ```
 
 The web-root `.htaccess` is **rendered at publish time, never copied**: the versioned
@@ -465,16 +509,17 @@ the Cloudflare origin secret. Copying `server/.htaccess` by hand locks the site 
 intended failure mode, not a bug.
 
 No database, no Node.js process and no background service is required for the questionnaire. The
-database is required only by QuickRisk Live; without it, the questionnaire works normally and Live
-reports that storage is unavailable.
+database is required only by QuickRisk Live and Decision Lab; without it, the questionnaire works
+normally and those modules report that storage is unavailable.
 
 ## Running it on your own machine
 
 You need **Node.js 20+** and **PHP 8.2+** (any web server is *optional* — PHP's built-in
-server is enough). If PHP is not on PATH, this repository ships a portable CLI at
-`.tmp/php/php.exe`, or set `QUICKRISK_PHP` to any PHP binary.
+server is enough). If PHP is not on PATH, the local runner looks for a portable CLI at
+`.tmp/php/php.exe` (downloaded into the git-ignored `.tmp/` directory, not shipped in the
+repository); set `QUICKRISK_PHP` to use any PHP binary.
 
-Run the entire application from one terminal:
+Run the questionnaire and calculation API from one terminal:
 
 ```bash
 node tools/serve-local.mjs
@@ -482,13 +527,17 @@ node tools/serve-local.mjs
 
 The script, in order: loads the PHP CLI, runs the model deployment gate
 (`tools/validate-model.php`), builds the frontend if `frontend/dist` is missing (add `--build`
-to force a fresh build, or `--no-validate` to skip the gate), then serves everything from one
-origin — the compiled React app *and* the API — so the endpoint's same-origin protection works
-exactly as it does in production.
+to force a fresh build, or `--no-validate` to skip the gate), then serves the compiled React app and
+the questionnaire API from one origin — so the endpoint's same-origin protection works exactly as it
+does in production. It also routes the core QuickRisk Live endpoints. It does **not** start MySQL and
+it does **not** route the Decision Lab `decision-*.php` endpoints; full Live and Decision Lab
+persistence therefore requires the deployed PHP/MySQL setup described above.
 
 - Open <http://127.0.0.1:8000/> (change the port with `--port 8080`).
 - Methodology: <http://127.0.0.1:8000/methodology.html>.
-- The API lives at `/api/calculate.php` and answers POST only.
+- The questionnaire calculation API lives at `/api/calculate.php` and answers POST only. The same
+  local runner also routes the core QuickRisk Live endpoints; Decision Lab endpoints require the
+  deployed PHP/MySQL setup.
 
 What the local runner does not do: it never starts Apache or a database, and it never stores an
 assessment. It writes one generated override to `.tmp/local-config.php` that allows plain HTTP
@@ -515,8 +564,9 @@ you actually use for calculations must be the one served by the PHP server above
 - Calibration values are application assumptions/heuristics, documented and classified in
   `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md`. They are not universally authoritative FAIR
   constants.
-- Version 1.3.0 corrects defects found by an independent quantitative audit; the findings and
-  the corrections made for each one are recorded in `docs/AUDIT_RESPONSE_FAIR-QK-1.1.md`.
+- Version 1.2.0 corrected defects found by an independent quantitative audit; 1.3.0 carries
+  those corrections unchanged. The findings and the corrections made for each one are recorded in
+  `requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md`.
 - Because no assessment is retained, a calibration change cannot alter any past result.
 
 ## Origin access (Cloudflare only)
@@ -545,7 +595,7 @@ scan of any of them sees the same controls.
 
 | Finding a passive scan reports | Control |
 |---|---|
-| Cookie No HttpOnly Flag | The only cookie (QuickRisk Live session) is `HttpOnly`, `Secure`, `SameSite=Lax`; the session ini options are hardened in `includes/bootstrap.php` |
+| Cookie No HttpOnly Flag | The only cookie (the QuickRisk Live/Decision Lab session) is `HttpOnly`, `Secure`, `SameSite=Lax`; the session ini options are hardened in `includes/bootstrap.php` |
 | Strict-Transport-Security Not Set / Disabled | `max-age=31536000; includeSubDomains` on every response, in the origin policy and (over TLS) from PHP |
 | X-Content-Type-Options Header Missing | `nosniff` on every response, including error documents and JSON |
 | Content Security Policy Not Set | `Content-Security-Policy` from Apache, from `QkHttp` and from the development router |
@@ -564,7 +614,8 @@ Where each control lives:
   the `<style>` block of each document it is about to publish (`--web-root`) and writes its
   sha256 into `style-src`. Editing that CSS changes the hash, so the policy must be
   re-rendered: `php tools/render-apache-policy.php --check` reports a mismatch, and so does
-  the test suite.
+  the test suite. The check needs the deploy secret (or `--secret-file`/`QK_ORIGIN_SECRET`);
+  without a usable gate it exits without writing a policy.
 - **The beta gate must not restate a header.** It is appended after the policy, so its values
   win; the renderer now refuses such a fragment instead of publishing an HSTS `max-age=0`,
   `X-Frame-Options: SAMEORIGIN` or a CORS wildcard.

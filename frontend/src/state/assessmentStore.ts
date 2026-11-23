@@ -10,8 +10,16 @@
 import { create } from 'zustand';
 import { publicModel } from '../../shared/publicModel';
 import type { CalculationRequest, OrganisationAnswers, ScenarioAnswers } from '@/domain/answers';
-import { answerForStep, buildQuestionSteps, type QuestionStep, type View } from '@/domain/assessment';
+import {
+  activeStepsFor,
+  answerForStep,
+  buildQuestionSteps,
+  type AssessmentScope,
+  type QuestionStep,
+  type View,
+} from '@/domain/assessment';
 import type { CalculationResponse } from '@/domain/results';
+import { buildSampleAssessment } from '@/content/sampleAssessment';
 import { CalculationError, describeCalculationError, requestCalculation } from '@/api/calculate';
 
 export type AssessmentStatus = 'idle' | 'calculating' | 'ready' | 'error';
@@ -36,6 +44,10 @@ export const questionSteps: readonly QuestionStep[] = buildQuestionSteps(publicM
 interface AssessmentState {
   view: View;
   stepIndex: number;
+  /** Full five-scenario assessment, or a one-scenario quick check. */
+  scope: AssessmentScope;
+  /** The single scenario a quick check asks about; null in a full assessment. */
+  quickScenarioCode: string | null;
   disclaimerAcknowledged: boolean;
   organisationAnswers: OrganisationAnswers;
   scenarioAnswers: ScenarioAnswers;
@@ -47,6 +59,10 @@ interface AssessmentState {
   setView: (view: View) => void;
   acknowledgeDisclaimer: (acknowledged: boolean) => void;
   startAssessment: () => void;
+  startFullAssessment: () => void;
+  startQuickCheck: (scenarioCode: string) => void;
+  loadSampleAssessment: () => void;
+  calculateLoadedAnswers: () => void;
   answerCurrentStep: (optionCode: string) => void;
   goToStep: (index: number) => void;
   nextStep: () => void;
@@ -57,8 +73,21 @@ interface AssessmentState {
   discardAssessment: () => void;
 }
 
-function stepAt(index: number): QuestionStep | undefined {
-  return questionSteps[Math.min(Math.max(index, 0), Math.max(questionSteps.length - 1, 0))];
+/** The ordered steps the current scope asks. */
+export function stepsForScope(
+  scope: AssessmentScope,
+  quickScenarioCode: string | null,
+): readonly QuestionStep[] {
+  return activeStepsFor(questionSteps, scope, quickScenarioCode);
+}
+
+function stepAt(
+  scope: AssessmentScope,
+  quickScenarioCode: string | null,
+  index: number,
+): QuestionStep | undefined {
+  const steps = stepsForScope(scope, quickScenarioCode);
+  return steps[Math.min(Math.max(index, 0), Math.max(steps.length - 1, 0))];
 }
 
 function withAnswer(
@@ -86,6 +115,8 @@ function withAnswer(
 export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   view: 'landing',
   stepIndex: 0,
+  scope: 'full',
+  quickScenarioCode: null,
   disclaimerAcknowledged: false,
   organisationAnswers: {},
   scenarioAnswers: {},
@@ -111,20 +142,71 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     });
   },
 
+  /**
+   * Entry paths from the landing page.
+   *
+   * All three stop at the disclaimer gate: none of them acknowledges the disclaimer on the
+   * visitor's behalf, and none of them calculates without that acknowledgement. What they
+   * change is how much of the questionnaire stands between the gate and a result.
+   */
+  startFullAssessment: () =>
+    set({
+      scope: 'full',
+      quickScenarioCode: null,
+      view: 'disclaimer',
+      stepIndex: 0,
+      errorMessage: null,
+    }),
+
+  startQuickCheck: (scenarioCode) =>
+    set({
+      scope: 'quick',
+      quickScenarioCode: scenarioCode,
+      view: 'disclaimer',
+      stepIndex: 0,
+      errorMessage: null,
+    }),
+
+  loadSampleAssessment: () => {
+    const sample = buildSampleAssessment(publicModel);
+    set({
+      scope: 'full',
+      quickScenarioCode: null,
+      organisationAnswers: sample.organisationAnswers,
+      scenarioAnswers: sample.scenarioAnswers,
+      view: 'disclaimer',
+      stepIndex: 0,
+      status: 'idle',
+      errorMessage: null,
+      results: null,
+      selectedScenarioCode: null,
+    });
+  },
+
+  /** Calculates answers that are already complete, without walking the questionnaire again. */
+  calculateLoadedAnswers: () => {
+    set({ view: 'calculating', errorMessage: null });
+    void get().submitAssessment();
+  },
+
   answerCurrentStep: (optionCode) => {
     const state = get();
-    const step = stepAt(state.stepIndex);
+    const step = stepAt(state.scope, state.quickScenarioCode, state.stepIndex);
     if (step === undefined) {
       return;
     }
     set(withAnswer(state, step, optionCode));
   },
 
-  goToStep: (index) => set({ stepIndex: Math.min(Math.max(index, 0), questionSteps.length - 1) }),
+  goToStep: (index) => {
+    const state = get();
+    set({ stepIndex: Math.min(Math.max(index, 0), stepsForScope(state.scope, state.quickScenarioCode).length - 1) });
+  },
 
   nextStep: () => {
     const state = get();
-    const step = stepAt(state.stepIndex);
+    const steps = stepsForScope(state.scope, state.quickScenarioCode);
+    const step = stepAt(state.scope, state.quickScenarioCode, state.stepIndex);
     if (step !== undefined && step.required) {
       const answer = answerForStep(step, state.organisationAnswers, state.scenarioAnswers);
       if (answer === undefined) {
@@ -133,7 +215,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
       }
     }
 
-    if (state.stepIndex >= questionSteps.length - 1) {
+    if (state.stepIndex >= steps.length - 1) {
       void get().submitAssessment();
       return;
     }
@@ -221,6 +303,8 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     set({
       view: 'landing',
       stepIndex: 0,
+      scope: 'full',
+      quickScenarioCode: null,
       disclaimerAcknowledged: false,
       organisationAnswers: {},
       scenarioAnswers: {},

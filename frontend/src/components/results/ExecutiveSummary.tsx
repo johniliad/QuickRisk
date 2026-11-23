@@ -41,7 +41,7 @@ export function ExecutiveSummary({
           <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
             Executive summary
           </p>
-          <h2 id="executive-summary-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+          <h2 id="executive-summary-heading" className="m-0 text-title font-bold text-heading">
             Indicative annual cyber-loss exposure
           </h2>
         </div>

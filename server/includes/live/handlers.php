@@ -419,6 +419,9 @@ function qk_live_handle_update_assessment(
     if ($row === null) {
         throw new QkLiveHttpError(404, 'NOT_FOUND', 'Assessment not found.');
     }
+    if ((string) ($row['status'] ?? '') === 'archived') {
+        throw new QkLiveHttpError(409, 'CONFLICT', 'An archived assessment cannot be updated.');
+    }
 
     $record = qk_live_validate_assessment_payload(qk_live_decode_object($rawBody), $liveConfig);
     if (!$repository->methodologyVersionEnabled((string) $record['methodologyVersion'])) {
@@ -506,11 +509,20 @@ function qk_live_handle_save_timeline(
     if ($row === null) {
         throw new QkLiveHttpError(404, 'NOT_FOUND', 'Assessment not found.');
     }
+    if ((string) ($row['status'] ?? '') === 'archived') {
+        throw new QkLiveHttpError(409, 'CONFLICT', 'An archived assessment cannot be updated.');
+    }
 
     $payload = qk_live_decode_object($rawBody);
     $timeline = qk_live_validate_timeline(
         $payload['timeline'] ?? [],
         (int) ($liveConfig['maxTimelineEvents'] ?? 50)
+    );
+    qk_live_assert_timeline_matches_assessment(
+        $timeline,
+        (string) $row['scenarioId'],
+        (float) $row['baselineEal'],
+        (string) $row['methodologyVersion']
     );
     $repository->replaceEvents((int) $row['id'], qk_live_event_rows($timeline));
 
@@ -542,6 +554,9 @@ function qk_live_handle_create_share(
     $row = $repository->findAssessment((int) $session['id'], $publicId);
     if ($row === null) {
         throw new QkLiveHttpError(404, 'NOT_FOUND', 'Assessment not found.');
+    }
+    if ((string) ($row['status'] ?? '') === 'archived') {
+        throw new QkLiveHttpError(409, 'CONFLICT', 'An archived assessment cannot be shared.');
     }
 
     $now = gmdate('Y-m-d H:i:s');

@@ -180,7 +180,7 @@ cat <<'EOF'
 
 Deployment complete.
 
-Next steps (documented in docs/DEPLOYMENT_FIRST_TIME.md):
+Next steps (documented in requirements/DEPLOYMENT_FIRST_TIME.md):
   1. Ensure ~/quickrisk-config/config.php exists with the production origin allow-list
      and a random rate-limit salt.
   2. Confirm the headers a browser actually receives, from anywhere:
@@ -205,5 +205,5 @@ Next steps (documented in docs/DEPLOYMENT_FIRST_TIME.md):
      The secret lives in ~/quickrisk-config/cloudflare-origin-secret (chmod 600) or
      in QK_ORIGIN_SECRET; it is never in the repository.
   5. Run the post-deployment checks, then the zero-retention exit test in
-     docs/ZERO_RETENTION_PROOF.md, and record both in docs/RELEASE_CHECKLIST.md.
+     requirements/ZERO_RETENTION_PROOF.md, and record both in requirements/RELEASE_CHECKLIST.md.
 EOF

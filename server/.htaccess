@@ -45,13 +45,24 @@ DirectoryIndex index.html
 # this stub into a matchable placeholder: this repository is public, so any
 # committed header value would be a known bypass.
 #
+# The REDIRECT_STATUS condition keeps the denial out of Apache's internal
+# subrequests. ErrorDocument serves the branded page (/errors/403.html) through
+# an internal redirect, and a subrequest cannot carry anything the client did
+# not already send. Without this exemption a refused request is answered by
+# Apache's bare "Additionally, a 403 Forbidden error was encountered while
+# trying to use an ErrorDocument" page instead of ours, which is exactly what a
+# visitor of a gated origin or a mistyped URL used to see. REDIRECT_STATUS is
+# set by Apache itself during an internal redirect, so a client cannot forge it,
+# and the gate still refuses every top-level request that lacks the header.
+#
 # Requirement: requirements/QuickRisk_Cloudflare_Origin_Gate_Requirements.md
 # ---------------------------------------------------------------------------
 # >>> QK-ORIGIN-GATE-BEGIN
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # Fail-closed stub. Replaced at deploy time with the X-Origin-Secret check.
-    RewriteRule ^ - [F,L]
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^- [F,L]
 </IfModule>
 # <<< QK-ORIGIN-GATE-END
 

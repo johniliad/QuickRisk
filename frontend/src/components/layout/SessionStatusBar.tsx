@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LIVE_SESSION_RETENTION_DAYS } from '@/content/dataLifecycle';
-import { questionSteps, useAssessmentStore } from '@/state/assessmentStore';
+import { stepsForScope, useAssessmentStore } from '@/state/assessmentStore';
 
 /**
  * Persistent state line.
@@ -19,10 +19,13 @@ export function SessionStatusBar({
   onShowDataHandling: () => void;
 }) {
   const view = useAssessmentStore((state) => state.view);
+  const scope = useAssessmentStore((state) => state.scope);
+  const quickScenarioCode = useAssessmentStore((state) => state.quickScenarioCode);
   const organisationAnswers = useAssessmentStore((state) => state.organisationAnswers);
   const scenarioAnswers = useAssessmentStore((state) => state.scenarioAnswers);
   const results = useAssessmentStore((state) => state.results);
 
+  const totalSteps = stepsForScope(scope, quickScenarioCode).length;
   const answered =
     Object.keys(organisationAnswers).length +
     Object.values(scenarioAnswers).reduce((count, answers) => count + Object.keys(answers).length, 0);
@@ -34,15 +37,15 @@ export function SessionStatusBar({
       : view === 'calculating'
         ? 'Calculating on the server. Your answers stay in this tab.'
         : answered > 0
-          ? `Assessment in progress — ${answered} of ${questionSteps.length} answered in this tab only.`
-          : 'No assessment in this tab. Nothing is stored unless you save in QuickRisk Live or Decision Lab.';
+          ? `Assessment in progress — ${answered} of ${totalSteps} answered in this tab only.`
+          : 'No assessment in this tab.';
 
   return (
     <div className="border-b border-border bg-canvas">
-      <div className="qk-shell flex flex-wrap items-center justify-between gap-2 py-2">
+      <div className="qk-shell flex flex-wrap items-center justify-between gap-2 py-1.5">
         <p className="m-0 max-w-[62rem] text-small text-muted" role="status">
           {message}
-          <span className="hidden sm:inline">
+          <span className="inline">
             {' '}
             Saved work expires with the anonymous session after {LIVE_SESSION_RETENTION_DAYS} days.
           </span>

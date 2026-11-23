@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { IliadisSuiteFooter } from '@/components/layout/IliadisSuiteFooter';
 import { useAssessmentStore } from '@/state/assessmentStore';
 import { publicModel } from '@/model';
 
@@ -6,16 +7,19 @@ import { publicModel } from '@/model';
  * Application footer.
  *
  * The disclaimer short form and the zero-retention statement are repeated here, as
- * required, and the model/version identifiers are always visible.
+ * required, and the model/version identifiers are always visible. Above them sits the
+ * suite strip that places QuickRisk as stage 3 of the ILIADIS Cyber Intelligence Suite.
  */
 export function Footer() {
   const setView = useAssessmentStore((state) => state.setView);
   const { version, content } = publicModel;
 
   return (
-    <footer className="mt-12 border-t border-border bg-canvas">
-      <div className="qk-shell grid gap-6 py-8">
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+    <footer className="mt-10 border-t border-border bg-canvas">
+      <div className="qk-shell grid gap-5 py-6">
+        <IliadisSuiteFooter />
+
+        <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
           <div className="grid gap-2">
             <p className="m-0 text-micro font-bold uppercase tracking-[0.09em] text-muted">
               {content.disclaimer.title}

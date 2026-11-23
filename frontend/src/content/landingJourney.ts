@@ -187,3 +187,79 @@ export const SAMPLE_THRESHOLD_ROWS: readonly SampleThresholdRow[] = [
 
 export const SAMPLE_PREVIEW_DISCLOSURE =
   'These numbers are illustrative only. Your results are produced by the server-side simulation from your own answers and will differ.';
+
+/* ---------------------------------------------------------------------------------------
+ * The entry section.
+ *
+ * The landing page used to open with the disclaimer and the retention prose, then offered a
+ * single "Start the assessment" button. A visitor had to read several hundred words and
+ * commit to eighteen questions before seeing any number. The three actions below are the
+ * three ways in, ordered by cost, so the cheapest way to see the product is the first thing
+ * on the page.
+ * ------------------------------------------------------------------------------------- */
+
+/** Headline of the redesigned hero. */
+export const LANDING_HERO_HEADLINE = 'Quantify annual cyber-loss exposure';
+
+/** One line under the headline, stating what the visitor actually does. */
+export const LANDING_HERO_LEAD =
+  'Answer a short questionnaire, get an indicative annual loss for five scenarios, then explore what makes the number worse or better.';
+
+export type LandingEntryKey = 'sample' | 'quick' | 'full';
+
+export interface LandingEntryAction {
+  readonly key: LandingEntryKey;
+  /** Short label above the title. */
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly description: string;
+  readonly timeEstimate: string;
+  /** Label on the control that starts this path. */
+  readonly ctaLabel: string;
+  /** True for the default demo path, which carries the visual emphasis. */
+  readonly primary: boolean;
+}
+
+export const LANDING_ENTRY_ACTIONS: readonly LandingEntryAction[] = [
+  {
+    key: 'sample',
+    eyebrow: 'See it first',
+    title: 'Load 60-Second Sample',
+    description:
+      'Loads a clearly labelled sample organisation — the middle answer for every question — so you can see the dashboard without answering anything. The sample is real model output, calculated on the server from those sample answers.',
+    timeEstimate: 'about 1 minute',
+    ctaLabel: 'Load the 60-second sample',
+    primary: true,
+  },
+  {
+    key: 'quick',
+    eyebrow: 'Fast practitioner path',
+    title: 'Quick 1-Scenario Check',
+    description:
+      'Answers the organisation profile and one scenario of your choice. The four scenarios you skip are submitted as Unknown, which widens their range instead of inventing a value.',
+    timeEstimate: 'about 3 minutes',
+    ctaLabel: 'Start the quick check',
+    primary: false,
+  },
+  {
+    key: 'full',
+    eyebrow: 'Comprehensive path',
+    title: 'Full 5-Scenario Assessment',
+    description:
+      'The complete guided assessment: organisation profile, then likelihood and impact for all five scenarios, with Unknown available at every step.',
+    timeEstimate: '10–15 minutes',
+    ctaLabel: 'Start the assessment',
+    primary: false,
+  },
+];
+
+/** Sentence under the three entry actions, naming what all three share. */
+export const LANDING_ENTRY_NOTE =
+  'All three paths run the same server-side model and the same five scenarios. Nothing is stored in any of them, and nothing is saved unless you explicitly save later in Live or Decision Lab.';
+
+/** Label of the scenario picker inside the quick-check card. */
+export const LANDING_QUICK_PICKER_LABEL = 'Scenario for the quick check';
+
+/** Help under that picker. */
+export const LANDING_QUICK_PICKER_HELP =
+  'Only this scenario is asked. The other four are submitted as Unknown, so their ranges widen and the estimate precision drops rather than a favourable value being assumed.';

@@ -7,7 +7,8 @@
   the questionnaire, QuickRisk Live or the Decision Lab references it.
 - **Self-contained.** All styling is inline in a single `<style>` block, using the same design
   tokens as `frontend/src/styles/index.css` (ink `#142b3b`, accent `#075e65`, canvas `#f3f7f8`,
-  0.25rem radii, 70rem shell). No fonts, scripts, images or network requests.
+  0.25rem radii, 70rem shell). No fonts, scripts, images or automatically loaded external
+  resources; the only external references are ordinary links to iliadis.net.
 - **Not indexable.** It declares `<meta name="robots" content="noindex, nofollow">` and no
   canonical URL, so a search engine never caches it as the site's home page.
 
@@ -52,10 +53,12 @@ it against the domain, not against the document root.
   into the production build and the page would then ship with every release.
 - `tools/deploy.sh` excludes `UnderConstruction/`, `UnderConstruction.html` and `index.app.html` from
   its `--delete` sweep, so the notice survives a deploy.
-- `tools/deploy.sh` **overwrites** `$WEBROOT/.htaccess` with `server/.htaccess` and then appends
+- `tools/deploy.sh` **renders** `$WEBROOT/.htaccess` with `tools/render-apache-policy.php`: the
+  versioned `server/.htaccess` supplies the rules (as a fail-closed stub), and the renderer injects
+  the Cloudflare origin secret and the inline-style hashes. The deploy then appends
   `~/quickrisk-config/beta-gate.htaccess` (`QK_BETA_GATE` overrides the path), so a deploy never
-  silently opens a beta site. The gate itself is never versioned. Full procedure:
-  `docs/DEPLOYMENT_FIRST_TIME.md`, Step 4.
+  silently opens a beta site. The gate and the secret are never versioned. Full procedure:
+  `requirements/DEPLOYMENT_FIRST_TIME.md`, Step 4.
 - The notice inherits the web-root Content-Security-Policy. It complies by design: one inline
   `<style>` block, allowed by its sha256 hash in `style-src` (the policy allows no inline
   keyword), and no external requests.

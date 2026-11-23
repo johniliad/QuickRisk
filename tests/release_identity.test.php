@@ -37,55 +37,85 @@ $qkRetiredDatabasePatterns = [
 
 $qkRetiredVersionPatterns = ['FAIR-QK-1.2', 'CAL-1.2', 'METH-1.2', 'DISC-1.0'];
 
-/** Current, operator-facing artefacts that must carry the live database name. */
+/**
+ * Reads a document from the local-only `requirements` directory.
+ *
+ * That directory is deliberately outside version control, so a fresh clone has no copy. Returning
+ * an empty string lets the identity checks skip only the assertions that need those documents
+ * instead of failing the whole suite.
+ */
+$qkRequirementDocument = static function (string $root, string $name): string {
+    $path = $root . '/requirements/' . $name;
+
+    return is_file($path) ? (string) file_get_contents($path) : '';
+};
+
+/**
+ * Current, operator-facing artefacts that must carry the live database name.
+ *
+ * The published guides live in `docs/`. The deployment plan and the release records live in
+ * `requirements/`, which is deliberately outside version control and may therefore be absent
+ * (for example on a fresh clone), so it is scanned only when it exists.
+ */
 $qkDatabaseDocuments = static function (string $root): array {
-    return array_merge(
-        [$root . '/README.md', $root . '/server/includes/live/config.php'],
-        qk_test_files($root . '/docs', ['md']),
-        qk_test_files($root . '/database', ['sql'])
-    );
+    $documents = [
+        $root . '/README.md',
+        $root . '/server/includes/live/config.php',
+    ];
+
+    foreach (['/docs', '/requirements'] as $directory) {
+        if (is_dir($root . $directory)) {
+            $documents = array_merge($documents, qk_test_files($root . $directory, ['md']));
+        }
+    }
+
+    return array_merge($documents, qk_test_files($root . '/database', ['sql']));
 };
 
 return [
-    'release identity: the deployment documents name the iliadis_quickrisk database and account' => function (): void {
+    'release identity: the deployment documents name the iliadis_quickrisk database and account' => function () use ($qkRequirementDocument): void {
         $root = qk_test_repository_root();
-        $firstTime = (string) file_get_contents($root . '/docs/DEPLOYMENT_FIRST_TIME.md');
 
-        assertContains(
-            'CREATE DATABASE iliadis_quickrisk',
-            $firstTime,
-            'The first-time deployment guide must create the iliadis_quickrisk database'
-        );
-        assertContains(
-            "CREATE USER 'iliadis_quickrisk_user'@'localhost'",
-            $firstTime,
-            'The first-time deployment guide must create the iliadis_quickrisk_user account'
-        );
-        assertContains(
-            'GRANT SELECT, INSERT, UPDATE, DELETE ON iliadis_quickrisk.*',
-            $firstTime,
-            'The grant must be limited to the iliadis_quickrisk schema'
-        );
-        assertContains(
-            "TO 'iliadis_quickrisk_user'@'localhost'",
-            $firstTime,
-            'The grant must be issued to the iliadis_quickrisk_user account'
-        );
-        assertContains(
-            "'name' => 'iliadis_quickrisk',",
-            $firstTime,
-            'The configuration template must name the iliadis_quickrisk database'
-        );
-        assertContains(
-            "'user' => 'iliadis_quickrisk_user',",
-            $firstTime,
-            'The configuration template must name the iliadis_quickrisk_user account'
-        );
-        assertContains(
-            'mysql -u iliadis_quickrisk_user -p iliadis_quickrisk',
-            $firstTime,
-            'The seed, check and backup commands must use the renamed database and account'
-        );
+        // The deployment plan lives in requirements/, which is not versioned: a fresh clone has
+        // no copy, so those assertions run only where the document exists.
+        $firstTime = $qkRequirementDocument($root, 'DEPLOYMENT_FIRST_TIME.md');
+        if ($firstTime !== '') {
+            assertContains(
+                'CREATE DATABASE iliadis_quickrisk',
+                $firstTime,
+                'The first-time deployment guide must create the iliadis_quickrisk database'
+            );
+            assertContains(
+                "CREATE USER 'iliadis_quickrisk_user'@'localhost'",
+                $firstTime,
+                'The first-time deployment guide must create the iliadis_quickrisk_user account'
+            );
+            assertContains(
+                'GRANT SELECT, INSERT, UPDATE, DELETE ON iliadis_quickrisk.*',
+                $firstTime,
+                'The grant must be limited to the iliadis_quickrisk schema'
+            );
+            assertContains(
+                "TO 'iliadis_quickrisk_user'@'localhost'",
+                $firstTime,
+                'The grant must be issued to the iliadis_quickrisk_user account'
+            );
+            assertContains(
+                "'name' => 'iliadis_quickrisk',",
+                $firstTime,
+                'The configuration template must name the iliadis_quickrisk database'
+            );
+            assertContains(
+                "'user' => 'iliadis_quickrisk_user',",
+                $firstTime,
+                'The configuration template must name the iliadis_quickrisk_user account'
+            );
+            assertContains(
+                'mysql -u iliadis_quickrisk_user -p iliadis_quickrisk',
+                $firstTime,
+                'The seed, check and backup commands must use the renamed database and account'
+            );
+        }
 
         $live = (string) file_get_contents($root . '/docs/DEPLOYMENT_QUICKRISK_LIVE.md');
         assertContains(
@@ -131,7 +161,7 @@ return [
         assertTrue($checked >= 10, 'The deployment artefacts must all be present');
     },
 
-    'release identity: every version identifier is raised by one and agrees across artefacts' => function (): void {
+    'release identity: every version identifier is raised by one and agrees across artefacts' => function () use ($qkRequirementDocument): void {
         $model = qk_test_model();
         $manifest = $model->manifest();
         $root = qk_test_repository_root();
@@ -175,9 +205,11 @@ return [
             'The model documentation must be named after the model identifier'
         );
 
-        $checklist = (string) file_get_contents($root . '/docs/RELEASE_CHECKLIST.md');
-        assertContains('FAIR-QK-1.3', $checklist, 'The release checklist must document the current release');
-        assertContains((string) $manifest['disclaimerVersion'], $checklist, 'The release checklist must state the disclaimer version');
+        $checklist = $qkRequirementDocument($root, 'RELEASE_CHECKLIST.md');
+        if ($checklist !== '') {
+            assertContains('FAIR-QK-1.3', $checklist, 'The release checklist must document the current release');
+            assertContains((string) $manifest['disclaimerVersion'], $checklist, 'The release checklist must state the disclaimer version');
+        }
 
         $package = json_decode((string) file_get_contents($root . '/frontend/package.json'), true);
         assertSame(
@@ -190,9 +222,15 @@ return [
     'release identity: no retired version identifier survives in the current documentation' => function () use ($qkHistoricalDocuments, $qkRetiredVersionPatterns): void {
         $root = qk_test_repository_root();
         $documents = [];
-        foreach (qk_test_files($root . '/docs', ['md']) as $document) {
-            if (!in_array(basename($document), $qkHistoricalDocuments, true)) {
-                $documents[] = $document;
+        // requirements/ is not versioned, so it is scanned only where a local copy exists.
+        foreach (['/docs', '/requirements'] as $directory) {
+            if (!is_dir($root . $directory)) {
+                continue;
+            }
+            foreach (qk_test_files($root . $directory, ['md']) as $document) {
+                if (!in_array(basename($document), $qkHistoricalDocuments, true)) {
+                    $documents[] = $document;
+                }
             }
         }
         $documents[] = $root . '/README.md';

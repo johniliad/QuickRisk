@@ -72,7 +72,7 @@ export function Modal({
             {eyebrow === undefined ? null : (
               <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">{eyebrow}</p>
             )}
-            <h2 id={titleId} className="m-0 text-[var(--text-section)] font-bold text-heading">
+            <h2 id={titleId} className="m-0 text-section font-bold text-heading">
               {title}
             </h2>
           </div>

@@ -59,7 +59,7 @@ export function ExecutiveReport({
         <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
           QuickRisk Live — Executive Risk Assessment
         </p>
-        <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">
+        <h1 className="m-0 text-title font-bold text-heading">
           {assessment.title === '' ? assessment.scenarioName : assessment.title}
         </h1>
         <p className="m-0 text-small text-muted">

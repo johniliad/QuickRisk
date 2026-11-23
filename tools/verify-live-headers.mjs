@@ -158,6 +158,29 @@ async function main() {
       'X-Content-Type-Options is present on ' + label);
   }
 
+  // ---- Branded error documents --------------------------------------------------------
+  // A mistyped URL must land on the application's own page. If the origin gate also
+  // refuses Apache's internal ErrorDocument subrequest, the visitor gets Apache's bare
+  // "Additionally, a 403 Forbidden error was encountered while trying to use an
+  // ErrorDocument…" text instead, which is the regression this check exists for.
+  const missingResponse = await request(origin + '/this-page-does-not-exist-' + Date.now());
+  const missingBody = await missingResponse.text();
+  check(
+    !/Additionally, a 403 Forbidden/i.test(missingBody),
+    "the error document is served, not Apache's bare \"Additionally, a 403 Forbidden\" page"
+  );
+  const branded =
+    /class="brand-mark"/.test(missingBody) || /FAIR <span class="brand-accent">QuickRisk<\/span>/.test(missingBody);
+  if (missingResponse.status === 404) {
+    check(branded, 'a missing page answers with the branded 404 document');
+    check(/This page does not exist/.test(missingBody), 'the branded 404 document explains the missing page');
+  } else if (missingResponse.status === 403) {
+    check(branded, 'a refused request answers with a branded 403 document');
+    note('a missing page answered 403: the beta gate or the origin gate is in force');
+  } else {
+    note('a missing page answered ' + missingResponse.status + '; the branded-page check was skipped');
+  }
+
   // ---- Subresource Integrity ----------------------------------------------------------
   const page = await request(base.toString());
   const html = await page.text();

@@ -25,10 +25,10 @@ export function SampleResultsPreview() {
   const symbol = publicModel.version.currencySymbol;
 
   return (
-    <section aria-labelledby="preview-heading" className="mt-12 grid gap-4">
+    <section aria-labelledby="preview-heading" className="mt-10 grid gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-2">
-          <h2 id="preview-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+          <h2 id="preview-heading" className="m-0 text-title font-bold text-heading">
             See a sample dashboard
           </h2>
           <p className="m-0 max-w-[48rem] text-muted">

@@ -73,7 +73,7 @@ export function ScenarioDetailPanel({
           <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
             Scenario {scenario.order} of {publicModel.scenarios.length}
           </p>
-          <h2 id={`detail-${scenario.code}`} className="m-0 text-[var(--text-title)] font-bold text-heading">
+          <h2 id={`detail-${scenario.code}`} className="m-0 text-title font-bold text-heading">
             {scenario.name}
           </h2>
         </div>

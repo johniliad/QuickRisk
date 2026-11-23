@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   LANDING_BRANCHES,
+  LANDING_ENTRY_ACTIONS,
+  LANDING_ENTRY_NOTE,
   LANDING_FORK_NOTE,
+  LANDING_HERO_HEADLINE,
+  LANDING_QUICK_PICKER_LABEL,
   LANDING_ROLES,
   LANDING_STEPS,
   SAMPLE_PREVIEW_DISCLOSURE,
@@ -99,5 +103,52 @@ describe('landing journey content', () => {
     expect(SAMPLE_THRESHOLD_ROWS.map((row) => row.scenario)).toEqual(
       SAMPLE_SCENARIO_RESULTS.map((scenario) => scenario.name),
     );
+  });
+});
+
+/**
+ * The entry page used to offer one button, so the cheapest way to see a dashboard — a
+ * sample — did not exist. These assertions pin the three paths, their order by cost and
+ * the promise that each of them is the same model.
+ */
+describe('landing entry actions', () => {
+  it('opens with a value proposition rather than the disclaimer', () => {
+    expect(LANDING_HERO_HEADLINE).toBe('Quantify annual cyber-loss exposure');
+    expect(LANDING_HERO_HEADLINE.toLowerCase()).not.toContain('disclaimer');
+  });
+
+  it('offers exactly three ways in, cheapest first', () => {
+    expect(LANDING_ENTRY_ACTIONS.map((action) => action.key)).toEqual(['sample', 'quick', 'full']);
+    expect(LANDING_ENTRY_ACTIONS.map((action) => action.title)).toEqual([
+      'Load 60-Second Sample',
+      'Quick 1-Scenario Check',
+      'Full 5-Scenario Assessment',
+    ]);
+  });
+
+  it('gives every path a time estimate and a control', () => {
+    for (const action of LANDING_ENTRY_ACTIONS) {
+      expect(action.timeEstimate.length).toBeGreaterThan(5);
+      expect(action.ctaLabel.length).toBeGreaterThan(5);
+      expect(action.description.length).toBeGreaterThan(60);
+      expect(action.eyebrow.length).toBeGreaterThan(3);
+    }
+  });
+
+  it('marks only the sample path as the primary demo', () => {
+    expect(LANDING_ENTRY_ACTIONS.filter((action) => action.primary).map((action) => action.key)).toEqual([
+      'sample',
+    ]);
+  });
+
+  it('says the quick check leaves the other scenarios Unknown rather than guessing', () => {
+    const quick = LANDING_ENTRY_ACTIONS.find((action) => action.key === 'quick');
+    expect(quick?.description).toContain('Unknown');
+    expect(LANDING_QUICK_PICKER_LABEL).toContain('Scenario');
+  });
+
+  it('states that all three paths share one model and store nothing', () => {
+    expect(LANDING_ENTRY_NOTE).toContain('same server-side model');
+    expect(LANDING_ENTRY_NOTE).toContain('Nothing is stored');
   });
 });

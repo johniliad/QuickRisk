@@ -61,7 +61,11 @@ function qk_decision_resolved_treatments(array $payload, array $appConfig, int $
     foreach ($selections as $selection) {
         $treatment = qk_decision_treatment_selection($selection, $appConfig);
         if (isset($seen[$treatment['id']])) {
-            continue;
+            throw new QkLiveHttpError(
+                422,
+                'VALIDATION_ERROR',
+                'Two selected treatments resolve to the same identity. Remove or edit one.'
+            );
         }
         $seen[$treatment['id']] = true;
         $treatments[] = $treatment;
@@ -151,6 +155,14 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         );
 
     $appetite = qk_decision_appetite($payload['appetite'] ?? null);
+    if ($action === 'portfolios' && qk_decision_portfolio_appetite_criteria($appetite) === []) {
+        throw new QkLiveHttpError(
+            422,
+            'VALIDATION_ERROR',
+            'Portfolio evaluation requires an annual loss limit. High-end and exceedance criteria '
+                . 'are not used to select portfolios because they depend on a joint distribution.'
+        );
+    }
     $constraints = qk_decision_constraints($payload['constraints'] ?? null);
     $treatments = qk_decision_resolved_treatments($payload, $appConfig, $budget['maxCandidates']);
 
@@ -158,6 +170,25 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
     $realised = qk_decision_realise_effects($treatments, $seed);
 
     $versionMeta = $model->versionMeta();
+    $candidates = [];
+    if ($action === 'portfolios') {
+        $candidates = qk_decision_resolved_treatments(
+            ['treatments' => $payload['candidateTreatments'] ?? $payload['treatments'] ?? []],
+            $appConfig,
+            $budget['maxCandidates']
+        );
+    }
+    $fingerprintTreatments = $action === 'portfolios' ? $candidates : $treatments;
+    $inputFingerprint = qk_decision_input_fingerprint(
+        $validated,
+        $fingerprintTreatments,
+        $appetite,
+        $constraints,
+        $seed,
+        $requestedIterations,
+        $versionMeta,
+        $config
+    );
     $provenance = [
         'quickriskModelId' => (string) $versionMeta['modelId'],
         'quickriskModelVersion' => (string) $versionMeta['modelVersion'],
@@ -165,6 +196,7 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         'boardPackVersion' => QK_BOARD_PACK_VERSION,
         'effectModel' => QK_DECISION_EFFECT_MODEL,
         'simulationSeed' => $seed,
+        'inputFingerprint' => $inputFingerprint,
         'iterations' => (int) $vectors['meta']['iterations'],
         'computeBudget' => [
             'maxIterations' => $budget['maxIterations'],
@@ -193,11 +225,6 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
     }
 
     if ($action === 'portfolios') {
-        $candidates = qk_decision_resolved_treatments(
-            ['treatments' => $payload['candidateTreatments'] ?? $payload['treatments'] ?? []],
-            $appConfig,
-            $budget['maxCandidates']
-        );
         $portfolioRealised = qk_decision_realise_effects($candidates, $seed);
         $search = qk_decision_portfolio_search(
             $vectors,
@@ -220,6 +247,10 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
             'truncated' => $search['truncated'],
             'candidatesConsidered' => $search['candidatesConsidered'],
             'appetiteDefined' => $search['appetiteDefined'],
+            'portfolioAppetiteDefined' => $search['portfolioAppetiteDefined'],
+            'appetiteBasis' => $search['appetiteBasis'],
+            'portfolioCriteria' => $search['portfolioCriteria'],
+            'excludedCriteria' => $search['excludedCriteria'],
             'notes' => $search['notes'],
             'effects' => $portfolioRealised,
             'provenance' => $provenance,
@@ -270,39 +301,21 @@ function qk_decision_save(
     array $appConfig,
     QkDecisionRepository $repository,
     array $cookies,
-    string $rawBody
+    string $rawBody,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'save');
     qk_live_assert_same_origin($server, $appConfig);
     qk_live_assert_json_request($server, $liveConfig, $rawBody);
 
-    $liveRepository = new QkLivePdoRepository(qk_live_pdo($liveConfig));
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
     $session = qk_live_require_session($liveRepository, $cookies, $liveConfig, $server);
     qk_live_assert_csrf($server, $session);
 
     $payload = qk_live_decode_object($rawBody);
-    $result = $payload['result'] ?? null;
-    if (!is_array($result)) {
-        throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'A decision analysis must include its result.');
-    }
-
-    $baselineEal = qk_decision_number($result['baseline']['expectedAnnualLoss'] ?? null, 'The baseline EAL', 0.0, 1.0e14);
-    $treatedEal = qk_decision_number($result['treated']['expectedAnnualLoss'] ?? null, 'The residual EAL', 0.0, 1.0e14);
-    $initial = qk_decision_number($result['cost']['initialInvestment'] ?? 0.0, 'The implementation cost', 0.0, 1.0e12);
-    $annual = qk_decision_number($result['cost']['annualOperatingCost'] ?? 0.0, 'The operating cost', 0.0, 1.0e12);
-    $status = (string) ($result['appetite']['treated']['status'] ?? ($result['appetite']['status'] ?? 'undefined'));
-    if (!in_array($status, ['within', 'above', 'undefined'], true)) {
-        throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'The appetite status is not recognised.');
-    }
-
-    $decisionVersion = qk_live_text(
-        $payload['decisionMethodologyVersion'] ?? QK_DECISION_METHODOLOGY_VERSION,
-        'The Decision Lab methodology version',
-        32,
-        false
-    );
-    if (!$repository->methodologyVersionEnabled($decisionVersion)) {
+    $validated = qk_decision_validate_saved_result($payload, $appConfig);
+    if (!$repository->methodologyVersionEnabled((string) $validated['decisionVersion'])) {
         throw new QkLiveHttpError(
             422,
             'METHODOLOGY_UNKNOWN',
@@ -310,28 +323,26 @@ function qk_decision_save(
         );
     }
 
-    $seed = (int) qk_decision_number($payload['simulationSeed'] ?? null, 'The simulation seed', 1.0, 2147483646.0);
-    $iterations = (int) qk_decision_number($payload['iterations'] ?? null, 'The iteration count', 1000.0, 50000.0);
     $now = gmdate('Y-m-d H:i:s');
 
     $record = [
         'publicId' => qk_live_public_id(),
         'title' => qk_live_text($payload['title'] ?? '', 'The title', 160),
-        'quickriskModelId' => qk_live_text($payload['quickriskModelId'] ?? 'unknown', 'The model id', 32, false),
-        'quickriskModelVersion' => qk_live_text($payload['quickriskModelVersion'] ?? 'unknown', 'The model version', 32, false),
-        'decisionMethodologyVersion' => $decisionVersion,
-        'boardPackVersion' => qk_live_text($payload['boardPackVersion'] ?? QK_BOARD_PACK_VERSION, 'The board pack version', 32),
-        'simulationSeed' => $seed,
-        'iterations' => $iterations,
-        'appetiteStatus' => $status,
-        'baselineEal' => $baselineEal,
-        'treatedEal' => $treatedEal,
-        'initialInvestment' => $initial,
-        'annualOperatingCost' => $annual,
-        'recommendedJson' => qk_live_encode(is_array($payload['recommended'] ?? null) ? $payload['recommended'] : []),
-        'selectionJson' => qk_live_encode(is_array($payload['selection'] ?? null) ? $payload['selection'] : []),
-        'appetiteJson' => qk_live_encode(is_array($payload['appetite'] ?? null) ? $payload['appetite'] : []),
-        'resultJson' => qk_live_encode($result),
+        'quickriskModelId' => (string) $validated['quickriskModelId'],
+        'quickriskModelVersion' => (string) $validated['quickriskModelVersion'],
+        'decisionMethodologyVersion' => (string) $validated['decisionVersion'],
+        'boardPackVersion' => (string) $validated['boardPackVersion'],
+        'simulationSeed' => (int) $validated['simulationSeed'],
+        'iterations' => (int) $validated['iterations'],
+        'appetiteStatus' => (string) $validated['status'],
+        'baselineEal' => (float) $validated['baselineEal'],
+        'treatedEal' => (float) $validated['treatedEal'],
+        'initialInvestment' => (float) $validated['initialInvestment'],
+        'annualOperatingCost' => (float) $validated['annualOperatingCost'],
+        'recommendedJson' => qk_live_encode(is_array($validated['recommended']) ? $validated['recommended'] : []),
+        'selectionJson' => qk_live_encode((array) $validated['selection']),
+        'appetiteJson' => qk_live_encode(is_array($validated['appetite']) ? $validated['appetite'] : []),
+        'resultJson' => qk_live_encode((array) $validated['result']),
         'createdAt' => $now,
         'updatedAt' => $now,
     ];
@@ -351,12 +362,14 @@ function qk_decision_list(
     array $server,
     array $appConfig,
     QkDecisionRepository $repository,
-    array $cookies
+    array $cookies,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'list');
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
     $session = qk_live_require_session(
-        new QkLivePdoRepository(qk_live_pdo($liveConfig)),
+        $liveRepository,
         $cookies,
         $liveConfig,
         $server
@@ -442,21 +455,22 @@ function qk_decision_share_create(
     array $appConfig,
     QkDecisionRepository $repository,
     array $cookies,
-    string $publicId
+    string $publicId,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'shareCreate');
     qk_live_assert_same_origin($server, $appConfig);
-    $session = qk_live_require_session(
-        new QkLivePdoRepository(qk_live_pdo($liveConfig)),
-        $cookies,
-        $liveConfig,
-        $server
-    );
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
+    $session = qk_live_require_session($liveRepository, $cookies, $liveConfig, $server);
     qk_live_assert_csrf($server, $session);
 
-    if ($repository->findDecision((int) $session['id'], $publicId) === null) {
+    $record = $repository->findDecision((int) $session['id'], $publicId);
+    if ($record === null) {
         throw new QkLiveHttpError(404, 'NOT_FOUND', 'Decision analysis not found.');
+    }
+    if ((string) ($record['status'] ?? '') === 'archived') {
+        throw new QkLiveHttpError(409, 'CONFLICT', 'An archived analysis cannot be shared.');
     }
 
     $now = gmdate('Y-m-d H:i:s');
@@ -552,12 +566,14 @@ function qk_decision_treatment_catalogue(
     array $server,
     array $appConfig,
     QkDecisionRepository $repository,
-    array $cookies
+    array $cookies,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'list');
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
     $session = qk_live_require_session(
-        new QkLivePdoRepository(qk_live_pdo($liveConfig)),
+        $liveRepository,
         $cookies,
         $liveConfig,
         $server
@@ -591,14 +607,16 @@ function qk_decision_custom_create(
     array $appConfig,
     QkDecisionRepository $repository,
     array $cookies,
-    string $rawBody
+    string $rawBody,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'update');
     qk_live_assert_same_origin($server, $appConfig);
     qk_live_assert_json_request($server, $liveConfig, $rawBody);
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
     $session = qk_live_require_session(
-        new QkLivePdoRepository(qk_live_pdo($liveConfig)),
+        $liveRepository,
         $cookies,
         $liveConfig,
         $server
@@ -639,13 +657,15 @@ function qk_decision_custom_delete(
     array $appConfig,
     QkDecisionRepository $repository,
     array $cookies,
-    string $publicId
+    string $publicId,
+    ?QkLiveRepository $liveRepository = null
 ): array {
     $liveConfig = qk_live_config($appConfig);
     qk_live_rate_limit($liveConfig, $server, 'update');
     qk_live_assert_same_origin($server, $appConfig);
+    $liveRepository ??= new QkLivePdoRepository(qk_live_pdo($liveConfig));
     $session = qk_live_require_session(
-        new QkLivePdoRepository(qk_live_pdo($liveConfig)),
+        $liveRepository,
         $cookies,
         $liveConfig,
         $server

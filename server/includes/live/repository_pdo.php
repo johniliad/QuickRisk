@@ -323,9 +323,14 @@ final class QkLivePdoRepository implements QkLiveRepository
              INNER JOIN assessments a ON a.id = s.assessment_id
              WHERE s.token_hash = :token_hash AND s.revoked_at IS NULL
                AND (s.expires_at IS NULL OR s.expires_at > :now)
+               AND a.status <> :archived
              LIMIT 1'
         );
-        $statement->execute([':token_hash' => $tokenHash, ':now' => $now]);
+        $statement->execute([
+            ':token_hash' => $tokenHash,
+            ':now' => $now,
+            ':archived' => 'archived',
+        ]);
         $row = $statement->fetch();
 
         return is_array($row) ? $this->hydrate($row) : null;

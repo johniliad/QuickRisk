@@ -10,6 +10,7 @@ frontend/dist/
 frontend/.vite/
 npm-debug.log*
 *.tsbuildinfo
+.clinerules
 
 # Local tooling used during development (e.g. a portable PHP CLI)
 .tmp/
@@ -75,6 +76,10 @@ Thumbs.db
 # Test / coverage
 coverage/
 *.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/.playwright/
 
 # Seed export temp bundles
 .tmp-seed/

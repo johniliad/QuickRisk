@@ -577,4 +577,86 @@ return [
             'An Unknown disruption cost alone must stay within the documented bound'
         );
     },
+
+    'corrections: sensitivity uses the submitted scenario answer codes' => function (): void {
+        $model = qk_test_model();
+        $profile = qk_test_profile();
+        $answers = qk_test_scenario_answers('VERY_LIKELY', 'CRITICAL');
+        $sensitivity = FairEngine::sensitivity($model, $profile, $answers);
+
+        // Independent expectation from the real validated payload and sampled vectors. The
+        // previous bug used no scenario answers at all, producing a baseline several times too
+        // low, so this cannot be satisfied by repeating the analytic helper's key mapping.
+        $validated = QkValidation::validatePayload($model, qk_test_payload($profile, $answers));
+        $vectors = FairEngine::lossVectors($model, $validated, 20261029, 20000);
+        $sampled = 0.0;
+        foreach ($vectors['scenarios'] as $scenario) {
+            $sampled += array_sum($scenario['losses']) / count($scenario['losses']);
+        }
+        assertRelativeClose(
+            $sampled,
+            (float) $sensitivity['baselineExpectedAnnualLoss'],
+            0.03,
+            'The sensitivity baseline must use the answers the validator returned'
+        );
+
+        $s1Likelihood = null;
+        foreach ($sensitivity['factors'] as $factor) {
+            if ($factor['questionCode'] === 'S1A') {
+                $s1Likelihood = $factor;
+            }
+        }
+        assertTrue($s1Likelihood !== null, 'The S1 likelihood factor must be assessed');
+
+        $variantAnswers = $answers;
+        $variantAnswers['S1']['S1A'] = (string) $s1Likelihood['lowOption'];
+        $variantValidated = QkValidation::validatePayload(
+            $model,
+            qk_test_payload($profile, $variantAnswers)
+        );
+        $variantVectors = FairEngine::lossVectors($model, $variantValidated, 20261029, 20000);
+        $variantSampled = 0.0;
+        foreach ($variantVectors['scenarios'] as $scenario) {
+            $variantSampled += array_sum($scenario['losses']) / count($scenario['losses']);
+        }
+        assertRelativeClose(
+            $variantSampled,
+            (float) $s1Likelihood['lowExpectedAnnualLoss'],
+            0.03,
+            'Varying one scenario question must hold the other submitted answer fixed'
+        );
+    },
+
+    'corrections: the sampled loss components respect the documented clamp' => function (): void {
+        $model = qk_test_model();
+        $cap = (float) $model->parameters()['sampling']['clamps']['lossMagnitude']['max'];
+        $profile = qk_test_profile([
+            'QP2' => 'EXTREME',
+            'QP6' => 'VERY_LOW',
+            'QP8' => 'GT10M',
+        ]);
+        $response = qk_test_calculate(
+            qk_test_payload($profile, qk_test_scenario_answers('VERY_LIKELY', 'CRITICAL')),
+            12345,
+            20000
+        );
+
+        foreach ($response['scenarios'] as $scenario) {
+            $statistics = $scenario['statistics'];
+            assertLessThan(
+                $cap + 1.0,
+                (float) $statistics['expectedPrimaryLossMagnitude'],
+                'The expected primary component must respect the component clamp'
+            );
+            assertLessThan(
+                $cap + 1.0,
+                (float) $statistics['expectedSecondaryLossMagnitude'],
+                'The expected secondary component must respect the component clamp'
+            );
+            assertTrue(
+                (float) $statistics['expectedPrimaryLossMagnitude'] > $cap * 0.9,
+                'The fixture must exercise the upper clamp'
+            );
+        }
+    },
 ];

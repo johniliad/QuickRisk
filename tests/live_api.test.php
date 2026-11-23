@@ -589,5 +589,86 @@ return [
             );
         }
     },
+
+    'live: an archived assessment cannot create a new share link' => function (): void {
+        $config = qk_live_test_config();
+        $repository = qk_live_test_repository();
+        $server = qk_live_test_server();
+        $session = qk_live_test_session($repository, $config, $server);
+        $request = array_merge($server, ['HTTP_X_LIVE_CSRF' => $session['csrf']]);
+
+        $created = qk_live_handle_create_assessment(
+            $request,
+            $config,
+            $repository,
+            $session['cookies'],
+            (string) json_encode(qk_live_test_payload())
+        );
+        $publicId = (string) $created['payload']['data']['publicId'];
+        qk_live_handle_archive($request, $config, $repository, $session['cookies'], $publicId);
+
+        try {
+            qk_live_handle_create_share($request, $config, $repository, $session['cookies'], $publicId);
+            qk_fail('An archived assessment must not create a share link');
+        } catch (QkLiveHttpError $error) {
+            assertSame(409, $error->status, 'Archived sharing must return 409');
+        }
+    },
+
+    'live: a timeline that belongs to another scenario is rejected' => function (): void {
+        $config = qk_live_test_config();
+        $repository = qk_live_test_repository();
+        $server = qk_live_test_server();
+        $session = qk_live_test_session($repository, $config, $server);
+        $request = array_merge($server, ['HTTP_X_LIVE_CSRF' => $session['csrf']]);
+
+        $payload = qk_live_test_payload();
+        $payload['timeline'][0]['state']['scenarioId'] = 'S2';
+        try {
+            qk_live_handle_create_assessment(
+                $request,
+                $config,
+                $repository,
+                $session['cookies'],
+                (string) json_encode($payload)
+            );
+            qk_fail('A timeline from another scenario must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'A scenario-incoherent timeline must return 422');
+        }
+    },
+
+    'live: a timeline calculated against another baseline is rejected' => function (): void {
+        $config = qk_live_test_config();
+        $repository = qk_live_test_repository();
+        $server = qk_live_test_server();
+        $session = qk_live_test_session($repository, $config, $server);
+        $request = array_merge($server, ['HTTP_X_LIVE_CSRF' => $session['csrf']]);
+
+        $created = qk_live_handle_create_assessment(
+            $request,
+            $config,
+            $repository,
+            $session['cookies'],
+            (string) json_encode(qk_live_test_payload())
+        );
+        $publicId = (string) $created['payload']['data']['publicId'];
+        $timeline = $created['payload']['data']['timeline'];
+        $timeline[0]['result']['baselineEal'] = 999999.0;
+
+        try {
+            qk_live_handle_save_timeline(
+                $request,
+                $config,
+                $repository,
+                $session['cookies'],
+                $publicId,
+                (string) json_encode(['timeline' => $timeline])
+            );
+            qk_fail('A timeline from another baseline must be rejected');
+        } catch (QkLiveHttpError $error) {
+            assertSame(422, $error->status, 'A baseline-incoherent timeline must return 422');
+        }
+    },
 ];
 

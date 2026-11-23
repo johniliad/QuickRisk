@@ -898,7 +898,7 @@ export function DecisionLabView() {
     <div className="grid gap-6">
       <header className="grid gap-2">
         <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">Decision Lab</p>
-        <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">
+        <h1 className="m-0 text-title font-bold text-heading">
           Explore how different investments and risk treatments could change your cyber-risk exposure
         </h1>
         <p className="m-0 text-small text-muted">

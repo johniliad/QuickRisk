@@ -31,6 +31,11 @@ export interface JourneyInput {
 
 const ASSESS_VIEWS: ReadonlySet<View> = new Set<View>(['disclaimer', 'questionnaire', 'calculating']);
 
+/**
+ * The printable report is part of the results step. The Board Brief is not: it prints the
+ * result that already exists, and opening it without one shows an empty state rather than a
+ * step of its own.
+ */
 const RESULT_VIEWS: ReadonlySet<View> = new Set<View>(['results', 'scenario-detail', 'report']);
 
 /**
@@ -45,6 +50,7 @@ const EXPLORE_VIEWS: ReadonlySet<View> = new Set<View>([
   'decision-lab',
   'decision-history',
   'history',
+  'saved-packs',
 ]);
 
 export function resolveJourneySteps({ view, hasAnswers, hasResults }: JourneyInput): readonly JourneyStep[] {

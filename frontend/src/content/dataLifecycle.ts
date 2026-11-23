@@ -409,6 +409,28 @@ export const DATA_CONTROLS: readonly string[] = [
   'Revoke link disables a read-only share link without deleting the saved record.',
 ];
 
+/**
+ * The one-line trust strip under the landing headline.
+ *
+ * The landing page used to carry the full retention prose and the disclaimer above the fold.
+ * These three claims are the whole of what a visitor needs before choosing a path; each one
+ * opens the reference modal that states it in full, so the detail is one click away instead
+ * of being a wall in front of the product.
+ */
+export type ReferenceModalKey = 'methodology' | 'privacy' | 'disclaimer';
+
+export interface TrustStripItem {
+  readonly key: string;
+  readonly label: string;
+  readonly modal: ReferenceModalKey;
+}
+
+export const TRUST_STRIP_ITEMS: readonly TrustStripItem[] = [
+  { key: 'retention', label: 'Zero-retention by default', modal: 'privacy' },
+  { key: 'soc', label: 'Synthetic SOC signals', modal: 'methodology' },
+  { key: 'model', label: 'Indicative FAIR-QK model', modal: 'methodology' },
+];
+
 export function lifecycleFor(key: SurfaceKey): SurfaceLifecycle {
   const entry = DATA_LIFECYCLE.find((surface) => surface.key === key);
   if (entry === undefined) {

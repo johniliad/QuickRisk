@@ -352,9 +352,10 @@ final class FairEngine
      * multiplier.
      *
      * @param array<string,mixed> $ranges
+     * @param array{min:float,max:float} $lossClamp
      * @return array<string,float|bool>
      */
-    private static function simulateIteration(QkDistributions $rng, array $ranges): array
+    private static function simulateIteration(QkDistributions $rng, array $ranges, array $lossClamp): array
     {
         $tef = self::sampleInput($rng, $ranges['threatEventFrequency']);
         $susceptibility = self::sampleInput($rng, $ranges['susceptibility']);
@@ -362,12 +363,18 @@ final class FairEngine
 
         $anchor = self::sampleInput($rng, $ranges['lossMagnitudeAnchor']);
         $impactMultiplier = self::sampleInput($rng, $ranges['impactMultiplier']);
-        $primaryLoss = $anchor * $impactMultiplier;
+        // The documented loss-magnitude clamp applies to each sampled primary and secondary
+        // component. Applying it only to the displayed input ranges would let the simulated
+        // component exceed the published bound.
+        $primaryLoss = self::clampLossComponent($anchor * $impactMultiplier, $lossClamp);
 
         $secondaryLoss = 0.0;
         $secondaryProbability = self::sampleInput($rng, $ranges['secondaryLossProbability']);
         if ($rng->sampleBernoulli($secondaryProbability)) {
-            $secondaryLoss = $anchor * self::sampleInput($rng, $ranges['secondaryLossMultiplier']);
+            $secondaryLoss = self::clampLossComponent(
+                $anchor * self::sampleInput($rng, $ranges['secondaryLossMultiplier']),
+                $lossClamp
+            );
         }
 
         $lossMagnitude = $primaryLoss + $secondaryLoss;
@@ -384,6 +391,16 @@ final class FairEngine
             'annualLoss' => $lossEventFrequency * $lossMagnitude,
             'secondaryOccurred' => $secondaryLoss > 0.0,
         ];
+    }
+
+    /**
+     * Applies the documented component-level loss-magnitude clamp.
+     *
+     * @param array{min:float,max:float} $clamp
+     */
+    private static function clampLossComponent(float $value, array $clamp): float
+    {
+        return QkDistributions::clamp($value, (float) $clamp['min'], (float) $clamp['max']);
     }
 
     /**
@@ -467,11 +484,15 @@ final class FairEngine
                 (string) ($answers[(string) $scenario['impactQuestion']['code']] ?? $model->unknownCode())
             );
             $ranges = $inputs['ranges'];
+            $lossClamp = [
+                'min' => (float) ($clamps['lossMagnitude']['min'] ?? 1000.0),
+                'max' => (float) ($clamps['lossMagnitude']['max'] ?? 500000000.0),
+            ];
 
             $rng = new QkDistributions($scenarioSeed);
             $losses = [];
             for ($iteration = 0; $iteration < $iterations; $iteration++) {
-                $losses[] = (float) self::simulateIteration($rng, $ranges)['annualLoss'];
+                $losses[] = (float) self::simulateIteration($rng, $ranges, $lossClamp)['annualLoss'];
             }
 
             $scenarios[] = [
@@ -483,6 +504,13 @@ final class FairEngine
                     'threatEventFrequency' => self::inputMean($ranges['threatEventFrequency']),
                     'susceptibility' => self::inputMean($ranges['susceptibility']),
                     'lossMagnitudeAnchor' => self::inputMean($ranges['lossMagnitudeAnchor']),
+                    'lossMagnitude' => self::expectedLossMagnitude(
+                        $ranges,
+                        [
+                            'min' => (float) ($clamps['lossMagnitude']['min'] ?? 1000.0),
+                            'max' => (float) ($clamps['lossMagnitude']['max'] ?? 500000000.0),
+                        ]
+                    ),
                 ],
                 'clamps' => [
                     'susceptibility' => (array) ($clamps['susceptibility'] ?? ['min' => 0.0, 'max' => 1.0]),
@@ -613,6 +641,11 @@ final class FairEngine
         $impactRange = $ranges['impactMultiplier'];
         $secondaryProbabilityRange = $ranges['secondaryLossProbability'];
         $secondaryMultiplierRange = $ranges['secondaryLossMultiplier'];
+        $clamps = (array) ($parameters['sampling']['clamps'] ?? []);
+        $lossClamp = [
+            'min' => (float) ($clamps['lossMagnitude']['min'] ?? 1000.0),
+            'max' => (float) ($clamps['lossMagnitude']['max'] ?? 500000000.0),
+        ];
 
         // 6. Monte Carlo simulation, entirely in server memory.
         $rng = new QkDistributions($seed);
@@ -626,7 +659,7 @@ final class FairEngine
         $secondaryOccurrences = 0;
 
         for ($iteration = 0; $iteration < $iterations; $iteration++) {
-            $draw = self::simulateIteration($rng, $ranges);
+            $draw = self::simulateIteration($rng, $ranges, $lossClamp);
             $tef = (float) $draw['threatEventFrequency'];
             $susceptibility = (float) $draw['susceptibility'];
 
@@ -964,24 +997,186 @@ final class FairEngine
         array $profileAnswers,
         array $answers
     ): float {
+        $scenario = $model->scenario($scenarioCode);
+        $likelihoodCode = (string) $scenario['likelihoodQuestion']['code'];
+        $impactCode = (string) $scenario['impactQuestion']['code'];
+        // The HTTP validator returns answers keyed by the model's question codes (S1A/S1B).
+        // Internal sensitivity variants use the semantic keys. Accept both here, with the
+        // semantic key taking precedence for the factor currently being varied.
+        $likelihood = (string) (
+            $answers['likelihood']
+            ?? $answers[$likelihoodCode]
+            ?? $model->unknownCode()
+        );
+        $impact = (string) (
+            $answers['impact']
+            ?? $answers[$impactCode]
+            ?? $model->unknownCode()
+        );
+
         $ranges = self::buildScenarioInputs(
             $model,
             $scenarioCode,
             $profileAnswers,
-            (string) ($answers['likelihood'] ?? $model->unknownCode()),
-            (string) ($answers['impact'] ?? $model->unknownCode())
+            $likelihood,
+            $impact
         )['ranges'];
+        $parameters = $model->parameters();
+        $clamps = (array) ($parameters['sampling']['clamps'] ?? []);
+        $lossClamp = [
+            'min' => (float) ($clamps['lossMagnitude']['min'] ?? 1000.0),
+            'max' => (float) ($clamps['lossMagnitude']['max'] ?? 500000000.0),
+        ];
 
         $tef = self::inputMean($ranges['threatEventFrequency']);
         $susceptibility = self::inputMean($ranges['susceptibility']);
-        $anchor = self::inputMean($ranges['lossMagnitudeAnchor']);
-        $impact = self::inputMean($ranges['impactMultiplier']);
-        $secondaryProbability = self::inputMean($ranges['secondaryLossProbability']);
-        $secondaryMultiplier = self::inputMean($ranges['secondaryLossMultiplier']);
-
-        $value = $tef * $susceptibility * ($anchor * $impact + $anchor * $secondaryMultiplier * $secondaryProbability);
+        $value = $tef * $susceptibility * self::expectedLossMagnitude($ranges, $lossClamp);
 
         return is_finite($value) ? $value : 0.0;
+    }
+
+    /**
+     * Expected per-event loss magnitude under the component cap.
+     *
+     * @param array<string,mixed> $ranges
+     * @param array{min:float,max:float} $clamp
+     */
+    public static function expectedLossMagnitude(array $ranges, array $clamp): float
+    {
+        $primary = self::expectedClampedProduct(
+            $ranges['lossMagnitudeAnchor'],
+            $ranges['impactMultiplier'],
+            $clamp
+        );
+        $secondary = self::inputMean($ranges['secondaryLossProbability'])
+            * self::expectedClampedProduct(
+                $ranges['lossMagnitudeAnchor'],
+                $ranges['secondaryLossMultiplier'],
+                $clamp
+            );
+        $value = $primary + $secondary;
+
+        return is_finite($value) ? $value : 0.0;
+    }
+
+    /**
+     * Expectation of clamp(X * Y) for two independent model inputs.
+     *
+     * A deterministic 24 by 24 midpoint integration over the inputs' quantile functions keeps
+     * the analytic sensitivity path aligned with the sampled component clamp. Sixteen-bit
+     * precision is not required: this is a sensitivity and reconciliation value, while the
+     * reported assessment statistics come from the Monte Carlo sample.
+     *
+     * @param array<string,mixed> $left
+     * @param array<string,mixed> $right
+     * @param array{min:float,max:float} $clamp
+     */
+    private static function expectedClampedProduct(array $left, array $right, array $clamp): float
+    {
+        $minimumProduct = self::inputMinimum($left) * self::inputMinimum($right);
+        $maximumProduct = self::inputMaximum($left) * self::inputMaximum($right);
+        if ($minimumProduct >= (float) $clamp['min'] && $maximumProduct <= (float) $clamp['max']) {
+            // The clamp cannot bind anywhere in the support, so the independent product's
+            // expectation is exact without numerical integration.
+            return self::inputMean($left) * self::inputMean($right);
+        }
+
+        $points = 24;
+        $total = 0.0;
+        for ($leftIndex = 0; $leftIndex < $points; $leftIndex++) {
+            $leftValue = self::inputQuantile($left, ($leftIndex + 0.5) / $points);
+            for ($rightIndex = 0; $rightIndex < $points; $rightIndex++) {
+                $rightValue = self::inputQuantile($right, ($rightIndex + 0.5) / $points);
+                $total += self::clampLossComponent($leftValue * $rightValue, $clamp);
+            }
+        }
+
+        return $total / ($points * $points);
+    }
+
+    /** @param array<string,mixed> $input */
+    private static function inputMinimum(array $input): float
+    {
+        if (($input['kind'] ?? 'triangular') !== 'mixture') {
+            return (float) $input['min'];
+        }
+        $minimum = INF;
+        foreach ((array) ($input['components'] ?? []) as $component) {
+            $minimum = min($minimum, (float) $component['min']);
+        }
+
+        return is_finite($minimum) ? $minimum : 0.0;
+    }
+
+    /** @param array<string,mixed> $input */
+    private static function inputMaximum(array $input): float
+    {
+        if (($input['kind'] ?? 'triangular') !== 'mixture') {
+            return (float) $input['max'];
+        }
+        $maximum = -INF;
+        foreach ((array) ($input['components'] ?? []) as $component) {
+            $maximum = max($maximum, (float) $component['max']);
+        }
+
+        return is_finite($maximum) ? $maximum : 0.0;
+    }
+
+    /**
+     * Quantile function for a triangular or weighted-mixture input.
+     *
+     * @param array<string,mixed> $input
+     */
+    private static function inputQuantile(array $input, float $probability): float
+    {
+        $u = QkDistributions::clamp($probability, 1.0e-12, 1.0 - 1.0e-12);
+        $components = array_values((array) ($input['components'] ?? []));
+        if (($input['kind'] ?? 'triangular') !== 'mixture' || $components === []) {
+            return self::triangularQuantile(
+                (float) $input['min'],
+                (float) $input['mode'],
+                (float) $input['max'],
+                $u
+            );
+        }
+
+        $cumulative = 0.0;
+        $selected = $components[count($components) - 1];
+        $componentProbability = $u;
+        foreach ($components as $component) {
+            $weight = (float) ($component['weight'] ?? 0.0);
+            if ($weight <= 0.0) {
+                continue;
+            }
+            $next = $cumulative + $weight;
+            if ($u < $next) {
+                $selected = $component;
+                $componentProbability = ($u - $cumulative) / $weight;
+                break;
+            }
+            $cumulative = $next;
+        }
+
+        return self::triangularQuantile(
+            (float) $selected['min'],
+            (float) $selected['mode'],
+            (float) $selected['max'],
+            QkDistributions::clamp($componentProbability, 0.0, 1.0 - 1.0e-12)
+        );
+    }
+
+    private static function triangularQuantile(float $min, float $mode, float $max, float $u): float
+    {
+        [$a, $m, $b] = QkDistributions::normaliseRange($min, $mode, $max);
+        if ($b - $a <= 1.0e-12) {
+            return $a;
+        }
+        $split = ($m - $a) / ($b - $a);
+        if ($u < $split) {
+            return $a + sqrt($u * ($b - $a) * ($m - $a));
+        }
+
+        return $b - sqrt((1.0 - $u) * ($b - $a) * ($b - $m));
     }
 
     /**

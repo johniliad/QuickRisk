@@ -65,6 +65,25 @@ describe('assessment journey', () => {
 });
 
 /**
+ * The two workspace tabs added in Phase 1 are views in the same journey, not new
+ * destinations: the Board Brief prints the current result, and Saved Packs is readable
+ * without a baseline for the same reason History is.
+ */
+describe('workspace tabs inside the journey', () => {
+  it('marks the results step done on the Board Brief, which prints that result', () => {
+    expect(statuses({ view: 'board-brief', hasAnswers: true, hasResults: true }).results).toBe('done');
+  });
+
+  it('does not claim a result the Board Brief cannot print', () => {
+    expect(statuses({ view: 'board-brief', hasAnswers: false, hasResults: false }).results).toBe('locked');
+  });
+
+  it('never locks Saved Packs', () => {
+    expect(statuses({ view: 'saved-packs', hasAnswers: false, hasResults: false }).explore).toBe('active');
+  });
+});
+
+/**
  * The milestone is the only forward-looking sentence in the questionnaire. It has to fire
  * at the real section boundaries and nowhere else, or it becomes noise.
  */

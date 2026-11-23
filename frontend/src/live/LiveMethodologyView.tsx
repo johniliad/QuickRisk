@@ -18,7 +18,7 @@ export function LiveMethodologyView() {
         <p className="m-0 text-micro font-bold uppercase tracking-[0.13em] text-accent-strong">
           Methodology v{LIVE_METHODOLOGY_VERSION}
         </p>
-        <h1 className="m-0 text-[var(--text-title)] font-bold text-heading">How QuickRisk Live works</h1>
+        <h1 className="m-0 text-title font-bold text-heading">How QuickRisk Live works</h1>
         <p className="m-0 max-w-[52rem] text-muted">
           QuickRisk Live adds a deterministic operational layer to the QuickRisk quantitative baseline. It
           converts synthetic SOC observations and response actions into a Real-Time Risk Index, a bounded SOC

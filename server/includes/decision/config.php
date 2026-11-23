@@ -69,13 +69,12 @@ const QK_DECISION_MECHANISM_GROUPS = [
 
 /**
  * Defaults for the Decision Lab. All values are application parameters, documented in
- * docs/QUICKRISK_DECISION_LAB.md.
+ * requirements/QUICKRISK_DECISION_LAB.md.
  */
 const QK_DECISION_DEFAULTS = [
     // Iterations used for comparative analysis. Lower than the assessment default because a
     // comparison evaluates many portfolios from one simulated sample.
     'iterations' => 5000,
-    'portfolioIterations' => 2000,
     'minimumIterations' => 1000,
     // Planning horizon used to annualise a one-time implementation cost.
     'planningHorizonYears' => 3,
@@ -93,9 +92,6 @@ const QK_DECISION_DEFAULTS = [
     // Maximum portfolios enumerated in one request. When the candidate set implies more
     // subsets than this, the budget is spent deterministically and the response says so.
     'maxPortfolios' => 256,
-    // A portfolio that is not within appetite is still labelled "high value" if it removes at
-    // least this share of the baseline expected annual loss.
-    'highValueReductionShare' => 0.15,
     // Break-even search: tolerance and iteration cap (bisection over model runs).
     'breakEvenTolerance' => 0.005,
     'breakEvenIterations' => 14,

@@ -86,7 +86,7 @@ same declaration.
 | TEF clamp | `0.001 – 100.0` events/year | internally-derived | Prevents degenerate extremes while never binding in realistic answers. |
 | Susceptibility clamp | `0.005 – 0.99` | internally-derived | Susceptibility is a probability; it must not reach 0 or 1. |
 | Impact multiplier clamp | `0.05 – 60.0` | internally-derived | Bounds the interval arithmetic of anchor × multiplier. |
-| Loss magnitude clamp | `1,000 – 500,000,000` EUR | internally-derived | Prevents absurd magnitudes from compounding modifiers. |
+| Loss magnitude clamp | `1,000 – 500,000,000` EUR per component | internally-derived | Applied independently to every sampled primary and secondary magnitude. It bounds each component after modifiers; the sum of both components can therefore exceed €500m. |
 | Secondary-loss probability clamp | `0.01 – 0.99` | internally-derived | Keeps the Bernoulli draw meaningful. |
 
 ## 4. Threat event frequency (TEF)
@@ -480,7 +480,9 @@ probabilities of a specific event occurring.
 
 The engine that implements this model is `server/includes/fair_engine.php`. Inputs are assembled
 in exactly one place (`buildScenarioInputs`), so the Monte Carlo path, the analytic expectation
-and the sensitivity analysis cannot diverge. The engine is independent of the HTTP layer and of
+and the sensitivity analysis cannot diverge. The component-level loss clamp is applied to every
+sampled primary and secondary magnitude, and the analytic product expectation uses a deterministic
+quantile integration when the clamp can bind. The engine is independent of the HTTP layer and of
 the presentation layer, and it is exercised by `tests/distributions.test.php`,
 `tests/engine.test.php`, `tests/behaviour.test.php`, `tests/regression.test.php` and
 `tests/audit_corrections.test.php`. `tools/dump-model.php` prints the resolved tables above
@@ -495,18 +497,18 @@ detected as a divergence rather than silently accepted.
 
 An independent quantitative, statistical and FAIR-methodology audit of model 1.0.0 concluded
 "pass with material corrections". The four mandatory and five recommended corrections are listed
-below with the evidence that pins each one. `docs/AUDIT_RESPONSE_FAIR-QK-1.1.md` records the
+below with the evidence that pins each one. `requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md` records the
 finding-to-correction mapping in full.
 
 | # | Audit finding | Correction in 1.2.0 | Evidence |
 |---|---|---|---|
 | QK-01 | The likelihood question asked for plausibility *given existing controls* but was implemented as TEF and then multiplied by susceptibility, counting controls twice. | The question now asks how often the scenario is attempted or contacted **before** control effectiveness, and says so in the help text. Control effectiveness is applied once, as susceptibility. | §4.3; `parameters.frequency.answerInterpretation`; `tests/audit_corrections.test.php`; frontend `model.test.ts`; `scenarios.json` wording. |
-| QK-02 | The Unknown priors were punitive, not merely wide: TEF mean 6.18× and impact mean 5.15× the typical answer, making an all-Unknown portfolio ≈ €260.5M against a €761k baseline. | Unknown answers are an equal-weight mixture over the available answers, whose mean is exactly the average of the five answers and cannot exceed their range. Widening is additionally bounded by a 1.5 mean-shift cap. | §4.1, §6.2; `parameters.unknownAnswerDisclosure`; audit `unknownPriors.neutralityVerdict = PASS`; all-Unknown portfolio now €32.5M (×42.5) instead of €260.5M (×342). |
+| QK-02 | The Unknown priors were punitive, not merely wide: TEF mean 6.18× and impact mean 5.15× the typical answer, making an all-Unknown portfolio ≈ €260.5M against a €761k baseline. | Unknown answers are an equal-weight mixture over the available answers, whose mean is exactly the average of the five answers and cannot exceed their range. Widening is additionally bounded by a 1.5 mean-shift cap. | §4.1, §6.2; `parameters.unknownAnswerDisclosure`; audit `unknownPriors.neutralityVerdict = PASS`; all-Unknown portfolio now €32.5M (×42.1) instead of €260.5M (×342). |
 | QK-03 | Reported percentiles were of an annualised LEF × LM approximation, not realised annual losses, and were presented as if they were. | The model declares its annualisation method; every response sets `realisedAnnualTotalsModelled = false`; the methodology, results view and report state that percentiles describe an annualised exposure approximation. The model loader rejects a model that claims otherwise. | §2, §11; `parameters.annualisation`; `tests/audit_corrections.test.php`; frontend schema literal `false`. |
 | QK-04 | User-facing claims had to match what is computed (percentile explanation, secondary-loss wording, threshold-zero wording). | The methodology, glossary, limitations, results view, report and scenario detail were rewritten; secondary loss is described as a per-trial draw; a zero threshold result is shown as "0 of 5,000 simulated trials". | §2, §7, §10; `content.json` methodology, terminology, limitations, `annualisationNotice`, `confidenceNotice`; `ThresholdTable`, `ScenarioTable`, `ReportView`, `ScenarioDetailPanel`. |
 | QK-05 | "High confidence" was awarded to an unvalidated heuristic calibration. | The indicator is renamed **Input confidence**, declares `basis = heuristic-input-quality` and `isStatisticalConfidence = false`, and is capped at Medium while the calibration is provisional. The loader rejects a provisional model that allows High. | §9; `parameters.confidence`; `tests/audit_corrections.test.php`; the baseline records level `Medium` at score 85. |
 | QK-06 | The "risk drivers" chart showed normalised components, not sensitivity. | The chart is renamed **Modelled components**, and a genuine one-at-a-time sensitivity analysis of the analytic expected annualised exposure is computed for every answer option of every factor, returned in the response and rendered as a chart, a table and a report section. | §15; `FairEngine::sensitivity()`; `tests/audit_corrections.test.php` verifies each factor against a direct recalculation to 1e-9. |
-| QK-07 | Extreme inputs produced finite but non-credible estimates (all-max ≈ €25.1bn) with no documented review. | `parameters.plausibilityReview` records `pending-expert-review`; §13.9 documents the extreme-case magnitudes; the release checklist requires a risk-professional review before extremes are relied upon. | §13.9; `tools/validate-model.php` gate; `docs/RELEASE_CHECKLIST.md`. |
+| QK-07 | Extreme inputs produced finite but non-credible estimates (all-max ≈ €25.1bn) with no documented review. | `parameters.plausibilityReview` records `pending-expert-review`; §13.9 documents the extreme-case magnitudes; the release checklist requires a risk-professional review before extremes are relied upon. | §13.9; `tools/validate-model.php` gate; `requirements/RELEASE_CHECKLIST.md`. |
 | QK-08 | The model did not state that model-form, distribution-shape, calibration and correlation uncertainty are outside its scope. | The limitations list, the methodology and this document state it explicitly. | §11.11–12; `content.json` limitations and methodology; `tests/audit_corrections.test.php`. |
 | QK-09 | Zero exceedances were displayed as a bare zero, implying impossibility. | The response returns integer exceedance counts and the interface renders "0 of N simulated trials" with the statement that this is not evidence of impossibility. | §10; `statistics.thresholdExceedanceCounts`; `ThresholdTable`, `ScenarioTable`, `ReportView`. |
 
@@ -525,8 +527,8 @@ finding-to-correction mapping in full.
 Run everything with:
 
 ```bash
-php tests/run-tests.php                 # 110 PHP tests
+php tests/run-tests.php                 # 188 PHP tests
 php tools/validate-model.php            # deployment gates
-cd frontend && npm run build            # lint, typecheck, boundary guards, 65 tests, production build
+cd frontend && npm run build            # type-check, boundary/storage/licence guards, 244 unit tests, production build
 node audit/run-audit.mjs                # independent reference-model comparison
 ```

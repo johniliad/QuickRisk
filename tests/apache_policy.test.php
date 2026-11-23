@@ -94,12 +94,18 @@ return [
         $root = qk_test_repository_root();
 
         // The places a duplicate could realistically appear: the Apache policies themselves, the
-        // guides that quote snippets, and the page someone might add a <meta> tag to.
+        // guides that quote snippets, and the page someone might add a <meta> tag to. The operator
+        // documents moved to requirements/, which is not versioned, so it is scanned when present.
+        $documentation = qk_test_files($root . '/docs', ['md', 'txt']);
+        if (is_dir($root . '/requirements')) {
+            $documentation = array_merge($documentation, qk_test_files($root . '/requirements', ['md', 'txt']));
+        }
+
         $candidates = array_merge(
             glob($root . '/*.md') ?: [],
             glob($root . '/*.txt') ?: [],
             [$root . '/frontend/index.html'],
-            qk_test_files($root . '/docs', ['md', 'txt']),
+            $documentation,
             qk_test_files($root . '/server', ['htaccess', 'php', 'conf']),
             qk_test_files($root . '/static-pages', ['html', 'md']),
             qk_test_files($root . '/tools', ['sh', 'php']),
@@ -235,6 +241,43 @@ return [
             0,
             preg_match('/[A-Za-z0-9]{32,}/', $withoutHashes),
             'No value that could be mistaken for a deployed secret may be committed'
+        );
+    },
+
+    'apache policy: the gate exempts internal error-document subrequests' => function (): void {
+        $root = qk_test_repository_root();
+        $htaccess = (string) file_get_contents($root . '/server/.htaccess');
+        $renderer = (string) file_get_contents($root . '/tools/render-apache-policy.php');
+
+        $begin = (int) strpos($htaccess, '# >>> QK-ORIGIN-GATE-BEGIN');
+        $end = (int) strpos($htaccess, '# <<< QK-ORIGIN-GATE-END');
+        $block = substr($htaccess, $begin, $end - $begin);
+
+        // Without this, Apache answers every refused request with
+        // "Additionally, a 403 Forbidden error was encountered while trying to use an
+        // ErrorDocument to handle the request" instead of the branded 403 page.
+        assertContains(
+            'RewriteCond %{ENV:REDIRECT_STATUS} ^$',
+            $block,
+            'The committed gate must exempt internal error-document subrequests'
+        );
+        assertTrue(
+            strpos($block, 'RewriteCond %{ENV:REDIRECT_STATUS} ^$') < strpos($block, 'RewriteRule ^ - [F,L]'),
+            'The REDIRECT_STATUS exemption must precede the deny rule'
+        );
+
+        // The rendered policy must carry the same exemption; the renderer builds the
+        // block from scratch, so a missing line there would silently reintroduce the
+        // bare Apache error page.
+        assertContains(
+            'RewriteCond %{ENV:REDIRECT_STATUS} ^$',
+            $renderer,
+            'The renderer must emit the REDIRECT_STATUS exemption'
+        );
+        assertContains(
+            'REDIRECT_STATUS exemption must come before the X-Origin-Secret condition',
+            $renderer,
+            'The renderer must refuse a policy whose exemption sits after the secret check'
         );
     },
 
