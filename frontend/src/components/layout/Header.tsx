@@ -1,4 +1,5 @@
-import { Activity, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ExternalLink, History, ShieldCheck } from 'lucide-react';
+import { JourneyStepper } from '@/components/layout/JourneyStepper';
 import { Button } from '@/components/ui/button';
 import { useAssessmentStore } from '@/state/assessmentStore';
 import { useViewModeStore } from '@/state/viewModeStore';
@@ -7,14 +8,21 @@ import { publicModel } from '@/model';
 /**
  * Application header.
  *
- * QuickRisk is presented as a first-party tool of the iliadis.net ecosystem: the
- * brand mark, restrained navigation and a clear route back to the main site, without
- * copying the main site's personal content.
+ * Two rows with distinct jobs. The first states where the visitor is in the journey
+ * (Assess → Results → Explore) and is the only place that offers QuickRisk Live and
+ * Decision Lab, so their dependency on a completed assessment is visible. The second is
+ * the utility navigation: overview, saved work, methodology, view mode, the mandatory
+ * disclaimer and the route back to the main site.
  */
-export function Header() {
+export function Header({
+  onStartOver,
+  onShowDataHandling,
+}: {
+  onStartOver: () => void;
+  onShowDataHandling: () => void;
+}) {
   const view = useAssessmentStore((state) => state.view);
   const setView = useAssessmentStore((state) => state.setView);
-  const discardAssessment = useAssessmentStore((state) => state.discardAssessment);
   const mode = useViewModeStore((state) => state.mode);
   const toggleMode = useViewModeStore((state) => state.toggleMode);
 
@@ -44,47 +52,54 @@ export function Header() {
           </span>
         </a>
 
-        <nav aria-label="FAIR QuickRisk" className="flex flex-wrap items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={() => setView('landing')}>
-            Overview
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView('live')}>
-            <Activity aria-hidden="true" className="size-4" />
-            Live
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView('decision-lab')}>
-            Decision Lab
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView('live-history')}>
-            History
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView('methodology')}>
-            Methodology
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setView('live-methodology')}>
-            Live methodology
-          </Button>
-          <Button variant="ghost" size="sm" onClick={toggleMode} aria-pressed={mode === 'analyst'}>
-            {mode === 'executive' ? 'Analyst view' : 'Executive view'}
-          </Button>
-          {inAssessment ? (
-            <Button variant="subtle" size="sm" onClick={discardAssessment}>
-              Start over
+        <JourneyStepper />
+      </div>
+
+      <div className="border-t border-border bg-paper">
+        <div className="qk-shell flex flex-wrap items-center justify-between gap-1 py-1.5">
+          <nav aria-label="FAIR QuickRisk" className="flex flex-wrap items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => setView('landing')}>
+              Overview
             </Button>
-          ) : (
-            <Button variant="ghost" size="sm" onClick={() => setView('disclaimer')}>
+            <Button variant="ghost" size="sm" onClick={() => setView('history')}>
+              <History aria-hidden="true" className="size-4" />
+              History
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setView('methodology')}>
+              Methodology
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setView('live-methodology')}>
+              Live methodology
+            </Button>
+            <Button variant="ghost" size="sm" onClick={toggleMode} aria-pressed={mode === 'analyst'}>
+              {mode === 'executive' ? 'Analyst view' : 'Executive view'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onShowDataHandling}>
               <ShieldCheck aria-hidden="true" className="size-4" />
-              Disclaimer
+              Your data
             </Button>
-          )}
-          <a
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-control px-3 text-small font-semibold text-muted no-underline hover:bg-accent-soft hover:text-accent-strong"
-            href="https://www.iliadis.net/"
-          >
-            iliadis.net
-            <ExternalLink aria-hidden="true" className="size-3.5" />
-          </a>
-        </nav>
+          </nav>
+
+          <div className="flex flex-wrap items-center gap-1">
+            {inAssessment ? (
+              <Button variant="subtle" size="sm" onClick={onStartOver}>
+                Start over
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => setView('disclaimer')}>
+                <ShieldCheck aria-hidden="true" className="size-4" />
+                Disclaimer
+              </Button>
+            )}
+            <a
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-control px-3 text-small font-semibold text-muted no-underline hover:bg-accent-soft hover:text-accent-strong"
+              href="https://www.iliadis.net/"
+            >
+              iliadis.net
+              <ExternalLink aria-hidden="true" className="size-3.5" />
+            </a>
+          </div>
+        </div>
       </div>
       <p className="qk-visually-hidden">
         Model {publicModel.version.modelId} · calibration {publicModel.version.calibrationVersion} ·{' '}

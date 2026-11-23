@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { LiveScenarioPreset } from '@/live/api/liveClient';
 
 /**
- * Demonstration scenario library.
+ * Synthetic SOC timeline library.
  *
  * The definitions come from MySQL through the PHP API. Applying one loads its deterministic
- * SOC state into the simulator; the risk engine recalculates the score, so a stored preset can
- * never carry a stale result.
+ * SOC state and timeline steps into the simulator; the risk engine recalculates the score, so
+ * a stored preset can never carry a stale result. A preset is not a quantitative scenario: it
+ * never changes the baseline expected annual loss copied from a QuickRisk result.
  */
 export function PresetLibrary({
   presets,
@@ -23,10 +24,11 @@ export function PresetLibrary({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Demonstration scenario library</CardTitle>
+        <CardTitle>Synthetic SOC timeline library</CardTitle>
         <p className="m-0 text-small text-muted">
-          Curated synthetic sequences. A demonstration scenario is separate from the QuickRisk quantitative
-          scenario you selected: the same preset can be applied against any QuickRisk baseline.
+          Curated synthetic incident sequences — what happened, not how much it costs. Applying one loads its
+          SOC state and timeline steps; it does not change the quantitative baseline or its expected annual
+          loss. The same preset can be applied against any QuickRisk scenario selected above.
         </p>
       </CardHeader>
       <CardContent className="grid gap-3">

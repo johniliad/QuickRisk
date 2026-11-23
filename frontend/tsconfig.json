@@ -24,6 +24,6 @@
       "@model/*": ["../fairquickmodel/*"]
     }
   },
-  "include": ["src", "shared", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "shared", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
 }
 

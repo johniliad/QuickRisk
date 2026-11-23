@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert } from '@/components/ui/alert';
 import { ExecutiveReport } from '@/live/components/ExecutiveReport';
+import { UserRecordedNotice } from '@/live/components/UserRecordedNotice';
 import { liveApi, LiveApiError, type LiveAssessmentDetail } from '@/live/api/liveClient';
 import { useAssessmentStore } from '@/state/assessmentStore';
 
@@ -51,6 +52,8 @@ export function SharedAssessmentView({ token }: { token: string }) {
           be edited.
         </p>
       </Alert>
+
+      <UserRecordedNotice />
 
       {error === null ? null : (
         <Alert tone="warning" title="Shared assessment unavailable">

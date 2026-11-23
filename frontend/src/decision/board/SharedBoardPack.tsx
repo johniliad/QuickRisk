@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert } from '@/components/ui/alert';
 import { decisionApi, DecisionApiError, type StoredDecision } from '@/decision/api/decisionClient';
 import { BoardRiskPack } from '@/decision/board/BoardRiskPack';
-import { buildBoardReport } from '@/decision/board/boardModel';
+import { buildStoredBoardReport } from '@/decision/board/storedReport';
 
 export function SharedBoardPack({ token }: { token: string }) {
   const [record, setRecord] = useState<StoredDecision | null>(null);
@@ -42,38 +42,10 @@ export function SharedBoardPack({ token }: { token: string }) {
     };
   }, [token]);
 
-  const report = useMemo(() => {
-    const comparison = record?.selection?.comparison;
-    if (record === null || comparison === undefined) {
-      return null;
-    }
-    const treatments = record.selection?.treatments ?? [];
-
-    return buildBoardReport({
-      title: record.title === '' ? 'Decision analysis' : record.title,
-      currencySymbol: '€',
-      generatedAt: record.createdAt.slice(0, 10),
-      baseline: comparison.baseline,
-      treated: comparison.treated,
-      appetiteBaseline: comparison.appetite.baseline,
-      appetiteTreated: comparison.appetite.treated,
-      initialInvestment: comparison.cost.initialInvestment,
-      annualOperatingCost: comparison.cost.annualOperatingCost,
-      treatments,
-      recommended: record.recommendedPortfolio === undefined ? null : record.recommendedPortfolio,
-      reductionShare: comparison.delta.reductionShare,
-      riskReductionEfficiency: comparison.riskReductionEfficiency,
-      implementationDelayDays: comparison.cost.implementationDelayDays,
-      provenance: {
-        decisionMethodologyVersion: record.decisionMethodologyVersion,
-        boardPackVersion: record.boardPackVersion,
-        quickriskModelVersion: record.quickriskModelVersion,
-        iterations: record.iterations,
-        simulationSeed: record.simulationSeed,
-        effectModel: comparison.provenance.effectModel,
-      },
-    });
-  }, [record]);
+  const report = useMemo(
+    () => (record === null ? null : buildStoredBoardReport(record)),
+    [record],
+  );
 
   if (error !== null) {
     return (

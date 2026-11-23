@@ -9,33 +9,99 @@
  * calculates risk.
  */
 
-import { ArrowRight, FileText, Printer, RefreshCw, Save, Share2, ShieldOff } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FileText, History, Printer, RefreshCw, Save, Share2, ShieldOff, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataProvenance } from '@/components/layout/DataProvenance';
+import { DataStatusNote } from '@/components/layout/DataStatusNote';
+import { GuidedOnboarding } from '@/components/layout/GuidedOnboarding';
+import { JourneyMap } from '@/components/layout/JourneyMap';
+import { formatIterations } from '@/lib/format';
+import {
+  DECISION_UNSAVED_NOTE,
+  SAVED_SESSION_LABEL,
+  SESSION_SAVE_NOTE,
+  UNSAVED_SESSION_LABEL,
+  decisionBaselineEalProvenance,
+  decisionTreatedEalProvenance,
+} from '@/content/dataLifecycle';
 import { Checkbox, Label } from '@/components/ui/field';
 import { publicModel } from '@/model';
 import { useAssessmentStore } from '@/state/assessmentStore';
 import { useLiveStore } from '@/live/state/liveStore';
-import { decisionApi, DecisionApiError, type ComparisonResponse, type PortfolioResponse } from '@/decision/api/decisionClient';
+import { decisionApi, DecisionApiError } from '@/decision/api/decisionClient';
+import { CustomTreatmentForm } from '@/decision/components/CustomTreatmentForm';
 import {
   BoardRiskPack,
   formatBoardMoney,
 } from '@/decision/board/BoardRiskPack';
 import { buildBoardReport } from '@/decision/board/boardModel';
 import {
+  attachPortfolios,
+  attachRecommendedComparison,
+  attachSensitivity,
+  sameProvenance,
+  selectReportTarget,
+  snapshotAfterComparison,
+  type DecisionSnapshot,
+} from '@/decision/domain/analysisSnapshot';
+import { analysisInputKey } from '@/decision/domain/analysisIdentity';
+import {
+  probabilityCriterionDisabled,
+  withAnnualLossLimit,
+} from '@/decision/domain/appetite';
+import {
+  boardModelInputFromBasis,
+  comparisonBasis,
+  recommendedBasis,
+  type ReportBasis,
+} from '@/decision/domain/reportBasis';
+import {
+  DECISION_METHODOLOGY_VERSION,
   EVIDENCE_LABELS,
   MECHANISM_LABELS,
   type Appetite,
+  type CustomTreatmentDefinition,
   type EvidenceQuality,
   type MechanismGroup,
-  type SensitivityResult,
   type TreatmentCatalogue,
   type TreatmentDefinition,
 } from '@/decision/domain/decisionTypes';
+import {
+  catalogueSelections,
+  findSelectionByTreatmentId,
+  findSelectionForResultTreatment,
+  selectionForCompute,
+  selectionIdentity,
+  type SelectableTreatment,
+} from '@/decision/domain/selectableTreatment';
 
-const SEED = 20261107;
+/**
+ * The published assessment seed.
+ *
+ * It mirrors `tools/generate-baseline.php`, `tests/helpers.php` and the audited baseline. Decision
+ * Lab sends it, with the iteration count the results response reports, so the server replays the
+ * results page configuration instead of choosing another modelling basis. The assessment endpoint
+ * seeds each calculation randomly, so the two figures are draws from the same model and agree to
+ * within Monte Carlo noise rather than being the same draw.
+ */
+const RESULTS_SIMULATION_SEED = 20261029;
+
+/** Iteration budget used only if the results response does not report one. */
+const RESULTS_ITERATION_FALLBACK = 5_000;
+
+/**
+ * Relative gap above which a baseline is treated as describing different answers.
+ *
+ * The assessment endpoint seeds each calculation randomly, so the Results figure and the
+ * Decision Lab replay are two draws from the same model. Measured on the reference profile at
+ * 5,000 iterations, the portfolio expected annual loss moves by less than 0.5% between seeds;
+ * an edited answer changes a scenario's frequency or magnitude band and moves the portfolio by
+ * several percent. 2% therefore separates sampling noise from an answer change with margin.
+ */
+const BASELINE_NOISE_TOLERANCE = 0.02;
 
 /** Builds the assessment payload the compute endpoints expect, from the in-memory answers. */
 function buildAnswersPayload(
@@ -62,6 +128,17 @@ function buildAnswersPayload(
 
 const emptyAppetite: Appetite = { annualLossLimit: null, highEndLimit: null, maxExceedanceProbability: null };
 
+/** The one basis the next report or save will describe. */
+const resolveReportBasis = (snapshot: DecisionSnapshot | null): ReportBasis | null => {
+  if (snapshot === null) {
+    return null;
+  }
+
+  return snapshot.reportTarget === 'recommended-portfolio'
+    ? recommendedBasis(snapshot)
+    : comparisonBasis(snapshot);
+};
+
 /**
  * A numeric input that accepts an empty value (an unconfigured appetite criterion).
  *
@@ -77,6 +154,7 @@ function MoneyInput({
   value,
   onChange,
   suffix,
+  disabled = false,
 }: {
   id: string;
   label: string;
@@ -84,6 +162,7 @@ function MoneyInput({
   value: number | null;
   onChange: (value: number | null) => void;
   suffix?: string;
+  disabled?: boolean;
 }) {
   const [draft, setDraft] = useState(value === null ? '' : String(value));
   const [focused, setFocused] = useState(false);
@@ -104,6 +183,7 @@ function MoneyInput({
           className="min-h-9 w-full rounded-control border border-border bg-paper px-3 text-small"
           inputMode="decimal"
           value={draft}
+          disabled={disabled}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             setFocused(false);
@@ -151,11 +231,13 @@ function TreatmentCard({
   treatment,
   selected,
   onToggle,
+  onDelete,
   symbol,
 }: {
   treatment: TreatmentDefinition;
   selected: boolean;
   onToggle: () => void;
+  onDelete?: () => void;
   symbol: string;
 }) {
   const evidence = EVIDENCE_LABELS[treatment.evidenceQuality as EvidenceQuality];
@@ -180,11 +262,29 @@ function TreatmentCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="m-0 font-semibold text-heading">{treatment.name}</p>
-        <span className="text-micro font-bold uppercase tracking-[0.08em] text-muted">
-          {treatment.origin === 'custom' ? 'User-defined treatment' : 'Curated treatment'}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-micro font-bold uppercase tracking-[0.08em] text-muted">
+            {treatment.origin === 'custom' ? 'User-defined treatment' : 'Curated treatment'}
+          </span>
+          {onDelete === undefined ? null : (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onDelete}
+              aria-label={`Delete the user-defined treatment ${treatment.name}`}
+            >
+              <Trash2 aria-hidden="true" className="size-3.5" />
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
       <p className="m-0 text-small text-muted">{treatment.businessOutcome}</p>
+      {treatment.assumptions.length === 0 ? null : (
+        <p className="m-0 text-micro text-muted">
+          Assumption: {treatment.assumptions.join(' ')}
+        </p>
+      )}
       <p className="m-0 text-small">
         Investment {formatBoardMoney(treatment.initialCost.amount, symbol)} · annual cost{' '}
         {formatBoardMoney(treatment.annualOperatingCost.amount, symbol)} · effective after{' '}
@@ -217,10 +317,8 @@ export function DecisionLabView() {
 
   const [appetite, setAppetite] = useState<Appetite>(emptyAppetite);
   const [catalogue, setCatalogue] = useState<TreatmentCatalogue | null>(null);
-  const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
-  const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
-  const [portfolios, setPortfolios] = useState<PortfolioResponse | null>(null);
-  const [sensitivity, setSensitivity] = useState<SensitivityResult | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<readonly string[]>([]);
+  const [snapshot, setSnapshot] = useState<DecisionSnapshot | null>(null);
   const [analystMode, setAnalystMode] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -231,26 +329,45 @@ export function DecisionLabView() {
   const symbol = results?.meta.currencySymbol === '' || results?.meta.currencySymbol === undefined
     ? '€'
     : results.meta.currencySymbol;
+  // Derived from the active model, never hard-coded: the questionnaire already exposes the
+  // profile question count and two questions per scenario.
+  const questionCount = publicModel.profileQuestions.length + publicModel.scenarios.length * 2;
+
+  // The assessment's own run: the same published seed and iteration budget are re-sent below, so
+  // the server replays the results page configuration instead of choosing another basis.
+  const resultsIterations = results?.meta.iterations ?? RESULTS_ITERATION_FALLBACK;
+  const resultsPortfolioEal =
+    typeof results?.portfolio?.expectedAnnualLoss === 'number'
+    && Number.isFinite(results.portfolio.expectedAnnualLoss)
+      ? results.portfolio.expectedAnnualLoss
+      : null;
+
+  const reloadCatalogue = useCallback(async (): Promise<TreatmentCatalogue> => {
+    const csrfToken = await initSession();
+    if (csrfToken === null) {
+      throw new Error(
+        'The anonymous session could not be prepared, so the treatment library is unavailable.',
+      );
+    }
+
+    return decisionApi.catalogue(csrfToken);
+  }, [initSession]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const csrfToken = await initSession();
-      if (csrfToken === null) {
-        if (!cancelled) {
-          setError('The anonymous session could not be prepared, so the treatment library is unavailable.');
-        }
-
-        return;
-      }
       try {
-        const loaded = await decisionApi.catalogue(csrfToken);
+        const loaded = await reloadCatalogue();
         if (!cancelled) {
           setCatalogue(loaded);
         }
       } catch (caught) {
         if (!cancelled) {
-          setError(caught instanceof DecisionApiError ? caught.message : 'The treatment library could not be loaded.');
+          setError(
+            caught instanceof DecisionApiError || caught instanceof Error
+              ? caught.message
+              : 'The treatment library could not be loaded.',
+          );
         }
       }
     };
@@ -259,19 +376,100 @@ export function DecisionLabView() {
     return () => {
       cancelled = true;
     };
-  }, [initSession]);
+  }, [reloadCatalogue]);
 
   const answers = useMemo(
     () => buildAnswersPayload(organisationAnswers, scenarioAnswers),
     [organisationAnswers, scenarioAnswers],
   );
 
-  const curated = catalogue?.curated ?? [];
-  const selectedTreatments = curated.filter((treatment) => selectedIds.includes(treatment.id));
+  const selections = useMemo(
+    () => (catalogue === null ? [] : catalogueSelections(catalogue)),
+    [catalogue],
+  );
+  const curatedSelections = useMemo(
+    () => selections.filter((treatment) => treatment.source === 'curated'),
+    [selections],
+  );
+  const customSelections = useMemo(
+    () =>
+      selections.filter(
+        (treatment): treatment is Extract<SelectableTreatment, { source: 'custom' }> =>
+          treatment.source === 'custom',
+      ),
+    [selections],
+  );
+  const selectedTreatments = useMemo(
+    () => selections.filter((treatment) => selectedKeys.includes(treatment.key)),
+    [selections, selectedKeys],
+  );
+
+  const methodologyVersion = catalogue?.methodologyVersion ?? DECISION_METHODOLOGY_VERSION;
+
+  const currentKey = useMemo(
+    () =>
+      analysisInputKey({
+        answers,
+        treatments: selectedTreatments.map(selectionIdentity),
+        appetite,
+        seed: RESULTS_SIMULATION_SEED,
+        iterations: resultsIterations,
+        decisionMethodologyVersion: methodologyVersion,
+      }),
+    [answers, appetite, methodologyVersion, resultsIterations, selectedTreatments],
+  );
+
+  const currentKeyRef = useRef(currentKey);
+  currentKeyRef.current = currentKey;
+  const snapshotRef = useRef(snapshot);
+  snapshotRef.current = snapshot;
+  const previousKeyRef = useRef(currentKey);
+
+  // Any input change invalidates the analysis, the saved identifier and the share link.
+  useEffect(() => {
+    if (previousKeyRef.current === currentKey) {
+      return;
+    }
+    previousKeyRef.current = currentKey;
+    const hadResults = snapshotRef.current !== null;
+    setSnapshot(null);
+    setPublicId(null);
+    setShareUrl(null);
+    setError(null);
+    setMessage(hadResults ? 'Inputs changed. Results cleared. Recalculate.' : null);
+  }, [currentKey]);
+
+  const activeSnapshot = snapshot !== null && snapshot.inputKey === currentKey ? snapshot : null;
+  const reportBasis = useMemo(() => resolveReportBasis(activeSnapshot), [activeSnapshot]);
+  const comparison = reportBasis?.comparison ?? null;
+  const portfolios = activeSnapshot?.portfolios ?? null;
+  const sensitivity = activeSnapshot?.sensitivity ?? null;
+  /**
+   * Whether the calculated baseline still describes the answers the results page used.
+   *
+   * `true` means the replay lands within Monte Carlo noise of the portfolio figure on the results
+   * page, so nothing material moved since it was calculated. `false` means the gap is larger than
+   * sampling noise can explain, which is what an edited answer looks like (the in-memory Results
+   * response is then stale for the current answers), so the screen must say the two surfaces no
+   * longer describe the same answers. `null` means there is nothing to compare yet.
+   */
+  const baselineCarriedFromResults =
+    comparison === null || resultsPortfolioEal === null
+      ? null
+      : Math.abs(comparison.baseline.expectedAnnualLoss - resultsPortfolioEal)
+        <= BASELINE_NOISE_TOLERANCE * resultsPortfolioEal;
+  const portfolioDecisionAvailable =
+    appetite.annualLossLimit !== null && Number.isFinite(appetite.annualLossLimit) && appetite.annualLossLimit > 0;
 
   const computeBody = useCallback(
-    (extra: Record<string, unknown>) => ({ ...answers, seed: SEED, iterations: 2000, appetite, ...extra }),
-    [answers, appetite],
+    (extra: Record<string, unknown>) => ({
+      ...answers,
+      seed: RESULTS_SIMULATION_SEED,
+      iterations: resultsIterations,
+      appetite,
+      ...extra,
+    }),
+    [answers, appetite, resultsIterations],
   );
 
   const runComparison = useCallback(async () => {
@@ -280,25 +478,52 @@ export function DecisionLabView() {
 
       return;
     }
+    const requestKey = currentKey;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
       const result = await decisionApi.computeComparison(
-        computeBody({ treatments: selectedTreatments.map((treatment) => ({ source: 'curated', id: treatment.id })) }),
+        computeBody({ treatments: selectedTreatments.map(selectionForCompute) }),
       );
-      setComparison(result);
+      if (currentKeyRef.current !== requestKey) {
+        setError('The inputs changed while the request was running. Recalculate.');
+
+        return;
+      }
+      setSnapshot(snapshotAfterComparison(requestKey, result));
+      setPublicId(null);
+      setShareUrl(null);
       setMessage('Treatment comparison calculated.');
     } catch (caught) {
-      setError(caught instanceof DecisionApiError ? caught.message : 'The comparison could not be calculated.');
+      setError(
+        caught instanceof DecisionApiError || caught instanceof Error
+          ? caught.message
+          : 'The comparison could not be calculated.',
+      );
     } finally {
       setBusy(false);
     }
-  }, [computeBody, selectedTreatments]);
+  }, [computeBody, currentKey, selectedTreatments]);
 
   const runPortfolios = useCallback(async () => {
+    const request = snapshotRef.current;
     if (selectedTreatments.length === 0) {
       setError('Select the candidate treatments you want evaluated.');
+
+      return;
+    }
+    if (
+      appetite.annualLossLimit === null
+      || !Number.isFinite(appetite.annualLossLimit)
+      || appetite.annualLossLimit <= 0
+    ) {
+      setError('Enter an annual loss limit before evaluating portfolios.');
+
+      return;
+    }
+    if (request === null || request.inputKey !== currentKeyRef.current) {
+      setError('Run the comparison again for the current inputs before evaluating portfolios.');
 
       return;
     }
@@ -309,25 +534,44 @@ export function DecisionLabView() {
       const result = await decisionApi.computePortfolios(
         computeBody({
           treatments: [],
-          candidateTreatments: selectedTreatments.map((treatment) => ({ source: 'curated', id: treatment.id })),
+          candidateTreatments: selectedTreatments.map(selectionForCompute),
         }),
       );
-      setPortfolios(result);
+      if (currentKeyRef.current !== request.inputKey || snapshotRef.current !== request) {
+        setError('The inputs changed while the request was running. Recalculate.');
+
+        return;
+      }
+      setSnapshot(attachPortfolios(request, request.inputKey, result));
+      setPublicId(null);
+      setShareUrl(null);
       setMessage(
         result.truncated && result.notes.length > 0
           ? `Evaluated ${result.evaluated} portfolios. ${result.notes.join(' ')}`
           : `Evaluated ${result.evaluated} portfolios.`,
       );
     } catch (caught) {
-      setError(caught instanceof DecisionApiError ? caught.message : 'The portfolios could not be evaluated.');
+      setError(
+        caught instanceof DecisionApiError
+          ? caught.message
+          : caught instanceof Error
+            ? caught.message
+            : 'The portfolios could not be evaluated.',
+      );
     } finally {
       setBusy(false);
     }
-  }, [computeBody, selectedTreatments]);
+  }, [appetite.annualLossLimit, computeBody, selectedTreatments]);
 
   const runSensitivity = useCallback(async () => {
+    const request = snapshotRef.current;
     if (selectedTreatments.length === 0) {
       setError('Select a treatment first.');
+
+      return;
+    }
+    if (request === null || request.inputKey !== currentKeyRef.current) {
+      setError('Run the comparison again for the current inputs before calculating break-even effectiveness.');
 
       return;
     }
@@ -335,20 +579,126 @@ export function DecisionLabView() {
     setError(null);
     try {
       const result = await decisionApi.computeSensitivity(
-        computeBody({ treatments: selectedTreatments.map((treatment) => ({ source: 'curated', id: treatment.id })) }),
+        computeBody({ treatments: selectedTreatments.map(selectionForCompute) }),
       );
-      setSensitivity(result.sensitivity);
+      if (currentKeyRef.current !== request.inputKey || snapshotRef.current !== request) {
+        setError('The inputs changed while the request was running. Recalculate.');
+
+        return;
+      }
+      if (!sameProvenance(result.provenance, request.comparison.provenance)) {
+        setError('The break-even result does not belong to this analysis. Recalculate.');
+
+        return;
+      }
+      setSnapshot(attachSensitivity(request, request.inputKey, result.sensitivity, result.provenance));
     } catch (caught) {
-      setError(caught instanceof DecisionApiError ? caught.message : 'The break-even analysis could not be calculated.');
+      setError(
+        caught instanceof DecisionApiError || caught instanceof Error
+          ? caught.message
+          : 'The break-even analysis could not be calculated.',
+      );
     } finally {
       setBusy(false);
     }
   }, [computeBody, selectedTreatments]);
 
+  const prepareRecommendedReport = useCallback(async () => {
+    const request = snapshotRef.current;
+    if (request === null || request.inputKey !== currentKeyRef.current) {
+      setError('Recalculate the analysis before preparing a recommended report.');
+
+      return;
+    }
+    const search = request.portfolios;
+    if (search === null) {
+      setError('Run a portfolio search before preparing a recommended report.');
+
+      return;
+    }
+    const recommendedId = search.recommendedId;
+    if (recommendedId === null) {
+      setError('No portfolio was recommended for this analysis.');
+
+      return;
+    }
+    const portfolio = search.portfolios.find((entry) => entry.id === recommendedId);
+    if (portfolio === undefined) {
+      setError('The recommended portfolio could not be found. Recalculate.');
+
+      return;
+    }
+    const resolved = portfolio.treatmentIds.map((id) => {
+      const direct = findSelectionByTreatmentId(selections, id);
+      if (direct !== undefined) {
+        return direct;
+      }
+      const resultTreatment = request.comparison.treatments.find((treatment) => treatment.id === id);
+
+      return resultTreatment === undefined
+        ? undefined
+        : findSelectionForResultTreatment(selections, resultTreatment);
+    });
+    if (resolved.some((treatment) => treatment === undefined)) {
+      setError('The recommended portfolio names a treatment that is not in the library.');
+
+      return;
+    }
+    const treatments = resolved as SelectableTreatment[];
+
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await decisionApi.computeComparison(
+        computeBody({ treatments: treatments.map(selectionForCompute) }),
+      );
+      if (currentKeyRef.current !== request.inputKey || snapshotRef.current !== request) {
+        setError('The inputs changed while the request was running. Recalculate.');
+
+        return;
+      }
+      const expected = [...portfolio.treatmentIds].sort();
+      const actual = result.treatments.map((treatment) => treatment.id).sort();
+      if (expected.length !== actual.length || expected.some((id, index) => id !== actual[index])) {
+        setError('The recommended comparison returned a different treatment set. Recalculate.');
+
+        return;
+      }
+      if (!sameProvenance(result.provenance, search.provenance)) {
+        setError('The recommended comparison does not belong to this portfolio search. Recalculate.');
+
+        return;
+      }
+      const attached = attachRecommendedComparison(request, request.inputKey, result);
+      setSnapshot(selectReportTarget(attached, request.inputKey, 'recommended-portfolio'));
+      setPublicId(null);
+      setShareUrl(null);
+      setMessage('Recommended portfolio report prepared.');
+    } catch (caught) {
+      setError(
+        caught instanceof DecisionApiError
+          ? caught.message
+          : caught instanceof Error
+            ? caught.message
+            : 'The recommended portfolio report could not be prepared.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }, [computeBody, selections]);
+
 
   const saveDecision = useCallback(async () => {
-    if (comparison === null) {
-      setError('Run a comparison before saving the analysis.');
+    const current = snapshotRef.current;
+    if (current === null || current.inputKey !== currentKeyRef.current) {
+      setError('Recalculate the analysis before saving it.');
+
+      return;
+    }
+    const basis = resolveReportBasis(current);
+    if (basis === null) {
+      setError('Prepare the recommended portfolio report before saving.');
 
       return;
     }
@@ -364,28 +714,44 @@ export function DecisionLabView() {
     try {
       const saved = await decisionApi.save(
         {
-          title: selectedTreatments.map((treatment) => treatment.name).join(' + ').slice(0, 160),
-          selection: { treatments: selectedTreatments, comparison, portfolios, sensitivity },
+          title:
+            (basis.comparison.treatments.length === 0
+              ? 'No treatment (baseline)'
+              : basis.comparison.treatments.map((treatment) => treatment.name).join(' + ')
+            ).slice(0, 160),
+          selection: {
+            treatments: basis.comparison.treatments,
+            comparison: basis.comparison,
+            portfolios: current.portfolios,
+            sensitivity: basis.kind === 'comparison' ? current.sensitivity : null,
+            reportBasis: {
+              kind: basis.kind,
+              inputKey: basis.inputKey,
+              recommendationState: basis.recommendationState,
+              treatmentIds: basis.comparison.treatments.map((treatment) => treatment.id),
+            },
+          },
           appetite,
-          recommended: portfolios === null ? null : (portfolios.portfolios.find((entry) => entry.id === portfolios.recommendedId) ?? null),
-          result: comparison,
-          quickriskModelId: comparison.provenance.quickriskModelId,
-          quickriskModelVersion: comparison.provenance.quickriskModelVersion,
-          decisionMethodologyVersion: comparison.provenance.decisionMethodologyVersion,
-          boardPackVersion: comparison.provenance.boardPackVersion,
-          simulationSeed: comparison.provenance.simulationSeed,
-          iterations: comparison.provenance.iterations,
+          recommended: basis.portfolio,
+          result: basis.comparison,
+          quickriskModelId: basis.comparison.provenance.quickriskModelId,
+          quickriskModelVersion: basis.comparison.provenance.quickriskModelVersion,
+          decisionMethodologyVersion: basis.comparison.provenance.decisionMethodologyVersion,
+          boardPackVersion: basis.comparison.provenance.boardPackVersion,
+          simulationSeed: basis.comparison.provenance.simulationSeed,
+          iterations: basis.comparison.provenance.iterations,
         },
         csrfToken,
       );
       setPublicId(saved.publicId);
+      setShareUrl(null);
       setMessage('Decision analysis saved to your anonymous session.');
     } catch (caught) {
       setError(caught instanceof DecisionApiError ? caught.message : 'The analysis could not be saved.');
     } finally {
       setBusy(false);
     }
-  }, [appetite, comparison, initSession, portfolios, selectedTreatments, sensitivity]);
+  }, [appetite, initSession]);
 
   const shareBoardPack = useCallback(async () => {
     if (publicId === null) {
@@ -424,63 +790,106 @@ export function DecisionLabView() {
   }, [initSession, publicId]);
 
   const boardReport = useMemo(() => {
-    if (comparison === null) {
+    if (reportBasis === null) {
       return null;
     }
-    const recommended = portfolios === null
-      ? null
-      : (portfolios.portfolios.find((entry) => entry.id === portfolios.recommendedId) ?? null);
 
-    return buildBoardReport({
-      title: selectedTreatments.map((treatment) => treatment.name).join(' + ') || 'Decision analysis',
-      currencySymbol: symbol,
-      generatedAt: comparison.provenance.generatedAt.slice(0, 10),
-      baseline: comparison.baseline,
-      treated: comparison.treated,
-      appetiteBaseline: comparison.appetite.baseline,
-      appetiteTreated: comparison.appetite.treated,
-      initialInvestment: comparison.cost.initialInvestment,
-      annualOperatingCost: comparison.cost.annualOperatingCost,
-      treatments: selectedTreatments,
-      recommended,
-      reductionShare: comparison.delta.reductionShare,
-      riskReductionEfficiency: comparison.riskReductionEfficiency,
-      implementationDelayDays: comparison.cost.implementationDelayDays,
-      provenance: {
-        decisionMethodologyVersion: comparison.provenance.decisionMethodologyVersion,
-        boardPackVersion: comparison.provenance.boardPackVersion,
-        quickriskModelVersion: comparison.provenance.quickriskModelVersion,
-        iterations: comparison.provenance.iterations,
-        simulationSeed: comparison.provenance.simulationSeed,
-        effectModel: comparison.provenance.effectModel,
-      },
-    });
-  }, [comparison, portfolios, selectedTreatments, symbol]);
+    return buildBoardReport(
+      boardModelInputFromBasis(
+        reportBasis,
+        symbol,
+        reportBasis.comparison.provenance.generatedAt.slice(0, 10),
+      ),
+    );
+  }, [reportBasis, symbol]);
 
-  const toggleTreatment = (id: string) =>
-    setSelectedIds((current) => (current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]));
+  const createCustomTreatment = useCallback(
+    async (definition: CustomTreatmentDefinition) => {
+      const csrfToken = await initSession();
+      if (csrfToken === null) {
+        throw new Error('The anonymous session could not be prepared.');
+      }
+      const created = await decisionApi.createCustomTreatment(
+        definition as unknown as Record<string, unknown>,
+        csrfToken,
+      );
+      const loaded = await reloadCatalogue().catch(() => null);
+      if (loaded === null) {
+        setError(
+          'The treatment was saved, but the treatment library could not be refreshed. Reopen Decision Lab to reload it.',
+        );
+
+        return;
+      }
+      setCatalogue(loaded);
+      const added = catalogueSelections(loaded).find(
+        (entry) => entry.source === 'custom' && entry.publicId === created.publicId,
+      );
+      if (added !== undefined) {
+        setSelectedKeys((current) => (current.includes(added.key) ? current : [...current, added.key]));
+      }
+      setMessage('User-defined treatment created and selected for the analysis.');
+    },
+    [initSession, reloadCatalogue],
+  );
+
+  const deleteCustomTreatment = useCallback(
+    async (treatment: Extract<SelectableTreatment, { source: 'custom' }>) => {
+      if (
+        !globalThis.confirm(
+          `Delete the user-defined treatment “${treatment.definition.name}”? Saved analyses that used it are not changed.`,
+        )
+      ) {
+        return;
+      }
+      const csrfToken = await initSession();
+      if (csrfToken === null) {
+        setError('The anonymous session could not be prepared.');
+
+        return;
+      }
+      try {
+        await decisionApi.deleteCustomTreatment(treatment.publicId, csrfToken);
+        setSelectedKeys((current) => current.filter((key) => key !== treatment.key));
+        const loaded = await reloadCatalogue().catch(() => null);
+        if (loaded === null) {
+          setError(
+            'The treatment was deleted, but the treatment library could not be refreshed. Reopen Decision Lab to reload it.',
+          );
+
+          return;
+        }
+        setCatalogue(loaded);
+        setMessage('User-defined treatment deleted.');
+      } catch (caught) {
+        setError(caught instanceof DecisionApiError ? caught.message : 'The treatment could not be deleted.');
+      }
+    },
+    [initSession, reloadCatalogue],
+  );
+
+  const toggleTreatment = (key: string) =>
+    setSelectedKeys((current) => (current.includes(key) ? current.filter((entry) => entry !== key) : [...current, key]));
 
 
   if (results === null) {
     return (
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Decision Lab needs a QuickRisk assessment first</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <p className="m-0">
-              Decision Lab analyses the scenarios and exposure of a completed QuickRisk assessment. It never
-              invents a baseline.
-            </p>
-            <div>
-              <Button onClick={() => setView('disclaimer')}>
-                Run a QuickRisk assessment
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <GuidedOnboarding
+          eyebrow="Decision Lab"
+          title="Decision Lab compares treatments against a QuickRisk assessment"
+          description="It never invents a baseline. The comparison replays the same simulated years the Results page showed, then applies the treatments you select to the drivers those treatments actually change."
+          steps={[
+            'Complete the QuickRisk assessment in this tab.',
+            'Return here — the portfolio baseline from Results is carried across with the same seed and iteration count, and your answers are re-sent for the treated calculation.',
+            'Set a risk appetite, select treatments and build the Board Risk Pack.',
+          ]}
+          primaryLabel="Start a new assessment"
+          onPrimary={() => setView('disclaimer')}
+          secondaryLabel="Open saved analyses"
+          onSecondary={() => setView('decision-history')}
+          footnote="A saved analysis keeps the result, the treatment set and the appetite status — not your questionnaire answers."
+        />
       </div>
     );
   }
@@ -493,9 +902,36 @@ export function DecisionLabView() {
           Explore how different investments and risk treatments could change your cyber-risk exposure
         </h1>
         <p className="m-0 text-small text-muted">
-          QuickRisk model {results.meta.modelId} version {results.meta.modelVersion} · Decision Lab methodology{' '}
-          {comparison?.provenance.decisionMethodologyVersion ?? '1.0'} · deterministic seed {SEED}
+          {baselineCarriedFromResults === false ? (
+            <>
+              Decision Lab replays the results page run with the published assessment seed{' '}
+              {RESULTS_SIMULATION_SEED} and {formatIterations(resultsIterations)} simulated years. This
+              baseline is further from the results page than sampling noise explains, so your answers
+              changed after that calculation.
+            </>
+          ) : (
+            <>
+              Baseline carried from the results page: the same QuickRisk model, the published assessment
+              seed {RESULTS_SIMULATION_SEED} and the same {formatIterations(resultsIterations)} simulated
+              years, so the two figures agree to within Monte Carlo noise instead of describing separate
+              runs.
+            </>
+          )}{' '}
+          Treated figures are recalculated on the server from your {questionCount} answers with QuickRisk
+          model {results.meta.modelId} version {results.meta.modelVersion} · Decision Lab methodology{' '}
+          {comparison?.provenance.decisionMethodologyVersion ?? '1.0'}.
         </p>
+        {comparison !== null && baselineCarriedFromResults === false && resultsPortfolioEal !== null ? (
+          <Alert tone="warning" title="The baseline no longer matches the results page">
+            <p className="m-0">
+              Your answers changed after the results were calculated. This baseline is{' '}
+              {formatBoardMoney(comparison.baseline.expectedAnnualLoss, symbol)}, while the results page
+              shows {formatBoardMoney(resultsPortfolioEal, symbol)} — a gap larger than Monte Carlo noise at{' '}
+              {formatIterations(resultsIterations)} iterations. Recalculate the assessment so both screens
+              describe the same answers.
+            </p>
+          </Alert>
+        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
@@ -507,11 +943,39 @@ export function DecisionLabView() {
           <Button size="sm" variant="ghost" onClick={() => setView('live')}>
             QuickRisk Live
           </Button>
+          <Button size="sm" variant="ghost" onClick={() => setView('decision-history')}>
+            <History aria-hidden="true" className="size-4" />
+            Saved analyses
+          </Button>
         </div>
+        <DataStatusNote
+          label={publicId === null ? UNSAVED_SESSION_LABEL : SAVED_SESSION_LABEL}
+          tone={publicId === null ? 'warning' : 'neutral'}
+          detail={publicId === null ? DECISION_UNSAVED_NOTE : SESSION_SAVE_NOTE}
+        />
+
+        {analystMode ? (
+          <div className="rounded-control border border-border bg-canvas p-3">
+            <p className="m-0 text-micro font-semibold uppercase tracking-[0.08em] text-muted">
+              Server input fingerprint
+            </p>
+            <code className="block break-all text-micro text-ink">
+              {reportBasis?.comparison.provenance.inputFingerprint ??
+                activeSnapshot?.comparison.provenance.inputFingerprint ??
+                'Not calculated'}
+            </code>
+            <p className="m-0 mt-1 text-micro text-muted">
+              Seed {RESULTS_SIMULATION_SEED} · {formatIterations(resultsIterations)} iterations · Analyst Mode
+              only. The fingerprint identifies the validated compute input; it is not a security token.
+            </p>
+          </div>
+        ) : null}
       </header>
 
       {error === null ? null : <Alert tone="danger" role="alert">{error}</Alert>}
       {message === null ? null : <Alert tone="info" role="status">{message}</Alert>}
+
+      <JourneyMap currentSurface="decision-lab" />
 
       <Card>
         <CardHeader>
@@ -527,7 +991,7 @@ export function DecisionLabView() {
             label="Annual loss limit"
             help="The maximum modeled annual cyber-loss exposure management is prepared to accept."
             value={appetite.annualLossLimit}
-            onChange={(value) => setAppetite((current) => ({ ...current, annualLossLimit: value }))}
+            onChange={(value) => setAppetite((current) => withAnnualLossLimit(current, value))}
             suffix="per year"
           />
           <MoneyInput
@@ -540,9 +1004,14 @@ export function DecisionLabView() {
           <MoneyInput
             id="appetite-probability"
             label="Maximum acceptable likelihood of exceeding the annual loss limit"
-            help="Enter a share between 0 and 1 (for example 0.25 for 25%)."
+            help={
+              probabilityCriterionDisabled(appetite)
+                ? 'This criterion needs a loss threshold. Enter an annual loss limit first.'
+                : 'Enter a share between 0 and 1 (for example 0.25 for 25%).'
+            }
             value={appetite.maxExceedanceProbability}
             onChange={(value) => setAppetite((current) => ({ ...current, maxExceedanceProbability: value }))}
+            disabled={probabilityCriterionDisabled(appetite)}
           />
         </CardContent>
       </Card>
@@ -563,20 +1032,48 @@ export function DecisionLabView() {
           ) : (
             <>
               <p className="m-0 text-small text-muted">
-                {selectedIds.length} of {curated.length} selected · {catalogue.custom.length} saved user-defined
-                treatment(s)
+                {selectedTreatments.length} of {selections.length} selected · {customSelections.length} saved
+                user-defined treatment(s)
               </p>
+              <p className="m-0 text-small font-semibold text-heading">Curated treatments</p>
               <div className="grid gap-3 lg:grid-cols-2">
-                {curated.map((treatment) => (
+                {curatedSelections.map((treatment) => (
                   <TreatmentCard
-                    key={treatment.id}
-                    treatment={treatment}
-                    selected={selectedIds.includes(treatment.id)}
-                    onToggle={() => toggleTreatment(treatment.id)}
+                    key={treatment.key}
+                    treatment={treatment.definition}
+                    selected={selectedKeys.includes(treatment.key)}
+                    onToggle={() => toggleTreatment(treatment.key)}
                     symbol={symbol}
                   />
                 ))}
               </div>
+              {customSelections.length === 0 ? null : (
+                <div className="grid gap-2">
+                  <p className="m-0 text-small font-semibold text-heading">Your user-defined treatments</p>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {customSelections.map((treatment) => (
+                      <TreatmentCard
+                        key={treatment.key}
+                        treatment={treatment.definition}
+                        selected={selectedKeys.includes(treatment.key)}
+                        onToggle={() => toggleTreatment(treatment.key)}
+                        onDelete={() => void deleteCustomTreatment(treatment)}
+                        symbol={symbol}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <CustomTreatmentForm
+                scenarios={publicModel.scenarios.map((scenario) => ({
+                  code: scenario.code,
+                  shortLabel: scenario.shortLabel,
+                }))}
+                mechanismGroups={catalogue.mechanismGroups}
+                evidenceLevels={catalogue.evidenceLevels}
+                busy={busy}
+                onCreate={createCustomTreatment}
+              />
             </>
           )}
           <div className="flex flex-wrap gap-2">
@@ -584,7 +1081,17 @@ export function DecisionLabView() {
               <RefreshCw aria-hidden="true" className="size-4" />
               Compare selected treatments
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => void runPortfolios()} disabled={busy}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void runPortfolios()}
+              disabled={busy || !portfolioDecisionAvailable}
+              title={
+                portfolioDecisionAvailable
+                  ? 'Evaluate portfolios against the expected annual-loss criterion'
+                  : 'Enter an annual loss limit to enable portfolio evaluation'
+              }
+            >
               Evaluate portfolios
             </Button>
             <Button size="sm" variant="secondary" onClick={() => void runSensitivity()} disabled={busy}>
@@ -592,6 +1099,14 @@ export function DecisionLabView() {
             </Button>
             {busy ? <span className="self-center text-small text-muted">Calculating…</span> : null}
           </div>
+          <p className="m-0 text-micro text-muted">
+            Portfolio selection uses the expected annual-loss limit only. High-end modeled loss and
+            exceedance probability remain part of the exact treatment comparison but are not used
+            to rank portfolios, because they require a joint scenario-dependence model.
+            {portfolioDecisionAvailable
+              ? ''
+              : ' Enter an annual loss limit to enable portfolio evaluation.'}
+          </p>
         </CardContent>
       </Card>
 
@@ -600,11 +1115,30 @@ export function DecisionLabView() {
           <CardHeader>
             <CardTitle>3. What would change?</CardTitle>
             <p className="m-0 text-small text-muted">
+              {reportBasis?.kind === 'recommended-portfolio'
+                ? 'These figures describe the recommended portfolio.'
+                : 'These figures describe the selected treatment set.'}
+            </p>
+            <p className="m-0 text-small text-muted">
               Expected Annual Loss (EAL) is the average annual modeled loss. High-End Modeled Loss is the P90
-              (90th percentile): about 10% of modeled years exceed it.
+              (90th percentile): about 10% of modeled years exceed it.{' '}
+              {baselineCarriedFromResults === false
+                ? 'The baseline is further from the results page than sampling noise explains, so it describes changed answers.'
+                : 'The baseline replays the results page run with the same seed and iteration count, so it agrees with that figure to within Monte Carlo noise.'}{' '}
+              The treated figures apply your selected treatments to those same simulated years. Neither figure
+              comes from QuickRisk Live, and neither one changes the results page or your saved Live
+              snapshots.
             </p>
           </CardHeader>
           <CardContent className="grid gap-4">
+            {comparison.factors.clampWarning ? (
+              <Alert tone="warning" title="A documented loss cap limits the modeled effect">
+                <p className="m-0">
+                  {comparison.factors.notes.join(' ') ||
+                    'A sampled loss component can reach the documented cap, so the paired-year treatment scaling is an approximation.'}
+                </p>
+              </Alert>
+            ) : null}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-border p-3">
                 <p className="m-0 text-micro font-semibold uppercase tracking-[0.08em] text-muted">
@@ -669,6 +1203,17 @@ export function DecisionLabView() {
                 )}
               </div>
             </div>
+            <div className="grid gap-2">
+              <DataProvenance
+                provenance={decisionBaselineEalProvenance({
+                  ...comparison.provenance,
+                  questionCount,
+                  baselineCarriedFromResults,
+                  resultsPortfolioEal,
+                })}
+              />
+              <DataProvenance provenance={decisionTreatedEalProvenance(comparison.provenance)} />
+            </div>
           </CardContent>
         </Card>
       )}
@@ -679,13 +1224,14 @@ export function DecisionLabView() {
             <CardTitle>4. What are the options?</CardTitle>
             <p className="m-0 text-small text-muted">
               {portfolios.evaluated} portfolios evaluated from {portfolios.candidatesConsidered} candidates. The
-              recommendation is the lowest-cost option that satisfies the stated appetite and constraints; it is
-              not a claim that it is the only correct investment.
+              recommendation is the lowest-cost option that meets the expected annual-loss criterion and
+              constraints; it is not a claim that it is the only correct investment. High-end and exceedance
+              criteria are not used for portfolio selection.
             </p>
           </CardHeader>
           <CardContent className="grid gap-3">
             {portfolios.noneSatisfies ? (
-              <Alert tone="warning" title="No portfolio satisfies the appetite">
+              <Alert tone="warning" title="No portfolio meets the annual-loss criterion">
                 <p className="m-0">{portfolios.noneSatisfiesMessage}</p>
               </Alert>
             ) : null}
@@ -707,7 +1253,12 @@ export function DecisionLabView() {
                       {portfolio.treatmentIds.length === 0
                         ? 'No treatment'
                         : portfolio.treatmentIds
-                            .map((id) => curated.find((entry) => entry.id === id)?.name ?? id)
+                            .map(
+                              (id) =>
+                                findSelectionByTreatmentId(selections, id)?.definition.name ??
+                                comparison?.treatments.find((treatment) => treatment.id === id)?.name ??
+                                id,
+                            )
                             .join(' + ')}
                     </td>
                     <td className="border-b border-border py-2 pr-3">
@@ -730,11 +1281,16 @@ export function DecisionLabView() {
               {portfolios.truncated ? ' The candidate set was truncated to the configured maximum.' : ''}
               {portfolios.notes.length === 0 ? '' : ` ${portfolios.notes.join(' ')}`}
             </p>
+            <p className="m-0 text-micro text-muted">
+              {portfolios.portfolios.length <= 12
+                ? `Showing all ${portfolios.portfolios.length} evaluated portfolios.`
+                : `Showing the first 12 of ${portfolios.portfolios.length} evaluated portfolios. All evaluated portfolios remain in the saved analysis.`}
+            </p>
           </CardContent>
         </Card>
       )}
 
-      {sensitivity === null ? null : (
+      {sensitivity === null || reportBasis?.kind !== 'comparison' ? null : (
         <Card>
           <CardHeader>
             <CardTitle>5. How effective would it have to be?</CardTitle>
@@ -758,22 +1314,69 @@ export function DecisionLabView() {
         </Card>
       )}
 
-      {comparison === null ? null : (
+      {activeSnapshot === null ? null : (
         <Card>
           <CardHeader>
             <CardTitle>6. Save, share and report</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
+            <p className="m-0 text-micro text-muted">
+              {publicId === null
+                ? `${UNSAVED_SESSION_LABEL}. Saving stores this analysis in your anonymous session; it does not publish it.`
+                : `${SESSION_SAVE_NOTE} Any input change clears the result and the saved identifier.`}
+            </p>
+            <p className="m-0 text-micro text-muted">
+              {reportBasis === null
+                ? 'No report basis is available. Recalculate the analysis.'
+                : reportBasis.kind === 'recommended-portfolio'
+                  ? 'The report describes the recommended portfolio.'
+                  : 'The report describes the selected treatment set.'}
+            </p>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => void saveDecision()} disabled={busy}>
+              {activeSnapshot !== null &&
+              activeSnapshot.portfolios !== null &&
+              activeSnapshot.portfolios.recommendedId !== null ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void prepareRecommendedReport()}
+                  disabled={busy}
+                >
+                  Prepare recommended portfolio report
+                </Button>
+              ) : null}
+              {reportBasis?.kind === 'recommended-portfolio' ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const current = snapshotRef.current;
+                    if (current === null || current.inputKey !== currentKeyRef.current) {
+                      return;
+                    }
+                    setSnapshot(selectReportTarget(current, current.inputKey, 'comparison'));
+                    setPublicId(null);
+                    setShareUrl(null);
+                    setMessage('The report now describes the selected treatment set.');
+                  }}
+                  disabled={busy}
+                >
+                  Describe selected treatment set
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                onClick={() => void saveDecision()}
+                disabled={busy || reportBasis === null || publicId !== null}
+              >
                 <Save aria-hidden="true" className="size-4" />
-                Save decision analysis
+                {publicId === null ? 'Save decision analysis' : 'Decision analysis saved'}
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={() => void shareBoardPack()}
-                disabled={busy || publicId === null}
+                disabled={busy || publicId === null || reportBasis === null}
               >
                 <Share2 aria-hidden="true" className="size-4" />
                 Share Board Risk Pack
@@ -782,7 +1385,12 @@ export function DecisionLabView() {
                 <ShieldOff aria-hidden="true" className="size-4" />
                 Revoke link
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => globalThis.print()}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => globalThis.print()}
+                disabled={reportBasis === null}
+              >
                 <Printer aria-hidden="true" className="size-4" />
                 Print / save as PDF
               </Button>

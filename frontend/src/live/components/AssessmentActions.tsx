@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { USER_RECORDED_EXPLANATION } from '@/live/content/liveIntegrity';
 
 /**
  * Persistence and reporting actions.
@@ -21,6 +22,8 @@ export function AssessmentActions({
   onHistory,
   shareUrl,
   publicId,
+  hasActiveShare,
+  saveStatus,
   busy,
   message,
   error,
@@ -36,6 +39,8 @@ export function AssessmentActions({
   onHistory: () => void;
   shareUrl: string | null;
   publicId: string | null;
+  hasActiveShare: boolean;
+  saveStatus: 'saved' | 'edited' | 'unsaved';
   busy: boolean;
   message: string | null;
   error: string | null;
@@ -80,15 +85,23 @@ export function AssessmentActions({
           />
         </div>
 
+        <p className="m-0 text-small text-muted" role="status">
+          {saveStatus === 'saved'
+            ? 'Saved. The stored assessment matches the current simulation.'
+            : saveStatus === 'edited'
+              ? 'Unsaved changes. The stored assessment and any share link still describe the last saved state.'
+              : 'Not saved. Saving is an explicit action; nothing is stored while you move the controls.'}
+        </p>
+
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={onSave} disabled={busy}>
             <Save aria-hidden="true" className="size-4" />
             Save assessment
           </Button>
-          <Button size="sm" variant="secondary" onClick={onUpdate} disabled={busy || publicId === null}>
+          <Button size="sm" variant="secondary" onClick={onUpdate} disabled={busy || publicId === null || saveStatus === 'saved'}>
             Update saved assessment
           </Button>
-          <Button size="sm" variant="secondary" onClick={onShare} disabled={busy || publicId === null}>
+          <Button size="sm" variant="secondary" onClick={onShare} disabled={busy || publicId === null || saveStatus !== 'saved'}>
             <Share2 aria-hidden="true" className="size-4" />
             Share assessment
           </Button>
@@ -102,15 +115,29 @@ export function AssessmentActions({
           </Button>
         </div>
 
-        {shareUrl === null ? null : (
+        {shareUrl === null && !hasActiveShare ? null : (
           <div className="grid gap-2 rounded-control border border-accent-strong/30 bg-accent-soft p-3">
-            <p className="m-0 text-small font-semibold text-heading">Shareable read-only link created</p>
-            <p className="m-0 break-all text-small text-ink">{shareUrl}</p>
+            <p className="m-0 text-small font-semibold text-heading">
+              {shareUrl === null
+                ? 'An active read-only link exists for this saved assessment'
+                : 'Read-only user-recorded data link created'}
+            </p>
+            {shareUrl === null ? (
+              <p className="m-0 text-small text-muted">
+                For security, the existing URL cannot be shown again. You can revoke it here, or
+                create a replacement link.
+              </p>
+            ) : (
+              <p className="m-0 break-all text-small text-ink">{shareUrl}</p>
+            )}
+            <p className="m-0 text-micro text-muted">{USER_RECORDED_EXPLANATION}</p>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={copy}>
-                <Copy aria-hidden="true" className="size-4" />
-                {copied ? 'Copied' : 'Copy link'}
-              </Button>
+              {shareUrl === null ? null : (
+                <Button size="sm" variant="secondary" onClick={copy}>
+                  <Copy aria-hidden="true" className="size-4" />
+                  {copied ? 'Copied' : 'Copy link'}
+                </Button>
+              )}
               <Button size="sm" variant="ghost" onClick={onRevokeShare} disabled={busy}>
                 <ShieldOff aria-hidden="true" className="size-4" />
                 Revoke share link

@@ -1,8 +1,23 @@
-import { ArrowRight } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataProvenance } from '@/components/layout/DataProvenance';
+import { DataStatusNote } from '@/components/layout/DataStatusNote';
+import { GuidedOnboarding } from '@/components/layout/GuidedOnboarding';
+import { JourneyMap } from '@/components/layout/JourneyMap';
+import {
+  LIVE_BASELINE_SELECTOR_HELP,
+  LIVE_BASELINE_SELECTOR_LABEL,
+  LIVE_EDITED_NOTE,
+  LIVE_SESSION_RETENTION_DAYS,
+  LIVE_UNSAVED_NOTE,
+  SAVED_SESSION_LABEL,
+  SESSION_SAVE_NOTE,
+  UNSAVED_CHANGES_LABEL,
+  UNSAVED_SESSION_LABEL,
+  liveBaselineEalProvenance,
+  liveOverlayEalProvenance,
+} from '@/content/dataLifecycle';
 import { formatMoney, formatPercent } from '@/lib/format';
 import { AssessmentActions } from '@/live/components/AssessmentActions';
 import { CalculationTrace } from '@/live/components/CalculationTrace';
@@ -12,6 +27,8 @@ import { LiveDisclaimer, SimulationBadge } from '@/live/components/SimulationBad
 import { SocInputs } from '@/live/components/SocInputs';
 import { TimelinePanel } from '@/live/components/TimelinePanel';
 import { calculateRealTimeRisk } from '@/live/engine/socRiskEngine';
+import { liveStateFingerprint } from '@/live/domain/liveFingerprint';
+import { LIVE_METHODOLOGY_VERSION } from '@/live/domain/socTypes';
 import { useLiveStore } from '@/live/state/liveStore';
 import { useAssessmentStore } from '@/state/assessmentStore';
 
@@ -33,7 +50,9 @@ export function LiveSimulatorView() {
   const library = useLiveStore((state) => state.library);
   const currentPublicId = useLiveStore((state) => state.currentPublicId);
   const currentTitle = useLiveStore((state) => state.currentTitle);
+  const savedFingerprint = useLiveStore((state) => state.savedFingerprint);
   const shareUrl = useLiveStore((state) => state.shareUrl);
+  const currentHasActiveShare = useLiveStore((state) => state.currentHasActiveShare);
   const message = useLiveStore((state) => state.message);
   const error = useLiveStore((state) => state.error);
   const busy = useLiveStore((state) => state.busy);
@@ -90,30 +109,44 @@ export function LiveSimulatorView() {
       return null;
     }
   }, [soc, baseline]);
+
+  const saveStatus: 'saved' | 'edited' | 'unsaved' = useMemo(() => {
+    if (currentPublicId === null) {
+      return 'unsaved';
+    }
+    if (baseline === null || savedFingerprint === null) {
+      return 'edited';
+    }
+
+    return liveStateFingerprint({
+      baseline,
+      soc,
+      timeline,
+      title: currentTitle,
+      methodologyVersion: LIVE_METHODOLOGY_VERSION,
+    }) === savedFingerprint
+      ? 'saved'
+      : 'edited';
+  }, [baseline, currentPublicId, currentTitle, savedFingerprint, soc, timeline]);
   if (baseline === null || result === null) {
     return (
       <div className="grid gap-6">
         <SimulationBadge />
-        <Card>
-          <CardHeader>
-            <CardTitle>QuickRisk Live needs a QuickRisk baseline first</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <p className="m-0">
-              Select a valid QuickRisk scenario before using QuickRisk Live. The baseline exposure comes
-              from the QuickRisk quantitative model and is never invented here.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => setView('disclaimer')}>
-                Run a QuickRisk assessment
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-              <Button variant="secondary" onClick={() => setView('live-history')}>
-                Open a saved assessment
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <GuidedOnboarding
+          eyebrow="QuickRisk Live"
+          title="Live overlays a SOC simulation on a QuickRisk baseline"
+          description="Live does not invent a baseline. It takes the expected annual loss and the selected scenario from a completed QuickRisk assessment, then applies synthetic SOC observations and simulated response actions on top of them."
+          steps={[
+            'Answer the assessment in this tab — 18 questions, about 10 minutes.',
+            'Review the indicative exposure and note the scenario you want to simulate.',
+            'Return to Live and record SOC observations against that baseline.',
+          ]}
+          primaryLabel="Start a new assessment"
+          onPrimary={() => setView('disclaimer')}
+          secondaryLabel="Open a saved assessment"
+          onSecondary={() => setView('live-history')}
+          footnote={`Saved assessments live in this browser's anonymous session for ${LIVE_SESSION_RETENTION_DAYS} days. Assessment answers are never stored.`}
+        />
         <LiveDisclaimer />
       </div>
     );
@@ -124,6 +157,23 @@ export function LiveSimulatorView() {
   return (
     <div className="grid gap-6">
       <SimulationBadge />
+      <DataStatusNote
+        label={
+          saveStatus === 'saved'
+            ? SAVED_SESSION_LABEL
+            : saveStatus === 'edited'
+              ? UNSAVED_CHANGES_LABEL
+              : UNSAVED_SESSION_LABEL
+        }
+        tone={saveStatus === 'saved' ? 'neutral' : 'warning'}
+        detail={
+          saveStatus === 'saved'
+            ? SESSION_SAVE_NOTE
+            : saveStatus === 'edited'
+              ? LIVE_EDITED_NOTE
+              : LIVE_UNSAVED_NOTE
+        }
+      />
 
       <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
         <div className="grid gap-1">
@@ -143,12 +193,13 @@ export function LiveSimulatorView() {
               className="text-micro font-semibold uppercase tracking-[0.08em] text-muted"
               htmlFor="live-scenario"
             >
-              QuickRisk baseline scenario
+              {LIVE_BASELINE_SELECTOR_LABEL}
             </label>
             <select
               id="live-scenario"
               className="min-h-9 rounded-control border border-border bg-paper px-3 text-small"
               value={baseline.scenarioCode}
+              disabled={busy}
               onChange={(event) => {
                 const scenario = scenarioChoices.find((entry) => entry.code === event.target.value);
                 if (scenario === undefined) {
@@ -170,8 +221,31 @@ export function LiveSimulatorView() {
                 </option>
               ))}
             </select>
+            <p className="m-0 max-w-md text-micro text-muted">{LIVE_BASELINE_SELECTOR_HELP}</p>
           </div>
         )}
+      </div>
+
+      <JourneyMap currentSurface="live" />
+
+      <div className="grid gap-2">
+        <DataProvenance
+          provenance={liveBaselineEalProvenance({
+            scenarioCode: baseline.scenarioCode,
+            scenarioName: baseline.scenarioName,
+            baselineEal: baseline.baselineEal,
+            currencySymbol: symbol,
+            resultsIterations: results?.meta.iterations ?? null,
+          })}
+        />
+        <DataProvenance
+          provenance={liveOverlayEalProvenance({
+            socMultiplier: result.socMultiplier,
+            baselineEal: result.baselineEal,
+            realTimeEal: result.realTimeEal,
+            currencySymbol: symbol,
+          })}
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1.15fr)]">
@@ -242,6 +316,8 @@ export function LiveSimulatorView() {
         onHistory={() => setView('live-history')}
         shareUrl={shareUrl}
         publicId={currentPublicId}
+        hasActiveShare={currentHasActiveShare}
+        saveStatus={saveStatus}
         busy={busy}
         message={message}
         error={error}

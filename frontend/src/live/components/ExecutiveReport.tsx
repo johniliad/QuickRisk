@@ -1,9 +1,12 @@
 import { HowNumbersAreProduced } from '@/components/layout/HowNumbersAreProduced';
+import { BranchNote } from '@/components/layout/BranchNote';
 import { Alert } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LIVE_BRANCH_NOTE } from '@/content/dataLifecycle';
 import { LIVE_DISCLOSURE } from '@/content/plainLanguage';
 import { formatMoney } from '@/lib/format';
 import { STAGE_LABELS } from '@/live/domain/socTypes';
+import { UserRecordedNotice } from '@/live/components/UserRecordedNotice';
 import type { LiveAssessmentDetail } from '@/live/api/liveClient';
 
 const formatDate = (isoTimestamp: string): string => {
@@ -61,10 +64,12 @@ export function ExecutiveReport({
         </h1>
         <p className="m-0 text-small text-muted">
           {assessment.scenarioName} · generated {formatDate(assessment.createdAt)} UTC · Methodology QuickRisk
-          Live v{assessment.methodologyVersion} · Data status: synthetic SOC simulation · Assessment: anonymous
-          · Report: informational / demonstration
+          Live v{assessment.methodologyVersion} · Data status: synthetic SOC simulation, user-recorded · Assessment:
+          anonymous · Report: informational / demonstration
         </p>
       </header>
+
+      <BranchNote>{LIVE_BRANCH_NOTE}</BranchNote>
 
       <Alert tone="warning" title="SIMULATION MODE — Synthetic SOC Data">
         <p className="m-0">
@@ -72,6 +77,8 @@ export function ExecutiveReport({
           scenario is being evaluated against a simulated SOC sequence.
         </p>
       </Alert>
+
+      <UserRecordedNotice />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>

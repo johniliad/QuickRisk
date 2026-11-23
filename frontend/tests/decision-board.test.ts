@@ -86,6 +86,7 @@ const input = (overrides: Partial<BoardModelInput> = {}): BoardModelInput => ({
   annualOperatingCost: 45000,
   treatments: [treatment()],
   recommended: { id: 'p1', treatmentIds: ['immutable-backup'] },
+  recommendationState: 'recommended',
   reductionShare: 0.35,
   riskReductionEfficiency: 4.09,
   implementationDelayDays: 90,
@@ -182,11 +183,100 @@ describe('Board Risk Pack model', () => {
   });
 
   it('makes no recommendation when no portfolio satisfies the appetite', () => {
-    const report = buildBoardReport(input({ recommended: null }));
+    const report = buildBoardReport(input({ recommended: null, recommendationState: 'none-satisfies' }));
 
     expect(report.recommendation).toBeNull();
-    expect(report.pages[3].narrative).toContain('No evaluated portfolio satisfies');
-    expect(report.decisionRequested).toContain('No evaluated portfolio satisfies');
+    expect(report.pages[3].narrative).toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.decisionRequested).toContain('No evaluated portfolio meets the expected annual-loss criterion');
+  });
+
+  it('does not claim a portfolio search happened when none was run', () => {
+    const report = buildBoardReport(input({ recommended: null, recommendationState: 'not-evaluated' }));
+
+    expect(report.recommendation).toBeNull();
+    expect(report.pages[3].narrative).toContain('No portfolio search has been performed');
+    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.decisionRequested).toContain('Run a portfolio search');
+    expect(report.decisionRequested).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+  });
+
+  it('says a different combination was recommended when the report describes the selected set', () => {
+    const report = buildBoardReport(input({ recommendationState: 'evaluated-other' }));
+
+    expect(report.recommendation).toBeNull();
+    expect(report.pages[3].narrative).toContain('different combination was recommended');
+    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.decisionRequested).toContain('no portfolio recommendation is made');
+  });
+
+  it('ignores a recommended row unless the state says the report describes it', () => {
+    const report = buildBoardReport(input({ recommendationState: 'not-evaluated' }));
+
+    expect(report.recommendation).toBeNull();
+    expect(report.pages[3].narrative).toContain('selected treatment set only');
+  });
+
+  it('keeps page 1 and page 4 on the same treated figures', () => {
+    const model = input();
+    const report = buildBoardReport(model);
+
+    expect(report.pages[0].metrics.map((metric) => metric.value)).toEqual(
+      report.pages[3].metrics.map((metric) => metric.value),
+    );
+    expect(report.pages[3].metrics[0].value).toBe(model.treated.expectedAnnualLoss);
+    expect(report.pages[3].metrics[1].value).toBe(model.treated.p90);
+  });
+
+  it('includes every treatment and every assumption without silent truncation', () => {
+    const treatments = Array.from({ length: 8 }, (_, index) =>
+      treatment({
+        id: `treatment-${index}`,
+        name: `Treatment ${index}`,
+        assumptions: [`Assumption ${index}.A`, `Assumption ${index}.B`],
+      }),
+    );
+    const report = buildBoardReport(input({ treatments }));
+
+    expect(report.pages[2].treatments).toHaveLength(8);
+    const pageFive = report.pages[4].notes.join(' ');
+    for (const entry of treatments) {
+      expect(pageFive).toContain(entry.name);
+      for (const assumption of entry.assumptions) {
+        expect(pageFive).toContain(assumption);
+      }
+    }
+  });
+
+  it('states that portfolio selection uses expected annual loss only', () => {
+    const report = buildBoardReport(input());
+    expect(report.pages[3].notes.join(' ')).toContain('Portfolio selection uses expected annual loss only');
+  });
+
+  it('discloses when a sampled loss cap makes treatment scaling approximate', () => {
+    const report = buildBoardReport(
+      input({ clampWarning: true, clampNotes: ['In S1, the cap is reachable.'] }),
+    );
+    const limitations = report.limitations.join(' ');
+
+    expect(limitations).toContain('component can reach the documented cap');
+    expect(limitations).toContain('In S1, the cap is reachable.');
+  });
+
+  it('states that an empty recommended portfolio means no additional treatment', () => {
+    const report = buildBoardReport(
+      input({
+        treatments: [],
+        recommended: { id: 'p-empty', treatmentIds: [] },
+        recommendationState: 'recommended',
+        reductionShare: 0,
+        initialInvestment: 0,
+        annualOperatingCost: 0,
+      }),
+    );
+
+    expect(report.pages[3].narrative).toContain('no additional treatment');
+    expect(report.recommendation?.names).toEqual(['No additional treatment']);
+    expect(report.decisionRequested).toContain('no additional treatment');
   });
 });
 

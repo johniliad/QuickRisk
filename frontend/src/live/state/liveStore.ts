@@ -18,6 +18,15 @@ import {
 } from '@/live/domain/socTypes';
 import { calculateRealTimeRisk } from '@/live/engine/socRiskEngine';
 import {
+  APPLICATION_CURRENCY_SYMBOL,
+  buildLivePayload,
+  type LiveBaseline,
+} from '@/live/domain/livePayload';
+import { savedAssessmentScenarioError, withScenario } from '@/live/domain/scenarioIdentity';
+import { liveStateFingerprint } from '@/live/domain/liveFingerprint';
+import { retryCsrfOnce } from '@/live/api/csrfRetry';
+import { createSingleFlight } from '@/live/api/singleFlight';
+import {
   LiveApiError,
   liveApi,
   type LiveAssessmentDetail,
@@ -25,14 +34,7 @@ import {
   type LiveScenarioPreset,
 } from '@/live/api/liveClient';
 
-export interface LiveBaseline {
-  readonly scenarioCode: string;
-  readonly scenarioName: string;
-  readonly baselineEal: number;
-  readonly currencySymbol: string;
-  readonly modelId: string;
-  readonly modelVersion: string;
-}
+export type { LiveBaseline };
 
 type SessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -53,13 +55,18 @@ interface LiveState {
 
   currentPublicId: string | null;
   currentTitle: string;
+  titleOrigin: 'preset' | 'user';
   shareUrl: string | null;
+  /** True when the saved assessment has an active read-only link, even if its URL is not known. */
+  currentHasActiveShare: boolean;
+  /** Fingerprint of the state as last saved; null when no saved state is open. */
+  savedFingerprint: string | null;
 
   busy: boolean;
   message: string | null;
   error: string | null;
 
-  initSession: () => Promise<string | null>;
+  initSession: (forceRefresh?: boolean) => Promise<string | null>;
   setBaseline: (baseline: LiveBaseline | null) => void;
   setTitle: (title: string) => void;
   updateSoc: (patch: Partial<SOCInputState>) => void;
@@ -78,6 +85,8 @@ interface LiveState {
   createShare: () => Promise<void>;
   revokeShare: () => Promise<void>;
   clearMessages: () => void;
+  /** Clears the current simulation while retaining the anonymous session, library and history. */
+  resetSimulation: () => void;
   reset: () => void;
 }
 
@@ -95,7 +104,10 @@ const initialState = {
   history: [] as LiveAssessmentSummary[],
   currentPublicId: null,
   currentTitle: '',
+  titleOrigin: 'user' as const,
   shareUrl: null,
+  currentHasActiveShare: false,
+  savedFingerprint: null,
   busy: false,
   message: null,
   error: null,
@@ -106,16 +118,23 @@ const errorMessage = (error: unknown): string =>
     ? error.message
     : 'The request could not be completed.';
 
+/**
+ * The server rotates the CSRF token on every session read, so overlapping session requests are
+ * never allowed. This single promise is shared by every caller and cleared after settlement.
+ */
+const sessionFlight = createSingleFlight(() => liveApi.session());
+
 export const useLiveStore = create<LiveState>((set, get) => ({
   ...initialState,
 
-  initSession: async () => {
-    if (get().sessionStatus === 'ready' && get().csrfToken !== null) {
-      return get().csrfToken;
+  initSession: async (forceRefresh = false) => {
+    const current = get();
+    if (!forceRefresh && current.sessionStatus === 'ready' && current.csrfToken !== null) {
+      return current.csrfToken;
     }
     set({ sessionStatus: 'loading', error: null });
     try {
-      const session = await liveApi.session();
+      const session = await sessionFlight();
       set({
         sessionStatus: 'ready',
         csrfToken: session.csrfToken,
@@ -131,31 +150,70 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     }
   },
 
-  setBaseline: (baseline) => set({ baseline, currentPublicId: null, shareUrl: null }),
+  setBaseline: (baseline) =>
+    set((state) => {
+      const hadTimeline = state.timeline.length > 0;
+      const clearPresetTitle = state.titleOrigin === 'preset';
 
-  setTitle: (title) => set({ currentTitle: title.slice(0, 160) }),
+      return {
+        baseline,
+        soc: baseline === null ? state.soc : withScenario(state.soc, baseline.scenarioCode),
+        timeline: EMPTY_TIMELINE,
+        currentPublicId: null,
+        currentTitle: clearPresetTitle ? '' : state.currentTitle,
+        shareUrl: null,
+        currentHasActiveShare: false,
+        savedFingerprint: null,
+        message:
+          baseline !== null && hadTimeline
+            ? 'Baseline changed. The simulation timeline was cleared because every recorded exposure depends on the baseline.'
+            : null,
+        error: null,
+      };
+    }),
 
-  updateSoc: (patch) => set({ soc: { ...get().soc, ...patch }, error: null }),
+  setTitle: (title) => set({ currentTitle: title.slice(0, 160), titleOrigin: 'user' }),
 
-  resetSoc: () => set({ soc: DEFAULT_SOC_STATE, timeline: EMPTY_TIMELINE, error: null }),
+  updateSoc: (patch) =>
+    set((state) => {
+      const merged = { ...state.soc, ...patch };
+      const scenarioCode = state.baseline?.scenarioCode ?? merged.scenarioId;
+
+      return { soc: withScenario(merged, scenarioCode), error: null };
+    }),
+
+  resetSoc: () =>
+    set((state) => ({
+      soc: withScenario(DEFAULT_SOC_STATE, state.baseline?.scenarioCode ?? DEFAULT_SOC_STATE.scenarioId),
+      timeline: EMPTY_TIMELINE,
+      error: null,
+    })),
 
   applyPreset: (preset) => {
-    const baseline = get().baseline;
+    const state = get();
+    const scenarioCode = state.baseline?.scenarioCode ?? preset.defaultState.scenarioId;
+    const soc = withScenario(preset.defaultState, scenarioCode);
     const timeline: TimelineEntry[] = [];
-    if (baseline !== null) {
+    if (state.baseline !== null) {
       for (const step of preset.timeline) {
+        const stepState = withScenario(step.state, scenarioCode);
         timeline.push({
           offsetMs: step.offsetMs,
           label: step.label,
-          state: step.state,
-          result: calculateRealTimeRisk(step.state, baseline.baselineEal),
+          state: stepState,
+          result: calculateRealTimeRisk(stepState, state.baseline.baselineEal),
         });
       }
     }
     set({
-      soc: preset.defaultState,
+      soc,
       timeline,
       currentTitle: preset.name,
+      titleOrigin: 'preset',
+      currentPublicId: null,
+      shareUrl: null,
+      currentHasActiveShare: false,
+      savedFingerprint: null,
       message: `Applied the demonstration scenario: ${preset.name}.`,
       error: null,
     });
@@ -168,15 +226,21 @@ export const useLiveStore = create<LiveState>((set, get) => ({
 
       return;
     }
+    const normalized = withScenario(soc, baseline.scenarioCode);
     const previousOffset = timeline.length === 0 ? 0 : timeline[timeline.length - 1].offsetMs;
     const offsetMs = timeline.length === 0 ? 0 : previousOffset + TIMELINE_STEP_MS;
     const entry: TimelineEntry = {
       offsetMs,
       label: label.trim() === '' ? `Step ${timeline.length + 1}` : label.trim().slice(0, 160),
-      state: soc,
-      result: calculateRealTimeRisk(soc, baseline.baselineEal),
+      state: normalized,
+      result: calculateRealTimeRisk(normalized, baseline.baselineEal),
     };
-    set({ timeline: [...timeline, entry], message: `Recorded timeline step ${timeline.length + 1}.`, error: null });
+    set({
+      soc: normalized,
+      timeline: [...timeline, entry],
+      message: `Recorded timeline step ${timeline.length + 1}.`,
+      error: null,
+    });
   },
 
   removeTimelineEntry: (index) =>
@@ -213,19 +277,21 @@ export const useLiveStore = create<LiveState>((set, get) => ({
 
       return;
     }
-    const csrfToken = await get().initSession();
-    if (csrfToken === null) {
-      return;
-    }
 
     set({ busy: true, error: null, message: null });
     try {
-      const detail = await liveApi.createAssessment(buildPayload(state, title ?? state.currentTitle), csrfToken);
+      const detail = await retryCsrfOnce(get().initSession, (csrfToken) =>
+        liveApi.createAssessment(buildPayload(state, title ?? state.currentTitle), csrfToken),
+      );
+      // Ingest the persisted response rather than retaining the pre-save values. MySQL stores
+      // the baseline at DECIMAL(18,2); using the unrounded in-memory baseline made a fresh
+      // save look dirty immediately and disabled Share.
+      const ingested = ingestDetail(set, detail);
       set({
         busy: false,
-        currentPublicId: detail.publicId,
-        currentTitle: detail.title,
-        message: 'Assessment saved to your anonymous session.',
+        message: ingested
+          ? 'Assessment saved to your anonymous session.'
+          : 'The saved assessment is internally inconsistent and was not applied.',
       });
       await get().loadHistory();
     } catch (error) {
@@ -240,20 +306,18 @@ export const useLiveStore = create<LiveState>((set, get) => ({
 
       return;
     }
-    const csrfToken = await get().initSession();
-    if (csrfToken === null) {
-      return;
-    }
 
     set({ busy: true, error: null, message: null });
     try {
-      const detail = await liveApi.updateAssessment(
-        state.currentPublicId,
-        buildPayload(state, state.currentTitle),
-        csrfToken,
+      const detail = await retryCsrfOnce(get().initSession, (csrfToken) =>
+        liveApi.updateAssessment(
+          state.currentPublicId as string,
+          buildPayload(state, state.currentTitle),
+          csrfToken,
+        ),
       );
-      set({ busy: false, message: 'Assessment updated in your anonymous session.' });
-      ingestDetail(set, detail);
+      const ingested = ingestDetail(set, detail);
+      set({ busy: false, message: ingested ? 'Assessment updated in your anonymous session.' : null });
       await get().loadHistory();
     } catch (error) {
       set({ busy: false, error: errorMessage(error) });
@@ -268,26 +332,34 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     set({ busy: true, error: null, message: null });
     try {
       const detail = await liveApi.getAssessment(publicId, csrfToken);
-      ingestDetail(set, detail);
-      set({ busy: false, message: 'Assessment opened.' });
+      const ingested = ingestDetail(set, detail);
+      set({ busy: false, message: ingested ? 'Assessment opened.' : null });
     } catch (error) {
       set({ busy: false, error: errorMessage(error) });
     }
   },
 
   archiveAssessment: async (publicId) => {
-    const csrfToken = await get().initSession();
-    if (csrfToken === null) {
-      return;
-    }
+    set({ busy: true, error: null, message: null });
     try {
-      await liveApi.archiveAssessment(publicId, csrfToken);
-      set({
-        history: get().history.filter((entry) => entry.publicId !== publicId),
-        message: 'Assessment archived.',
+      await retryCsrfOnce(get().initSession, (csrfToken) =>
+        liveApi.archiveAssessment(publicId, csrfToken),
+      );
+      set((state) => {
+        const archivedCurrent = state.currentPublicId === publicId;
+
+        return {
+          busy: false,
+          history: state.history.filter((entry) => entry.publicId !== publicId),
+          currentPublicId: archivedCurrent ? null : state.currentPublicId,
+          savedFingerprint: archivedCurrent ? null : state.savedFingerprint,
+          shareUrl: archivedCurrent ? null : state.shareUrl,
+          currentHasActiveShare: archivedCurrent ? false : state.currentHasActiveShare,
+          message: 'Assessment archived.',
+        };
       });
     } catch (error) {
-      set({ error: errorMessage(error) });
+      set({ busy: false, error: errorMessage(error) });
     }
   },
 
@@ -299,27 +371,39 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     set({ busy: true, error: null, message: null });
     try {
       const source = await liveApi.getAssessment(publicId, csrfToken);
-      const duplicated = await liveApi.createAssessment(
-        {
-          title: `${source.title === '' ? source.scenarioName : source.title} (copy)`.slice(0, 160),
-          scenarioId: source.scenarioId,
-          scenarioName: source.scenarioName,
-          baselineEal: source.baselineEal,
-          inputState: source.inputState,
-          riskResult: source.result,
-          timeline: source.timeline.map((event) => ({
-            offsetMs: event.offsetMs,
-            eventType: event.eventType,
-            label: event.label,
-            state: event.state,
-            result: event.result,
-          })),
-          methodologyVersion: source.methodologyVersion,
-        },
-        csrfToken,
+      const problem = savedAssessmentScenarioError(source);
+      if (problem !== null) {
+        set({ busy: false, error: problem });
+
+        return;
+      }
+      const duplicated = await retryCsrfOnce(get().initSession, (writeToken) =>
+        liveApi.createAssessment(
+          {
+            title: `${source.title === '' ? source.scenarioName : source.title} (copy)`.slice(0, 160),
+            scenarioId: source.scenarioId,
+            scenarioName: source.scenarioName,
+            baselineEal: source.baselineEal,
+            baselineSource: {
+              modelId: source.baselineModelId,
+              modelVersion: source.baselineModelVersion,
+            },
+            inputState: source.inputState,
+            riskResult: source.result,
+            timeline: source.timeline.map((event) => ({
+              offsetMs: event.offsetMs,
+              eventType: event.eventType,
+              label: event.label,
+              state: event.state,
+              result: event.result,
+            })),
+            methodologyVersion: source.methodologyVersion,
+          },
+          writeToken,
+        ),
       );
-      ingestDetail(set, duplicated);
-      set({ busy: false, message: 'Assessment duplicated as a new assessment.' });
+      const ingested = ingestDetail(set, duplicated);
+      set({ busy: false, message: ingested ? 'Assessment duplicated as a new assessment.' : null });
       await get().loadHistory();
     } catch (error) {
       set({ busy: false, error: errorMessage(error) });
@@ -333,13 +417,23 @@ export const useLiveStore = create<LiveState>((set, get) => ({
 
       return;
     }
-    const csrfToken = await get().initSession();
-    if (csrfToken === null) {
+    const fingerprint = currentFingerprint(state);
+    if (fingerprint === null || state.savedFingerprint === null || fingerprint !== state.savedFingerprint) {
+      set({
+        error: 'Save or update the assessment before sharing it. The simulation has changed since the last save.',
+      });
+
       return;
     }
     try {
-      const share = await liveApi.createShare(state.currentPublicId, csrfToken);
-      set({ shareUrl: share.shareUrl, message: 'Read-only share link created.' });
+      const share = await retryCsrfOnce(get().initSession, (writeToken) =>
+        liveApi.createShare(state.currentPublicId as string, writeToken),
+      );
+      set({
+        shareUrl: share.shareUrl,
+        currentHasActiveShare: true,
+        message: 'Read-only share link created.',
+      });
       await get().loadHistory();
     } catch (error) {
       set({ error: errorMessage(error) });
@@ -351,13 +445,11 @@ export const useLiveStore = create<LiveState>((set, get) => ({
     if (state.currentPublicId === null) {
       return;
     }
-    const csrfToken = await get().initSession();
-    if (csrfToken === null) {
-      return;
-    }
     try {
-      await liveApi.revokeShare(state.currentPublicId, csrfToken);
-      set({ shareUrl: null, message: 'Share link revoked.' });
+      await retryCsrfOnce(get().initSession, (writeToken) =>
+        liveApi.revokeShare(state.currentPublicId as string, writeToken),
+      );
+      set({ shareUrl: null, currentHasActiveShare: false, message: 'Share link revoked.' });
       await get().loadHistory();
     } catch (error) {
       set({ error: errorMessage(error) });
@@ -366,62 +458,125 @@ export const useLiveStore = create<LiveState>((set, get) => ({
 
   clearMessages: () => set({ message: null, error: null }),
 
+  resetSimulation: () =>
+    set({
+      baseline: null,
+      soc: DEFAULT_SOC_STATE,
+      timeline: EMPTY_TIMELINE,
+      currentPublicId: null,
+      currentTitle: '',
+      titleOrigin: 'user',
+      shareUrl: null,
+      currentHasActiveShare: false,
+      savedFingerprint: null,
+      busy: false,
+      message: null,
+      error: null,
+    }),
+
   reset: () => set({ ...initialState }),
 }));
 
 
-/** Builds the persistence payload. The risk result is the answer of the pure engine. */
+/** Builds the persistence payload through the pure coherence guard. */
 function buildPayload(state: LiveState, title: string): Record<string, unknown> {
   const baseline = state.baseline;
   if (baseline === null) {
     throw new Error('A QuickRisk baseline is required before saving.');
   }
 
-  return {
-    title: title.slice(0, 160),
-    scenarioId: baseline.scenarioCode,
-    scenarioName: baseline.scenarioName,
-    baselineEal: baseline.baselineEal,
-    baselineSource: { modelId: baseline.modelId, modelVersion: baseline.modelVersion },
-    inputState: state.soc,
-    riskResult: calculateRealTimeRisk(state.soc, baseline.baselineEal),
-    timeline: state.timeline.map((entry) => ({
-      offsetMs: entry.offsetMs,
-      eventType: 'STATE_RECORDED',
-      label: entry.label,
-      state: entry.state,
-      result: entry.result,
-    })),
+  return buildLivePayload({
+    baseline,
+    soc: state.soc,
+    timeline: state.timeline,
+    title,
     methodologyVersion: LIVE_METHODOLOGY_VERSION,
-  };
+  });
 }
 
-/** Applies a server assessment to the in-memory store. */
+/**
+ * Applies a server assessment to the in-memory store.
+ *
+ * Fails closed when the saved record is internally inconsistent, rather than displaying a
+ * scenario, timeline and result that do not belong together.
+ */
 function ingestDetail(
   set: (partial: Partial<LiveState>) => void,
   detail: LiveAssessmentDetail,
-): void {
+): boolean {
+  const problem = savedAssessmentScenarioError(detail);
+  if (problem !== null) {
+    set({ error: problem });
+
+    return false;
+  }
+
   const baseline: LiveBaseline = {
     scenarioCode: detail.scenarioId,
     scenarioName: detail.scenarioName,
     baselineEal: detail.baselineEal,
-    currencySymbol: '€',
+    currencySymbol: APPLICATION_CURRENCY_SYMBOL,
     modelId: detail.baselineModelId,
     modelVersion: detail.baselineModelVersion,
   };
+  const soc = withScenario(detail.inputState, detail.scenarioId);
+  const timeline = detail.timeline.map((event) => ({
+    offsetMs: event.offsetMs,
+    label: event.label,
+    state: withScenario(event.state, detail.scenarioId),
+    result: event.result,
+  }));
 
   set({
     baseline,
-    soc: detail.inputState,
+    soc,
+    timeline,
+    currentPublicId: detail.publicId,
+    currentTitle: detail.title,
+    titleOrigin: 'user',
+    shareUrl: detail.shareUrl,
+    currentHasActiveShare: detail.hasActiveShare,
+    savedFingerprint: detailFingerprint(detail),
+    error: null,
+  });
+
+  return true;
+}
+
+/** Fingerprint of the state returned by the server after a save or an open. */
+function detailFingerprint(detail: LiveAssessmentDetail): string {
+  return liveStateFingerprint({
+    baseline: {
+      scenarioCode: detail.scenarioId,
+      scenarioName: detail.scenarioName,
+      baselineEal: detail.baselineEal,
+      currencySymbol: APPLICATION_CURRENCY_SYMBOL,
+      modelId: detail.baselineModelId,
+      modelVersion: detail.baselineModelVersion,
+    },
+    soc: withScenario(detail.inputState, detail.scenarioId),
     timeline: detail.timeline.map((event) => ({
       offsetMs: event.offsetMs,
       label: event.label,
-      state: event.state,
+      state: withScenario(event.state, detail.scenarioId),
       result: event.result,
     })),
-    currentPublicId: detail.publicId,
-    currentTitle: detail.title,
-    shareUrl: detail.shareUrl,
-    error: null,
+    title: detail.title,
+    methodologyVersion: LIVE_METHODOLOGY_VERSION,
+  });
+}
+
+/** Fingerprint of the current in-memory state, or null before a baseline exists. */
+function currentFingerprint(state: LiveState): string | null {
+  if (state.baseline === null) {
+    return null;
+  }
+
+  return liveStateFingerprint({
+    baseline: state.baseline,
+    soc: state.soc,
+    timeline: state.timeline,
+    title: state.currentTitle,
+    methodologyVersion: LIVE_METHODOLOGY_VERSION,
   });
 }

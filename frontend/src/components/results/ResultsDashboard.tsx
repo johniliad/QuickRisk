@@ -4,18 +4,24 @@ import { ModelledComponentsChart } from '@/components/charts/ModelledComponentsC
 import { PercentileRangeChart } from '@/components/charts/PercentileRangeChart';
 import { ScenarioRankingChart } from '@/components/charts/ScenarioRankingChart';
 import { SensitivityChart } from '@/components/charts/SensitivityChart';
+import { BranchDivider, ForkArms, FORK_GRID } from '@/components/layout/BranchDivider';
 import { DisclaimerBlock, PrivacyNotice } from '@/components/layout/DisclaimerBlock';
+import { DataProvenance } from '@/components/layout/DataProvenance';
+import { DataStatusNote } from '@/components/layout/DataStatusNote';
 import { HowNumbersAreProduced } from '@/components/layout/HowNumbersAreProduced';
+import { JourneyMap } from '@/components/layout/JourneyMap';
 import { ExecutiveSummary } from '@/components/results/ExecutiveSummary';
 import { ScenarioTable } from '@/components/results/ScenarioTable';
 import { ThresholdTable } from '@/components/results/ThresholdTable';
 import { Alert } from '@/components/ui/alert';
-import { ConfidenceBadge } from '@/components/ui/badge';
+import { Badge, ConfidenceBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CORE_DISCLOSURE, precisionFor } from '@/content/plainLanguage';
+import { RESULTS_MEMORY_NOTE, resultsScenarioEalProvenance } from '@/content/dataLifecycle';
 import type { CalculationResponse } from '@/domain/results';
 import { formatMoney } from '@/lib/format';
+import { cn } from '@/lib/cn';
 import { publicModel } from '@/model';
 
 /**
@@ -30,11 +36,13 @@ export function ResultsDashboard({
   onSelectScenario,
   onRestart,
   onOpenLive,
+  onOpenDecisionLab,
 }: {
   response: CalculationResponse;
   onSelectScenario: (scenarioCode: string) => void;
   onRestart: () => void;
   onOpenLive: () => void;
+  onOpenDecisionLab: () => void;
 }) {
   const thresholds = publicModel.version.lossThresholds;
   const symbol = response.meta.currencySymbol === '' ? publicModel.version.currencySymbol : response.meta.currencySymbol;
@@ -53,19 +61,96 @@ export function ResultsDashboard({
         onRestart={onRestart}
       />
 
-      <Alert tone="info" title="QuickRisk Live — real-time overlay">
-        <p className="m-0">
-          Add synthetic SOC evidence and simulated response actions to this quantitative baseline. The overlay
-          is a deterministic demonstration: it does not connect to a production SOC feed and does not change the
-          QuickRisk result above.
-        </p>
-        <p className="m-0 mt-2">
-          <Button variant="secondary" size="sm" onClick={onOpenLive}>
-            Open QuickRisk Live
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Button>
-        </p>
-      </Alert>
+      <section className="grid gap-4" aria-labelledby="next-steps-heading">
+        <div className="grid gap-2">
+          <h2 id="next-steps-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
+            Your exposure is ready. What next?
+          </h2>
+          <DataStatusNote label="In this tab only" detail={RESULTS_MEMORY_NOTE} />
+          <p className="m-0 text-small text-muted">
+            Both tools start from this result and neither one feeds the other. Pick a branch now —
+            you can come back and open the other one at any time.
+          </p>
+        </div>
+
+        <ForkArms className="-mb-4" />
+
+        <div className={cn('grid gap-3', FORK_GRID)}>
+          <Card className="border-accent-strong/40">
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle>QuickRisk Live</CardTitle>
+                <Badge tone="accent">Branch A</Badge>
+              </div>
+              <p className="m-0 text-micro font-semibold uppercase tracking-[0.08em] text-muted">
+                SOC overlay on one scenario
+              </p>
+            </CardHeader>
+            <CardContent className="grid gap-3 text-small">
+              <p className="m-0">
+                Overlay synthetic SOC evidence and simulated response actions on this baseline. It is a
+                deterministic demonstration: no production SOC feed is connected and the result above does not
+                change.
+              </p>
+              <p className="m-0 text-micro text-muted">
+                Carries across: one scenario's expected annual loss — not the portfolio total — plus the scenario
+                you select. Uses: a browser-side SOC overlay on that one number. Does not carry: the other
+                scenarios, your answers, or anything Decision Lab does. Nothing is stored until you save a
+                snapshot.
+              </p>
+              <p className="m-0 text-micro font-semibold text-ink">
+                Does not use Decision Lab, and Decision Lab does not use it.
+              </p>
+              <div>
+                <Button variant="secondary" size="sm" onClick={onOpenLive}>
+                  Open QuickRisk Live
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <BranchDivider className="lg:min-h-full" />
+
+          <Card className="border-success/40">
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle>Decision Lab</CardTitle>
+                <Badge tone="success">Branch B</Badge>
+              </div>
+              <p className="m-0 text-micro font-semibold uppercase tracking-[0.08em] text-muted">
+                Treatment comparison on the portfolio baseline
+              </p>
+            </CardHeader>
+            <CardContent className="grid gap-3 text-small">
+              <p className="m-0">
+                Compare risk treatments, evaluate portfolios against a stated risk appetite and produce a
+                printable Board Risk Pack. The comparison starts from the portfolio figure above, replays the
+                same simulated years and applies the treatments you select.
+              </p>
+              <p className="m-0 text-micro text-muted">
+                Carries across: this page's portfolio estimate, plus your answers re-sent for the treated
+                calculation. Uses: the same seed and iteration count as this page, so the baseline agrees
+                with the figure above to within Monte Carlo noise. Does not carry: anything from QuickRisk
+                Live or your saved Live snapshots. If an answer changes after this page was calculated,
+                Decision Lab says the baseline no longer matches. A saved analysis keeps the result, not the
+                answers.
+              </p>
+              <p className="m-0 text-micro font-semibold text-ink">
+                Does not read QuickRisk Live or your saved Live snapshots.
+              </p>
+              <div>
+                <Button variant="secondary" size="sm" onClick={onOpenDecisionLab}>
+                  Open Decision Lab
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <JourneyMap currentSurface="results" />
+      </section>
 
       <section className="grid gap-4" aria-labelledby="scenario-table-heading">
         <h2 id="scenario-table-heading" className="m-0 text-[var(--text-section)] font-semibold text-heading">
@@ -77,6 +162,7 @@ export function ResultsDashboard({
           millionThreshold={millionThreshold}
           onSelect={onSelectScenario}
         />
+        <DataProvenance provenance={resultsScenarioEalProvenance(response.meta)} />
         <p className="m-0 text-micro text-muted">
           Input quality is a heuristic indicator of answer completeness and of how wide the resulting distribution
           is. It is not statistical confidence and not a probability that the result is correct.

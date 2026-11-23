@@ -7,9 +7,11 @@
  */
 
 import { Printer } from 'lucide-react';
+import { BranchNote } from '@/components/layout/BranchNote';
 import { HowNumbersAreProduced } from '@/components/layout/HowNumbersAreProduced';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { DECISION_BRANCH_NOTE } from '@/content/dataLifecycle';
 import { DECISION_DISCLOSURE } from '@/content/plainLanguage';
 import {
   acronymDefinitions,
@@ -209,6 +211,7 @@ export function BoardRiskPack({ report, readOnly = false }: { report: BoardRepor
         <h2 style={{ fontSize: '1.9rem' }}>{report.title}</h2>
         <p className="qk-board-question">{report.subtitle}</p>
         <p className="qk-board-question">Generated {report.generatedAt}.</p>
+        <BranchNote>{DECISION_BRANCH_NOTE}</BranchNote>
         {readOnly ? (
           <Alert tone="info" title="Shared Board Risk Pack — read only">
             <p className="m-0">

@@ -16,6 +16,21 @@ import { CalculationError, describeCalculationError, requestCalculation } from '
 
 export type AssessmentStatus = 'idle' | 'calculating' | 'ready' | 'error';
 
+/** Invalidates a calculation that was running when the assessment was reset or restarted. */
+let submissionGeneration = 0;
+
+/**
+ * Clears Live's in-memory simulation when the base assessment lifecycle changes.
+ *
+ * The dynamic import keeps the Live engine out of the base questionnaire's initial bundle and
+ * avoids a module cycle between the two stores.
+ */
+function resetDependentLiveState(): void {
+  void import('@/live/state/liveStore')
+    .then(({ useLiveStore }) => useLiveStore.getState().resetSimulation())
+    .catch(() => undefined);
+}
+
 export const questionSteps: readonly QuestionStep[] = buildQuestionSteps(publicModel);
 
 interface AssessmentState {
@@ -83,13 +98,18 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
 
   acknowledgeDisclaimer: (acknowledged) => set({ disclaimerAcknowledged: acknowledged }),
 
-  startAssessment: () =>
+  startAssessment: () => {
+    submissionGeneration++;
+    resetDependentLiveState();
     set({
       view: 'questionnaire',
       stepIndex: 0,
       status: 'idle',
       errorMessage: null,
-    }),
+      results: null,
+      selectedScenarioCode: null,
+    });
+  },
 
   answerCurrentStep: (optionCode) => {
     const state = get();
@@ -159,10 +179,14 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
       })),
     };
 
+    const generation = ++submissionGeneration;
     set({ status: 'calculating', view: 'calculating', errorMessage: null });
 
     try {
       const results = await requestCalculation(request);
+      if (generation !== submissionGeneration) {
+        return;
+      }
       set({
         status: 'ready',
         view: 'results',
@@ -171,6 +195,9 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
         errorMessage: null,
       });
     } catch (error) {
+      if (generation !== submissionGeneration) {
+        return;
+      }
       const message =
         error instanceof CalculationError || error instanceof Error
           ? describeCalculationError(error)
@@ -188,7 +215,9 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
 
   dismissError: () => set({ errorMessage: null }),
 
-  discardAssessment: () =>
+  discardAssessment: () => {
+    submissionGeneration++;
+    resetDependentLiveState();
     set({
       view: 'landing',
       stepIndex: 0,
@@ -199,5 +228,6 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
       errorMessage: null,
       results: null,
       selectedScenarioCode: null,
-    }),
+    });
+  },
 }));

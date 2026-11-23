@@ -145,6 +145,8 @@ export interface DecisionProvenance {
   readonly boardPackVersion: string;
   readonly effectModel: string;
   readonly simulationSeed: number;
+  /** SHA-256 of the complete server-validated compute input. */
+  readonly inputFingerprint: string;
   readonly iterations: number;
   readonly planningHorizonYears: number;
   readonly sameGroupIndependentCoverage: number;
@@ -227,7 +229,14 @@ export interface PortfolioSearch {
   readonly evaluated: number;
   readonly truncated: boolean;
   readonly candidatesConsidered: number;
+  /** True when any appetite criterion is configured. */
   readonly appetiteDefined: boolean;
+  /** True when the additive expected-annual-loss criterion required for portfolio selection exists. */
+  readonly portfolioAppetiteDefined: boolean;
+  readonly appetiteBasis: 'expected-annual-loss-only';
+  readonly portfolioCriteria: readonly string[];
+  /** Criteria intentionally not used to select portfolios. */
+  readonly excludedCriteria: readonly string[];
   readonly notes: readonly string[];
   readonly provenance: DecisionProvenance;
 }

@@ -17,7 +17,8 @@ export function SimulationBadge({ compact = false }: { compact?: boolean }) {
       <p className="m-0">
         No production SIEM, EDR, SOC or incident-management feed is connected. Every SOC value on this
         page is synthetic and is used to demonstrate how current security observations and response
-        actions can influence a cyber-risk assessment.
+        actions can influence a cyber-risk assessment. Saved and shared results are user-recorded
+        simulation data, not server-verified calculations.
       </p>
     </Alert>
   );

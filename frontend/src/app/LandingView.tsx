@@ -5,6 +5,10 @@ import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { JourneyMap } from '@/components/landing/JourneyMap';
+import { RoleCards } from '@/components/landing/RoleCards';
+import { SampleResultsPreview } from '@/components/landing/SampleResultsPreview';
+import { lifecycleFor, retentionSentence } from '@/content/dataLifecycle';
 import { publicModel } from '@/model';
 import { useAssessmentStore } from '@/state/assessmentStore';
 
@@ -86,6 +90,8 @@ export function LandingView() {
         </div>
       </section>
 
+      <JourneyMap />
+
       <section className="mt-12 grid gap-4" aria-labelledby="scenarios-heading">
         <h2 id="scenarios-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
           The five assessed scenarios
@@ -143,6 +149,62 @@ export function LandingView() {
           </Card>
         </div>
       </section>
+
+      <RoleCards />
+
+      <section className="mt-12 grid gap-4" aria-labelledby="beyond-heading">
+        <h2 id="beyond-heading" className="m-0 text-[var(--text-title)] font-bold text-heading">
+          Beyond the assessment
+        </h2>
+        <p className="m-0 max-w-[48rem] text-muted">
+          Two optional tools go deeper, and both start from your assessment. They are separate screens with
+          their own data handling, and neither one runs without a completed assessment.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>QuickRisk Live</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-small text-muted">
+              <p className="m-0">
+                Overlay synthetic SOC observations and simulated response actions on your baseline exposure, and
+                record a timeline of observations.
+              </p>
+              <p className="m-0 text-micro">Available after your assessment.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Decision Lab</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-small text-muted">
+              <p className="m-0">
+                Compare treatments such as MFA, EDR or segmentation, test portfolios against a stated risk
+                appetite and prepare a Board Risk Pack.
+              </p>
+              <p className="m-0 text-micro">Available after your assessment.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>What you can keep</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-small text-muted">
+              <p className="m-0">
+                <span className="font-semibold text-ink">Assessment: </span>
+                {lifecycleFor('assessment').outputs.join('; ')} Nothing is stored.
+              </p>
+              <p className="m-0">
+                <span className="font-semibold text-ink">Live and Decision Lab: </span>
+                a saved snapshot, a printable report and a read-only link you can revoke.
+              </p>
+              <p className="m-0 text-micro">{retentionSentence()}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <SampleResultsPreview />
 
       <section className="mt-12 grid gap-4 lg:grid-cols-2" aria-labelledby="boundaries-heading">
         <div className="grid gap-3">

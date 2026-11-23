@@ -127,9 +127,10 @@
       <h2>What the application does</h2>
       <p>
         FAIR QuickRisk asks eight organisation-profile questions and exactly two questions for each of five
-        predefined scenarios, then runs a server-side Monte Carlo simulation of 5,000 simulated years per
-        scenario. It reports expected annual loss, a typical-year to bad-year (1 in 10) range, the chance of
-        exceeding key thresholds, and an estimate-precision indicator for each scenario.
+        predefined scenarios, then runs a server-side Monte Carlo simulation of 5,000 simulated
+        annualised-exposure trials per scenario. It reports expected annual loss, a typical-year to bad-year
+        (1 in 10) range, the chance of exceeding key thresholds, and an estimate-precision indicator for each
+        scenario.
       </p>
 
       <h2>Why these five scenarios</h2>
@@ -177,12 +178,13 @@
 
       <h2>What "typical year" and "bad year (1 in 10)" mean</h2>
       <p>
-        "Typical year" is the middle of the simulated outcomes: half of the simulated years are cheaper, half
-        costlier. "Bad year (1 in 10)" is the level that only 1 in 10 simulated years is worse than. "Best case
-        (1 in 10)" is the level that only 1 in 10 simulated years falls below. The technical names for these are
-        P50 (the median), P90 (the 90th percentile) and P10 (the 10th percentile). They describe an annualised
-        exposure approximation, not realised annual loss totals. A wide typical-to-bad range is a statement about
-        uncertainty in your inputs and assumptions — not a confidence interval around a known true value.
+        "Typical year" is the middle of the simulated outcomes: half of the simulated outcomes are cheaper,
+        half costlier. "Bad year (1 in 10)" is the level that only 1 in 10 simulated outcomes is worse than.
+        "Best case (1 in 10)" is the level that only 1 in 10 simulated outcomes falls below. The technical
+        names for these are P50 (the median), P90 (the 90th percentile) and P10 (the 10th percentile). They
+        describe an annualised exposure approximation, not realised annual loss totals. A wide
+        typical-to-bad range is a statement about uncertainty in your inputs and assumptions — not a
+        confidence interval around a known true value.
       </p>
 
       <h2>What expected annual loss means</h2>
@@ -213,8 +215,14 @@
         The optional QuickRisk Live overlay is separate. If you use it and explicitly save an assessment, the
         application stores that saved assessment — and the anonymous session it belongs to — in its own
         database so you can reopen, archive or share it. No name, email or organisation is attached, share
-        links are read-only and revocable, and the only cookie Live uses is the opaque session cookie that
-        JavaScript cannot read.
+        links are read-only and revocable, and the only cookie Live or Decision Lab uses is the opaque
+        session cookie that JavaScript cannot read.
+      </p>
+      <p>
+        The optional Decision Lab is separate too. If you explicitly save a treatment analysis, it stores the
+        computed comparison, the portfolio search, the treatment selection and the anonymous session in the
+        same database so you can reopen, archive or share the Board Risk Pack. It does not store the
+        questionnaire answers and cannot recompute them from the saved record.
       </p>
       <p>
         Normal web infrastructure may process technical metadata such as source IP address, timestamp, HTTP

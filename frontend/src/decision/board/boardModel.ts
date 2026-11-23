@@ -87,6 +87,12 @@ export function modeledEffect(treatment: TreatmentDefinition): string {
   return parts.length === 0 ? 'No modelled effect stated' : parts.join('; ');
 }
 
+export type RecommendationState =
+  | 'recommended'
+  | 'none-satisfies'
+  | 'evaluated-other'
+  | 'not-evaluated';
+
 export interface BoardModelInput {
   readonly title: string;
   readonly currencySymbol: string;
@@ -99,9 +105,14 @@ export interface BoardModelInput {
   readonly annualOperatingCost: number;
   readonly treatments: readonly TreatmentDefinition[];
   readonly recommended: Partial<Portfolio> | null;
+  /** What this report may claim about a portfolio recommendation. */
+  readonly recommendationState: RecommendationState;
   readonly reductionShare: number;
   readonly riskReductionEfficiency: number | null;
   readonly implementationDelayDays: number;
+  /** True when a sampled component cap makes the paired-year treatment scaling approximate. */
+  readonly clampWarning?: boolean;
+  readonly clampNotes?: readonly string[];
   readonly provenance: {
     readonly decisionMethodologyVersion: string;
     readonly boardPackVersion: string;
@@ -138,6 +149,36 @@ const statusSentence = (status: AppetiteEvaluation['status']): string =>
       ? 'above the stated appetite'
       : 'of undefined appetite';
 
+const pageFourNarrative = (
+  state: RecommendationState,
+  status: AppetiteEvaluation['status'],
+): string => {
+  if (state === 'recommended') {
+    const qualification =
+      status === 'within'
+        ? 'It also satisfies every configured appetite criterion in the exact comparison.'
+        : 'The exact comparison remains above the full configured appetite on at least one joint-distribution criterion; those criteria do not determine the portfolio recommendation.';
+    return (
+      `The recommended portfolio is the lowest-cost evaluated combination that meets the expected ` +
+      `annual-loss criterion and the stated constraints. ${qualification}`
+    );
+  }
+  if (state === 'none-satisfies') {
+    return 'No evaluated portfolio meets the expected annual-loss criterion within the stated constraints.';
+  }
+  if (state === 'evaluated-other') {
+    return (
+      'A portfolio search was performed and a different combination was recommended. ' +
+      'This report describes the selected treatment set and does not present that recommendation.'
+    );
+  }
+
+  return (
+    'No portfolio search has been performed for this analysis. ' +
+    'This report describes the selected treatment set only.'
+  );
+};
+
 /** Builds the five-page Board Risk Pack from an already-calculated decision result. */
 export function buildBoardReport(input: BoardModelInput): BoardReportModel {
   const annualLimit = input.appetiteBaseline.criteria.find((entry) => entry.id === 'annualLoss')?.limit ?? null;
@@ -148,7 +189,7 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     .sort((left, right) => right.expectedAnnualLoss - left.expectedAnnualLoss)
     .slice(0, 5);
 
-  const treatmentRows: BoardTreatmentRow[] = input.treatments.slice(0, 6).map((treatment) => ({
+  const treatmentRows: BoardTreatmentRow[] = input.treatments.map((treatment) => ({
     name: treatment.name,
     investment: treatment.initialCost.amount,
     annualCost: treatment.annualOperatingCost.amount,
@@ -255,10 +296,9 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     title: 'Recommended treatment portfolio',
     question: 'What would it change?',
     narrative:
-      input.recommended === null
-        ? 'No evaluated portfolio satisfies the selected risk appetite within the stated constraints.'
-        : `The recommended portfolio brings modeled exposure ${statusSentence(input.appetiteTreated.status)}. ` +
-          'It is the lowest-cost evaluated combination that satisfies the stated appetite and constraints.',
+      input.recommendationState === 'recommended' && input.treatments.length === 0
+        ? 'The recommended portfolio is no additional treatment. Modeled exposure is unchanged from the current position.'
+        : pageFourNarrative(input.recommendationState, input.appetiteTreated.status),
     acronyms: ['EAL', 'P90', 'RRE'],
     metrics: [
       ealMetric(input.treated.expectedAnnualLoss, input.baseline.expectedAnnualLoss, input.appetiteTreated.status),
@@ -272,6 +312,8 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
         ? 'Risk Reduction Efficiency (RRE) is not available because no annualised cost was configured.'
         : `Risk Reduction Efficiency (RRE): ${input.riskReductionEfficiency.toFixed(2)} of modeled annual ` +
           'loss reduction per unit of annualised cost. This is not a financial return.',
+      'Portfolio selection uses expected annual loss only. High-end loss and exceedance criteria ' +
+        'are evaluated for the exact treatment comparison, not used to rank portfolios.',
     ],
   };
 
@@ -290,14 +332,24 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
         `${input.provenance.boardPackVersion}; QuickRisk model ${input.provenance.quickriskModelVersion}.`,
       `Monte Carlo iterations ${input.provenance.iterations}; simulation seed ${input.provenance.simulationSeed}.`,
       `Treatment effect model: ${input.provenance.effectModel}.`,
-      ...input.treatments.slice(0, 6).map(
-        (treatment) =>
-          `${treatment.name}: ${EVIDENCE_LABELS[treatment.evidenceQuality as EvidenceQuality].confidence} — ` +
-          `${treatment.assumptions[0] ?? treatment.evidenceReference}`,
+      ...input.treatments.flatMap((treatment) =>
+        treatment.assumptions.length === 0
+          ? [
+              `${treatment.name}: ${EVIDENCE_LABELS[treatment.evidenceQuality as EvidenceQuality].confidence} — ` +
+                treatment.evidenceReference,
+            ]
+          : treatment.assumptions.map(
+              (assumption) =>
+                `${treatment.name}: ${EVIDENCE_LABELS[treatment.evidenceQuality as EvidenceQuality].confidence} — ` +
+                assumption,
+            ),
       ),
       `Implementation timing: ${days(input.implementationDelayDays)} before the modeled effect applies.`,
     ],
   };
+
+  const hasRecommendation =
+    input.recommendationState === 'recommended' && input.recommended !== null;
 
   return {
     title: 'Board Risk Pack',
@@ -306,26 +358,37 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     currencySymbol: input.currencySymbol,
     provenance: input.provenance,
     pages: [pageOne, pageTwo, pageThree, pageFour, pageFive],
-    decisionRequested:
-      input.recommended === null
-        ? 'No evaluated portfolio satisfies the stated appetite and budget. Consider a different appetite, budget ' +
-          'or candidate set before deciding.'
+    decisionRequested: hasRecommendation
+      ? input.treatments.length === 0
+        ? 'For consideration: no additional treatment. The evaluated baseline already meets the ' +
+          'expected annual-loss criterion and constraints in this model; validate that conclusion before deciding.'
         : `For consideration: an initial investment of ${input.initialInvestment.toFixed(0)} ${input.currencySymbol} ` +
           `and ${input.annualOperatingCost.toFixed(0)} ${input.currencySymbol} of annual operating cost, which the ` +
-          'model projects will bring expected annual loss and high-end modeled loss within the stated risk appetite. ' +
-          'Validate the implementation and treatment-effect assumptions before committing.',
-    recommendation:
-      input.recommended === null
-        ? null
-        : {
-            names: input.treatments.map((treatment) => treatment.name),
-            initialInvestment: input.initialInvestment,
-            annualOperatingCost: input.annualOperatingCost,
-            baselineEal: input.baseline.expectedAnnualLoss,
-            treatedEal: input.treated.expectedAnnualLoss,
-            baselineStatus: input.appetiteBaseline.status,
-            treatedStatus: input.appetiteTreated.status,
-          },
+          'model projects will bring expected annual loss within the expected annual-loss criterion and constraints. ' +
+          'High-end and exceedance criteria do not determine the portfolio recommendation. ' +
+          'Validate the implementation and treatment-effect assumptions before committing.'
+      : input.recommendationState === 'none-satisfies'
+        ? 'No evaluated portfolio meets the expected annual-loss criterion and budget. Consider a different limit, ' +
+          'budget or candidate set before deciding.'
+        : input.recommendationState === 'evaluated-other'
+          ? 'For consideration: the selected treatment set described on pages 1–3. A portfolio search recommended ' +
+            'a different combination; no portfolio recommendation is made in this report.'
+          : 'For consideration: the selected treatment set described on pages 1–3. Run a portfolio search to ' +
+            'evaluate alternatives.',
+    recommendation: hasRecommendation
+      ? {
+          names:
+            input.treatments.length === 0
+              ? ['No additional treatment']
+              : input.treatments.map((treatment) => treatment.name),
+          initialInvestment: input.initialInvestment,
+          annualOperatingCost: input.annualOperatingCost,
+          baselineEal: input.baseline.expectedAnnualLoss,
+          treatedEal: input.treated.expectedAnnualLoss,
+          baselineStatus: input.appetiteBaseline.status,
+          treatedStatus: input.appetiteTreated.status,
+        }
+      : null,
     limitations: [
       'The modeled result depends on the QuickRisk assessment answers, the treatment assumptions and the ' +
         'simulation seed recorded on page 5.',
@@ -334,6 +397,12 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
       'The modeled reduction is not a guaranteed saving: QuickRisk quantifies risk exposure, not cash flow.',
       'Correlation between scenarios, model-form uncertainty and calibration uncertainty are not represented.',
       'Synthetic or user-defined assumptions are labeled as such wherever they are used.',
+      ...(input.clampWarning === true
+        ? [
+            'A sampled primary or secondary loss component can reach the documented cap. Where that occurs, applying the treatment as a factor to paired simulated years is an approximation.',
+            ...(input.clampNotes ?? []),
+          ]
+        : []),
     ],
   };
 }

@@ -1,4 +1,5 @@
 import { Clock, Info, Printer, RotateCcw, TrendingUp } from 'lucide-react';
+import { DataProvenance } from '@/components/layout/DataProvenance';
 import { MetricCard } from '@/components/layout/SectionHeading';
 import { Alert } from '@/components/ui/alert';
 import { ConfidenceBadge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, DefinitionItem, DefinitionLis
 import type { CalculationResponse } from '@/domain/results';
 import { formatIterations, formatMoney, formatPercent, formatTimestamp } from '@/lib/format';
 import { buildPlainSummary, precisionFor } from '@/content/plainLanguage';
+import { resultsPortfolioEalProvenance } from '@/content/dataLifecycle';
 import { publicModel } from '@/model';
 
 /**
@@ -112,6 +114,8 @@ export function ExecutiveSummary({
           }
         />
       </div>
+
+      <DataProvenance provenance={resultsPortfolioEalProvenance(meta)} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card>

@@ -3,6 +3,7 @@ import { ProgressIndicator } from '@/components/assessment/ProgressIndicator';
 import { QuestionCard } from '@/components/assessment/QuestionCard';
 import { PageShell, SectionHeading } from '@/components/layout/SectionHeading';
 import { Alert } from '@/components/ui/alert';
+import { ASSESSMENT_MEMORY_BANNER } from '@/content/dataLifecycle';
 import { answerForStep, questionnaireProgress } from '@/domain/assessment';
 import { optionSetFor, publicModel } from '@/model';
 import { questionSteps, useAssessmentStore } from '@/state/assessmentStore';
@@ -64,7 +65,15 @@ export function QuestionnaireView() {
       />
 
       <div className="mt-6 grid gap-6">
-        <ProgressIndicator progress={progress} />
+        <ProgressIndicator
+          progress={progress}
+          stepIndex={stepIndex}
+          profileCount={publicModel.profileQuestions.length}
+        />
+
+        <Alert tone="neutral" title="Your answers stay in this tab">
+          <p className="m-0">{ASSESSMENT_MEMORY_BANNER}</p>
+        </Alert>
 
         {errorMessage === null ? null : (
           <Alert tone="danger" role="alert" title="The calculation did not complete">

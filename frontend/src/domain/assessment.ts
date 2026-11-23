@@ -22,7 +22,9 @@ export type View =
   | 'live-history'
   | 'live-executive'
   | 'live-methodology'
-  | 'decision-lab';
+  | 'decision-lab'
+  | 'decision-history'
+  | 'history';
 
 export interface QuestionStep {
   readonly key: string;
@@ -137,4 +139,32 @@ export function isQuestionnaireComplete(
     }
     return true;
   });
+}
+
+/**
+ * One forward-looking sentence at the two boundaries a visitor can feel: the end of the
+ * organisation profile and the end of the last scenario.
+ *
+ * The questionnaire is eighteen questions long, and nothing in the old progress bar said
+ * where the sections ended. The milestone is derived from the same step list the
+ * questionnaire renders, so it cannot point at a boundary that does not exist.
+ */
+export function questionnaireMilestone(
+  stepIndex: number,
+  profileCount: number,
+  total: number,
+): string | null {
+  if (total <= 0 || stepIndex < 0 || stepIndex >= total) {
+    return null;
+  }
+
+  if (profileCount > 0 && stepIndex === profileCount - 1) {
+    return 'Organisation profile complete. Next: one likelihood and one impact question for each scenario.';
+  }
+
+  if (stepIndex === total - 1) {
+    return 'All scenarios answered. Next: calculate your indicative annual exposure.';
+  }
+
+  return null;
 }

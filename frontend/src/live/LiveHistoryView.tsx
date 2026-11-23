@@ -4,8 +4,11 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, TableWrap } from '@/components/ui/table';
+import { BranchNote } from '@/components/layout/BranchNote';
+import { LIVE_BRANCH_NOTE } from '@/content/dataLifecycle';
 import { formatMoney } from '@/lib/format';
 import { LiveDisclaimer, SimulationBadge } from '@/live/components/SimulationBadge';
+import { UserRecordedNotice } from '@/live/components/UserRecordedNotice';
 import { useLiveStore } from '@/live/state/liveStore';
 import { useAssessmentStore } from '@/state/assessmentStore';
 
@@ -72,10 +75,17 @@ export function LiveHistoryView() {
         </div>
       </div>
 
+      <BranchNote>{LIVE_BRANCH_NOTE}</BranchNote>
+
       {error === null ? null : <Alert tone="danger" role="alert">{error}</Alert>}
+      <UserRecordedNotice />
       {shareUrl === null ? null : (
         <Alert tone="info" title="Share link created">
           <p className="m-0 break-all">{shareUrl}</p>
+          <p className="m-0 mt-1 text-small">
+            The link shows the saved user-recorded simulation data. It is not proof that the server
+            calculated the values.
+          </p>
         </Alert>
       )}
 
@@ -143,7 +153,11 @@ export function LiveHistoryView() {
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              void openAssessment(entry.publicId).then(() => createShare());
+                              void openAssessment(entry.publicId).then(() => {
+                                if (useLiveStore.getState().currentPublicId === entry.publicId) {
+                                  void createShare();
+                                }
+                              });
                             }}
                           >
                             <Share2 aria-hidden="true" className="size-3.5" />
