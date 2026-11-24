@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0.0",
+  "packageVersion": "EVID-QK-2.0.0",
+  "generatedAt": "2026-11-24T00:00:00Z",
+  "sources": [
+    {
+      "id": "dsit-csbs-2025-2026",
+      "file": "dsit-2025-2026.json",
+      "role": "frequency, materiality and ordinary-severity reference",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "ibm-cost-of-a-data-breach-2025",
+      "file": "ibm-2025.json",
+      "role": "large-enterprise severity sensitivity",
+      "classification": "externally-evidenced mean; weak-prior distribution shape"
+    },
+    {
+      "id": "verizon-dbir-2026",
+      "file": "dbir-2026.json",
+      "role": "scenario-composition sensitivity only; no activated frequency parameters",
+      "classification": "contextual and sensitivity-only"
+    },
+    {
+      "id": "ecb-annual-reference-rates-2025",
+      "file": "fx-2025.json",
+      "role": "currency conversion provenance",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "dsit-csbs-2024-2025-holdout",
+      "file": "dsit-2024-2025-holdout.json",
+      "role": "prior-wave prevalence holdout only",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "quickrisk-treatment-priors",
+      "file": "treatment-priors.json",
+      "role": "curated treatment effect priors",
+      "classification": "elicitation-assumption-only"
+    }
+  ],
+  "activationPolicy": {
+    "allowSynthetic": false,
+    "requireValidationReport": true,
+    "requireNonEmptySourceRoles": true
+  }
+}

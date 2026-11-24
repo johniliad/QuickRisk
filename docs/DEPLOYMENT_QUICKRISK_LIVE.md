@@ -88,7 +88,7 @@ FLUSH PRIVILEGES;
 No `CREATE`/`DROP`/`ALTER` privilege is needed at runtime; schema changes are applied by you, by
 hand, from the versioned files.
 
-Apply the five migrations **in order** as a MySQL administrator. The runtime account created above
+Apply the six migrations **in order** as a MySQL administrator. The runtime account created above
 has only `SELECT/INSERT/UPDATE/DELETE`, so it cannot create the schema; keep that least-privileged
 account for the application and use an administrative account for this one-time step:
 
@@ -98,6 +98,7 @@ mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/002_seed_methodology.sql
 mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/003_seed_scenarios.sql
 mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/004_seed_scenarios_more.sql
 mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/005_decision_lab.sql
+mysql -u MYSQL_ADMIN -p iliadis_quickrisk < database/006_posterior_inference.sql
 ```
 
 Confirm the seed rows:
@@ -376,7 +377,7 @@ cat > payload.json <<'JSON'
   "scenarioId": "S1",
   "scenarioName": "Ransomware",
   "baselineEal": 125000,
-  "baselineSource": { "modelId": "FAIR-QK-1.3", "modelVersion": "1.3.0" },
+  "baselineSource": { "modelId": "FAIR-QK-2.0", "modelVersion": "2.0.0" },
   "inputState": {
     "scenarioId": "S1", "incidentStage": "compromise", "iocCount": 6,
     "iocConfidence": 0.8, "alertVelocity": 3.0,
@@ -493,6 +494,7 @@ Keep the password out of cron: use a `~/.my.cnf` with `chmod 600`.
 | Library shows fewer than six presets (for example only “Ransomware Outbreak”) | migration 004 was skipped or its rows are disabled | `SELECT slug, enabled FROM scenario_library ORDER BY sort_order` — one row means `database/004_seed_scenarios_more.sql` was never applied; re-run it, then reload |
 | 500 on a Live endpoint | PHP fatal (version < 8.1, missing extension) | check `error_log`; `php -l` each file; confirm PHP ≥ 8.1 |
 | Decision Lab save returns 503 or missing-table error | migration 005 was skipped or its tables are absent | apply `database/005_decision_lab.sql`, then reload |
+| Decision Lab rejects methodology 2.0 | migration 006 was skipped | apply `database/006_posterior_inference.sql`, then reload |
 | Upload of results/save fails with 413 | request body over `maxRequestBytes` (256 KB) | shorten the timeline (`maxTimelineEvents`) |
 
 Never paste database credentials into a support ticket; the API never returns them, and the

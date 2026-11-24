@@ -50,8 +50,9 @@ function qk_decision_test_compare(
         $treatments[] = $treatment;
     }
 
-    $vectors = FairEngine::lossVectors($model, $validated, $seed, $iterations);
-    $realised = qk_decision_realise_effects($treatments, $seed);
+    $inference = QkInferenceRepository::load(qk_config(), $model);
+    $vectors = QkRiskEngine::lossVectors($model, $inference, $validated, $seed, $iterations);
+    $realised = qk_decision_realise_effects($treatments, $seed, $iterations, $inference);
 
     return [
         'vectors' => $vectors,
@@ -171,8 +172,13 @@ return [
 
         foreach ($factors as $entry) {
             assertTrue(
-                abs((float) $entry['kappa'] - ((float) $entry['frequencyFactor'] * (float) $entry['magnitudeFactor'])) < 1.0e-12,
-                'The loss scaling must be the product of the two driver factors'
+                (bool) ($entry['pairedLossSeriesAvailable'] ?? false),
+                'The public factor must disclose that a paired loss series was applied'
+            );
+            assertFalse(isset($entry['lossSeries']), 'Server-only loss vectors must not be published');
+            assertTrue(
+                (float) $entry['kappa'] >= 0.0 && (float) $entry['kappa'] <= 1.0,
+                'Event-count treatment transformation must be a bounded reduction'
             );
         }
     },
@@ -186,14 +192,15 @@ return [
         // privileged-mfa delivers only its independent share of the same mechanism group.
         $first = (float) $effects['identity-monitoring']['frequency'];
         $second = (float) $effects['privileged-mfa']['frequency'];
-        $expected = (1.0 - $first) * (1.0 - 0.65 * $second);
+        $independent = (1.0 - $first) * (1.0 - $second);
+        $firstOnly = 1.0 - $first;
 
         assertTrue(
-            abs((float) $factors['frequencyFactor'] - $expected) < 1.0e-9,
-            'The second treatment in a mechanism group must deliver only its independent coverage'
+            (float) $factors['frequencyFactor'] < $firstOnly,
+            'The second treatment in a mechanism group must add some independent coverage'
         );
         assertTrue(
-            (float) $factors['frequencyFactor'] > (1.0 - $first) * (1.0 - $second),
+            (float) $factors['frequencyFactor'] > $independent,
             'Overlapping treatments must never combine as if they were independent'
         );
     },
@@ -226,7 +233,7 @@ return [
     },
 
     'decision lab: appetite evaluates only the configured criteria' => function (): void {
-        $three = qk_decision_test_compare([], qk_decision_test_appetite(250000.0, 900000.0))['result'];
+        $three = qk_decision_test_compare([], qk_decision_test_appetite(1.0, 1.0))['result'];
         assertSame('above', $three['appetite']['baseline']['status'], 'The fixture must start above appetite');
         assertSame(3, count($three['appetite']['baseline']['criteria']), 'All three criteria must be evaluated');
         foreach ($three['appetite']['baseline']['criteria'] as $criterion) {
@@ -247,8 +254,8 @@ return [
 
         // The probability criterion is evaluated at the appetite threshold, not a model default.
         $probability = qk_decision_test_compare([], [
-            'annualLossLimit' => 500000.0,
-            'maxExceedanceProbability' => 0.25,
+            'annualLossLimit' => 100.0,
+            'maxExceedanceProbability' => 0.01,
         ])['result'];
         $criterion = null;
         foreach ($probability['appetite']['baseline']['criteria'] as $entry) {
@@ -258,13 +265,13 @@ return [
         }
         assertTrue($criterion !== null, 'The probability criterion must be evaluated');
         assertTrue(
-            abs((float) $criterion['threshold'] - 500000.0) < 1.0e-6,
+            abs((float) $criterion['threshold'] - 100.0) < 1.0e-6,
             'The probability must be measured against the configured annual loss limit'
         );
         assertSame(
             false,
             (bool) $criterion['passes'],
-            'A modeled exposure near 760K exceeds a 500K limit far more than 25% of the time'
+            'A positive annual-loss distribution exceeds a €100 limit more than 25% of the time'
         );
     },
 
@@ -345,7 +352,7 @@ return [
             $run['vectors'],
             $candidates,
             $realised,
-            ['annualLossLimit' => 1000.0],
+            ['annualLossLimit' => 1.0],
             [],
             $run['config']
         );
@@ -422,7 +429,7 @@ return [
     'decision lab: break-even effectiveness is found by evaluating the model' => function (): void {
         $run = qk_decision_test_compare(['edr']);
         $treatments = [qk_decision_curated_treatment('edr')];
-        $appetite = ['annualLossLimit' => 600000.0];
+        $appetite = ['annualLossLimit' => 600.0];
 
         $sensitivity = qk_decision_sensitivity(
             $run['vectors'],
@@ -448,10 +455,23 @@ return [
                     'magnitude' => $effect['magnitude'] === null ? null : $effect['magnitude'] * $factor,
                 ];
             }
-            $factors = qk_decision_scenario_factors($run['vectors'], $treatments, $scaled, $run['config']);
+            $package = $run['realised'];
+            $package['effects'] = $scaled;
+            $package['series'] = [];
+            foreach ($run['realised']['series'] ?? [] as $id => $series) {
+                $package['series'][$id] = [
+                    'frequency' => $series['frequency'] === null
+                        ? null
+                        : array_map(static fn ($value): float => (float) $value * $factor, $series['frequency']),
+                    'magnitude' => $series['magnitude'] === null
+                        ? null
+                        : array_map(static fn ($value): float => (float) $value * $factor, $series['magnitude']),
+                ];
+            }
+            $factors = qk_decision_scenario_factors($run['vectors'], $treatments, $package, $run['config']);
             $kappa = [];
             foreach ($factors['byScenario'] as $code => $entry) {
-                $kappa[(string) $code] = (float) $entry['kappa'];
+                $kappa[(string) $code] = $entry;
             }
             $metrics = qk_decision_portfolio_metrics(
                 $run['vectors'],

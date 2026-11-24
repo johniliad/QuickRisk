@@ -1,7 +1,7 @@
 THIRD-PARTY NOTICES
 ================================================================================
 
-FAIR QuickRisk — application 1.3.3, model FAIR-QK-1.3.
+FAIR QuickRisk — application 1.3.5, model FAIR-QK-2.0.
 
 FAIR QuickRisk is licensed under the Apache License, Version 2.0. A copy
 travels with this file as LICENSE.txt and in the repository root.

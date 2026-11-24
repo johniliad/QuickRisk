@@ -57,7 +57,8 @@ $payload = [
     'scenarioAnswers' => $scenarioAnswers,
 ];
 
-$response = FairEngine::calculateAssessment($model, $payload, $seed, $iterations);
+$inference = QkInferenceRepository::load($config, $model);
+$response = QkRiskEngine::calculateAssessment($model, $inference, $payload, $seed, $iterations);
 
 $envelope = [
     'modelId' => $response['meta']['modelId'],

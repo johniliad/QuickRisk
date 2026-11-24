@@ -1,0 +1,49 @@
+{
+  "sourceId": "verizon-dbir-2026",
+  "publisher": "Verizon Business",
+  "title": "2026 Data Breach Investigations Report",
+  "url": "https://www.verizon.com/business/resources/reports/dbir/",
+  "incidentWindow": "2024-11-01/2025-10-31",
+  "denominatorType": "analysed incidents and breaches contributed by participating organisations",
+  "permittedRole": "conditional scenario-composition sensitivity only",
+  "scenarioPatterns": [
+    {
+      "scenarioCode": "S1",
+      "pattern": "ransomware",
+      "proportion": null,
+      "note": "The public report landing page does not expose the exact analysed-case proportion in an extractable table. No value is invented."
+    },
+    {
+      "scenarioCode": "S2",
+      "pattern": "social engineering, phishing and identity compromise",
+      "proportion": null,
+      "note": "Identity and human-channel patterns can order scenario plausibility but do not provide an annual organisation denominator."
+    },
+    {
+      "scenarioCode": "S3",
+      "pattern": "software vulnerability exploitation",
+      "proportion": null,
+      "note": "The 2026 headline identifies vulnerabilities as a leading initial-access pattern; the exact share is not transcribed without the report table."
+    },
+    {
+      "scenarioCode": "S4",
+      "pattern": "third-party or supply-chain involvement",
+      "proportion": null,
+      "note": "No organisation-level annual third-party event rate is provided."
+    },
+    {
+      "scenarioCode": "S5",
+      "pattern": "denial of service",
+      "proportion": null,
+      "note": "DDoS is not represented as an annual organisation rate in DBIR."
+    }
+  ],
+  "prohibitedRole": "annual organisation-level breach frequency",
+  "limitations": [
+    "Case-based denominators are not organisation exposure denominators.",
+    "Contributor selection and reporting practices are not a random sample of all organisations.",
+    "Headline percentages may describe breaches among analysed cases, not organisations experiencing an event in a year.",
+    "Scenario mappings to the QuickRisk five-scenario taxonomy are not one-to-one.",
+    "No scenario weight is activated from this source until an explicit table and mapping are transcribed."
+  ]
+}

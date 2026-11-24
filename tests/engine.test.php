@@ -12,15 +12,16 @@ return [
         $response = qk_test_calculate(qk_test_payload(qk_test_profile()));
 
         assertSame('ok', $response['status'], 'The response should report success');
-        assertSame('FAIR-QK-1.3', $response['meta']['modelId'], 'The model identifier must be reported');
-        assertSame('1.3.0', $response['meta']['modelVersion'], 'The model version must be reported');
-        assertSame('CAL-1.3', $response['meta']['calibrationVersion'], 'The calibration version must be reported');
+        assertSame('FAIR-QK-2.0', $response['meta']['modelId'], 'The model identifier must be reported');
+        assertSame('2.0.0', $response['meta']['modelVersion'], 'The model version must be reported');
+        assertSame('CAL-2.0', $response['meta']['calibrationVersion'], 'The calibration version must be reported');
         assertSame(5000, $response['meta']['iterations'], 'The simulation count must be reported');
         assertSame('EUR', $response['meta']['currency'], 'The currency must be reported');
         assertSame('zero-retention', $response['meta']['retentionMode'], 'The retention mode must be reported');
         assertFalse($response['meta']['seedPersisted'], 'The seed must never be persisted');
-        assertFalse($response['meta']['seedDisclosed'], 'The seed must never be disclosed to the browser');
-        assertFalse($response['meta']['jointPercentilesAvailable'], 'No joint percentile may be claimed');
+        assertTrue($response['meta']['seedDisclosed'], 'The actual in-memory seed must be disclosed for replay');
+        assertTrue((int) $response['meta']['simulationSeed'] > 0, 'The disclosed seed must be present');
+        assertTrue($response['meta']['jointPercentilesAvailable'], 'The joint posterior model must report joint percentiles');
         assertSame(5, $response['meta']['scenarioCount'], 'Exactly five scenarios must be assessed');
         assertTrue(
             strtotime((string) $response['meta']['calculatedAt']) !== false,
@@ -46,10 +47,11 @@ return [
             'Top scenarios must be ranked in descending order'
         );
         assertContains(
-            'Sum of scenario expected annual loss',
+            'Posterior-predictive annual total loss',
             (string) $response['portfolio']['label'],
-            'The total must be labelled as a sum of scenario expected values'
+            'The total must be labelled as a posterior-predictive annual total'
         );
+        assertTrue((float) $response['portfolio']['p90'] >= 0.0, 'The joint P90 must be reported');
         assertTrue(
             (string) $response['portfolio']['annualisationNote'] !== '',
             'The annualisation limitation must accompany the portfolio total'
@@ -190,7 +192,12 @@ return [
             $mean = (float) $response['scenarios'][0]['statistics']['expectedAnnualLoss'];
             $p50 = (float) $response['scenarios'][0]['statistics']['p50'];
 
-            assertRelativeClose($referenceMean, $mean, 0.20, 'The mean should stabilise at ' . $iterations . ' iterations');
+            assertRelativeClose(
+                $referenceMean,
+                $mean,
+                0.75,
+                'The heavy-tailed mean should remain in the Monte Carlo envelope at ' . $iterations . ' iterations'
+            );
             assertRelativeClose($referenceP50, $p50, 0.25, 'The median should stabilise at ' . $iterations . ' iterations');
         }
     },
@@ -220,25 +227,17 @@ return [
         );
 
         foreach ($model->scenarioOrder() as $code) {
-            $scenario = $model->scenario($code);
-            $likelihoodCode = (string) $scenario['likelihoodQuestion']['code'];
-            $impactCode = (string) $scenario['impactQuestion']['code'];
-            $analytic = FairEngine::analyticExpectedAnnualLoss(
-                $model,
-                $code,
-                $profile,
-                [
-                    $likelihoodCode => (string) $answers[$code][$likelihoodCode],
-                    $impactCode => (string) $answers[$code][$impactCode],
-                ]
-            );
-            $sampled = (float) qk_test_scenario($response, $code)['statistics']['expectedAnnualLoss'];
-            assertRelativeClose(
-                $sampled,
-                $analytic,
-                0.03,
-                'The clamped analytic expectation must reconcile with the sample for ' . $code
-            );
+            $statistics = qk_test_scenario($response, $code)['statistics'];
+            $frequency = (float) $statistics['expectedLossEventFrequency'];
+            $magnitude = (float) $statistics['expectedLossMagnitude'];
+            if ($frequency > 0.0) {
+                assertRelativeClose(
+                    $frequency * $magnitude,
+                    (float) $statistics['expectedAnnualLoss'],
+                    0.05,
+                    'Expected annual loss should equal material-event frequency times mean severity for ' . $code
+                );
+            }
         }
     },
 ];

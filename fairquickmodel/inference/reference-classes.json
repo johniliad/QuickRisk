@@ -1,0 +1,442 @@
+{
+  "schemaVersion": "1.0.0",
+  "classes": {
+    "micro": {
+      "qp1Codes": [
+        "LT10M"
+      ],
+      "prevalence": {
+        "alpha": 34.1,
+        "beta": 46.9,
+        "mean": 0.42098765432098767,
+        "variance": 0.00297264694183293,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.42,
+        "sourceBase": 1154
+      },
+      "materiality": {
+        "alpha": 36.970588232,
+        "beta": 44.029411768,
+        "mean": 0.4564270152098765,
+        "variance": 0.003025626768249752,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 5.5367612855123856,
+        "sigma": 2.242329073513921,
+        "median": 253.85450438456675,
+        "mean": 3136.243805268351,
+        "sourceCurrency": "GBP",
+        "classification": "externally-evidenced quantiles; fitted lognormal",
+        "squaredLogError": 0.016780794949717907,
+        "fittedQuantiles": [
+          [
+            0.25,
+            3.912023005428146
+          ],
+          [
+            0.5,
+            5.298317366548036
+          ],
+          [
+            0.75,
+            6.907755278982137
+          ],
+          [
+            0.9,
+            8.330863613224745
+          ],
+          [
+            0.95,
+            9.02401079378469
+          ]
+        ]
+      },
+      "severityMeanLogOffset": 0.0,
+      "severityOffsetSigma": 0.35,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    },
+    "small": {
+      "qp1Codes": [
+        "10_50M"
+      ],
+      "prevalence": {
+        "alpha": 37.300000000000004,
+        "beta": 43.699999999999996,
+        "mean": 0.46049382716049386,
+        "variance": 0.003029747101311891,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.46,
+        "sourceBase": 507
+      },
+      "materiality": {
+        "alpha": 36.970588232,
+        "beta": 44.029411768,
+        "mean": 0.4564270152098765,
+        "variance": 0.003025626768249752,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 5.5367612855123856,
+        "sigma": 2.242329073513921,
+        "median": 253.85450438456675,
+        "mean": 3136.243805268351,
+        "sourceCurrency": "GBP",
+        "classification": "externally-evidenced quantiles; fitted lognormal",
+        "squaredLogError": 0.016780794949717907,
+        "fittedQuantiles": [
+          [
+            0.25,
+            3.912023005428146
+          ],
+          [
+            0.5,
+            5.298317366548036
+          ],
+          [
+            0.75,
+            6.907755278982137
+          ],
+          [
+            0.9,
+            8.330863613224745
+          ],
+          [
+            0.95,
+            9.02401079378469
+          ]
+        ]
+      },
+      "severityMeanLogOffset": 0.0,
+      "severityOffsetSigma": 0.35,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    },
+    "medium": {
+      "qp1Codes": [
+        "50_250M"
+      ],
+      "prevalence": {
+        "alpha": 48.6,
+        "beta": 26.4,
+        "mean": 0.648,
+        "variance": 0.003001263157894737,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.65,
+        "sourceBase": 296
+      },
+      "materiality": {
+        "alpha": 41.500000002,
+        "beta": 27.499999998,
+        "mean": 0.6014492753913043,
+        "variance": 0.003424400636036847,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 6.107896993306945,
+        "sigma": 2.4176952112274517,
+        "median": 449.39264498012705,
+        "mean": 8354.21984212766,
+        "sourceCurrency": "GBP",
+        "classification": "externally-evidenced quantiles; fitted lognormal",
+        "squaredLogError": 0.3045422516956889,
+        "fittedQuantiles": [
+          [
+            0.25,
+            4.605170185988092
+          ],
+          [
+            0.5,
+            5.703782474656201
+          ],
+          [
+            0.75,
+            7.3901814282264295
+          ],
+          [
+            0.9,
+            8.895629627136483
+          ],
+          [
+            0.95,
+            10.247077256926206
+          ]
+        ]
+      },
+      "severityMeanLogOffset": 0.0,
+      "severityOffsetSigma": 0.35,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    },
+    "large": {
+      "qp1Codes": [
+        "250M_1B"
+      ],
+      "prevalence": {
+        "alpha": 28.099999999999998,
+        "beta": 12.900000000000002,
+        "mean": 0.6853658536585365,
+        "variance": 0.005134273816605762,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.69,
+        "sourceBase": 155
+      },
+      "materiality": {
+        "alpha": 41.500000002,
+        "beta": 27.499999998,
+        "mean": 0.6014492753913043,
+        "variance": 0.003424400636036847,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 6.107896993306945,
+        "sigma": 2.4176952112274517,
+        "median": 449.39264498012705,
+        "mean": 8354.21984212766,
+        "sourceCurrency": "GBP",
+        "classification": "externally-evidenced quantiles; fitted lognormal",
+        "squaredLogError": 0.3045422516956889,
+        "fittedQuantiles": [
+          [
+            0.25,
+            4.605170185988092
+          ],
+          [
+            0.5,
+            5.703782474656201
+          ],
+          [
+            0.75,
+            7.3901814282264295
+          ],
+          [
+            0.9,
+            8.895629627136483
+          ],
+          [
+            0.95,
+            10.247077256926206
+          ]
+        ]
+      },
+      "severityMeanLogOffset": 0.5,
+      "severityOffsetSigma": 0.55,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    },
+    "large_enterprise": {
+      "qp1Codes": [
+        "GT1B"
+      ],
+      "prevalence": {
+        "alpha": 28.099999999999998,
+        "beta": 12.900000000000002,
+        "mean": 0.6853658536585365,
+        "variance": 0.005134273816605762,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.69,
+        "sourceBase": 155
+      },
+      "materiality": {
+        "alpha": 40.331932776,
+        "beta": 40.668067224,
+        "mean": 0.497925096,
+        "variance": 0.003048727985041351,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 14.402712302911398,
+        "sigma": 1.25,
+        "median": 1798947.4519392007,
+        "mean": 3929262.483140292,
+        "sourceCurrency": "USD",
+        "sourceMean": 4440000.0,
+        "classification": "externally-evidenced mean; weak-prior shape"
+      },
+      "severityMeanLogOffset": 0.0,
+      "severityOffsetSigma": 0.45,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    },
+    "unknown": {
+      "qp1Codes": [
+        "UNKNOWN"
+      ],
+      "prevalence": {
+        "alpha": 34.9,
+        "beta": 46.1,
+        "mean": 0.4308641975308642,
+        "variance": 0.0029904907416701053,
+        "sourceId": "dsit-csbs-2025-2026",
+        "sourceEstimate": 0.43,
+        "sourceBase": 2112
+      },
+      "materiality": {
+        "alpha": 40.331932776,
+        "beta": 40.668067224,
+        "mean": 0.497925096,
+        "variance": 0.003048727985041351,
+        "sourceId": "dsit-csbs-2025-2026",
+        "derivation": "non-zero-cost base divided by published attack base"
+      },
+      "severity": {
+        "mu": 5.5538065135194685,
+        "sigma": 2.3266000495426944,
+        "median": 258.21860013453175,
+        "mean": 3867.410376901756,
+        "sourceCurrency": "GBP",
+        "classification": "externally-evidenced quantiles; fitted lognormal",
+        "squaredLogError": 0.0299739002562219,
+        "fittedQuantiles": [
+          [
+            0.25,
+            3.912023005428146
+          ],
+          [
+            0.5,
+            5.298317366548036
+          ],
+          [
+            0.75,
+            6.907755278982137
+          ],
+          [
+            0.9,
+            8.476371196895983
+          ],
+          [
+            0.95,
+            9.210340371976184
+          ]
+        ]
+      },
+      "severityMeanLogOffset": 0.0,
+      "severityOffsetSigma": 0.35,
+      "primaryShare": {
+        "alpha": 7.0,
+        "beta": 3.0,
+        "classification": "elicitation-assumption"
+      }
+    }
+  },
+  "scenarioOrder": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+  ],
+  "scenarioWeightPrior": {
+    "alpha": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "classification": "weak-elicitation-prior"
+  },
+  "scenarioFrequencyLogSigma": 0.3,
+  "scenarioSeverityLogSigma": 0.25,
+  "scenarioMaterialityLogitSigma": 0.3,
+  "questionnaireModel": {
+    "classification": "elicitation-assumption; sensitivity-required",
+    "frequencyLogSigma": 0.45,
+    "impactLogSigma": 0.35,
+    "frequencyFactors": {
+      "VERY_UNLIKELY": 0.1,
+      "UNLIKELY": 0.3,
+      "POSSIBLE": 1.0,
+      "LIKELY": 3.0,
+      "VERY_LIKELY": 10.0,
+      "UNKNOWN": 1.0
+    },
+    "impactFactors": {
+      "MINOR": 0.3,
+      "MODERATE": 0.65,
+      "SIGNIFICANT": 1.0,
+      "SEVERE": 2.5,
+      "CRITICAL": 6.0,
+      "UNKNOWN": 1.0
+    },
+    "profileFrequencyFactors": {
+      "QP3": {
+        "LIMITED": 0.7,
+        "MODERATE": 0.9,
+        "SIGNIFICANT": 1.0,
+        "EXTENSIVE": 1.25,
+        "VERY_EXTENSIVE": 1.5,
+        "UNKNOWN": 1.0
+      }
+    },
+    "profileMaterialityOddsFactors": {
+      "QP7": {
+        "VERY_LIMITED": 1.8,
+        "LIMITED": 1.4,
+        "MODERATE": 1.0,
+        "STRONG": 0.7,
+        "VERY_STRONG": 0.5,
+        "UNKNOWN": 1.0
+      }
+    },
+    "profileSeverityFactors": {
+      "QP2": {
+        "LOW": 0.6,
+        "MODERATE": 0.8,
+        "HIGH": 1.0,
+        "VERY_HIGH": 1.3,
+        "EXTREME": 1.6,
+        "UNKNOWN": 1.0
+      },
+      "QP4": {
+        "LIMITED": 0.5,
+        "MODERATE": 0.75,
+        "SIGNIFICANT": 1.0,
+        "VERY_SIGNIFICANT": 1.35,
+        "CRITICAL": 1.7,
+        "UNKNOWN": 1.0
+      },
+      "QP6": {
+        "VERY_LOW": 1.5,
+        "LOW": 1.25,
+        "MODERATE": 1.0,
+        "HIGH": 0.8,
+        "VERY_HIGH": 0.65,
+        "UNKNOWN": 1.0
+      }
+    },
+    "thirdPartyFrequencyFactor": {
+      "QP5": {
+        "LOW": 0.5,
+        "MODERATE": 0.75,
+        "HIGH": 1.0,
+        "VERY_HIGH": 1.35,
+        "EXTREME": 1.7,
+        "UNKNOWN": 1.0
+      }
+    },
+    "qp8Elasticity": 0.25,
+    "qp8ReferenceDailyCostEUR": 200000.0
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ProgressIndicator } from '@/components/assessment/ProgressIndicator';
 import { QuestionCard } from '@/components/assessment/QuestionCard';
+import { EvidenceCard } from '@/components/assessment/EvidenceCard';
 import { PageShell, SectionHeading } from '@/components/layout/SectionHeading';
 import { Alert } from '@/components/ui/alert';
 import { ASSESSMENT_MEMORY_BANNER } from '@/content/dataLifecycle';
@@ -86,6 +87,8 @@ export function QuestionnaireView() {
         <Alert tone="neutral" title="Your answers stay in this tab">
           <p className="m-0">{ASSESSMENT_MEMORY_BANNER}</p>
         </Alert>
+
+        {step.kind === 'profile' && stepIndex === 0 ? <EvidenceCard /> : null}
 
         {quickScenario === null ? null : (
           <Alert tone="info" title="Quick check — one scenario">

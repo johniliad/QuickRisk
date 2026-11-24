@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mt19937.php';
+
 /**
  * FAIR QuickRisk — probability distribution utilities.
  *
@@ -13,20 +15,20 @@ final class QkDistributions
 {
     private bool $seeded = false;
 
+    private QkMt19937 $generator;
+
     /**
      * Seeds the generator. A seed lives only in process memory for the duration
      * of one calculation and is never persisted.
      */
     public function __construct(?int $seed = null)
     {
-        if ($seed !== null) {
-            $this->seed($seed);
-        }
+        $this->seed($seed ?? random_int(1, 2147483646));
     }
 
     public function seed(int $seed): void
     {
-        mt_srand($seed, MT_RAND_MT19937);
+        $this->generator = new QkMt19937($seed);
         $this->seeded = true;
     }
 
@@ -40,7 +42,7 @@ final class QkDistributions
      */
     public function uniform(): float
     {
-        return mt_rand() / (mt_getrandmax() + 1);
+        return $this->generator->nextInt31() / 2147483648.0;
     }
 
     /**
@@ -227,6 +229,109 @@ final class QkDistributions
         }
 
         return $value;
+    }
+
+    /**
+     * Exact Poisson draw for small and large rates.
+     */
+    public function samplePoisson(float $lambda): int
+    {
+        if (!is_finite($lambda) || $lambda < 0.0) {
+            throw new InvalidArgumentException('Poisson lambda must be finite and non-negative.');
+        }
+        if ($lambda === 0.0) {
+            return 0;
+        }
+
+        return $lambda < 30.0
+            ? $this->samplePoissonKnuth($lambda)
+            : $this->samplePoissonPtrs($lambda);
+    }
+
+    /**
+     * Deterministic inverse-CDF Poisson count on the passed probability.
+     */
+    public static function poissonQuantile(float $probability, float $lambda): int
+    {
+        if (!is_finite($lambda) || $lambda < 0.0) {
+            throw new InvalidArgumentException('Poisson lambda must be finite and non-negative.');
+        }
+        if ($lambda === 0.0) {
+            return 0;
+        }
+        $u = self::clamp($probability, 0.0, 1.0 - 1.0e-15);
+        $term = exp(-$lambda);
+        $cumulative = $term;
+        $limit = (int) ceil($lambda + 12.0 * sqrt($lambda) + 30.0);
+        for ($count = 0; $count < $limit; $count++) {
+            if ($u <= $cumulative) {
+                return $count;
+            }
+            $countPlusOne = $count + 1;
+            $term *= $lambda / $countPlusOne;
+            $cumulative += $term;
+        }
+
+        return $limit;
+    }
+
+    private function samplePoissonKnuth(float $lambda): int
+    {
+        $threshold = exp(-$lambda);
+        $product = 1.0;
+        $count = 0;
+        do {
+            $count++;
+            $product *= max($this->uniform(), 1.0e-15);
+        } while ($product > $threshold && $count < 10000);
+
+        return max(0, $count - 1);
+    }
+
+    private function samplePoissonPtrs(float $lambda): int
+    {
+        $sqrt = sqrt($lambda);
+        $b = 0.931 + 2.53 * $sqrt;
+        $a = -0.059 + 0.02483 * $b;
+        $inverseAlpha = 1.1239 + 1.1328 / ($b - 3.4);
+        $vR = 0.9277 - 3.6224 / ($b - 2.0);
+
+        for ($attempt = 0; $attempt < 10000; $attempt++) {
+            $u = $this->uniform() - 0.5;
+            $v = max($this->uniform(), 1.0e-15);
+            $us = 0.5 - abs($u);
+            if ($us <= 0.0) {
+                continue;
+            }
+            $k = (int) floor(((2.0 * $a / $us) + $b) * $u + $lambda + 0.43);
+            if ($us >= 0.07 && $v <= $vR) {
+                return max(0, $k);
+            }
+            if ($k < 0 || ($us < 0.013 && $v > $us)) {
+                continue;
+            }
+            $left = log($v * $inverseAlpha / (($a / ($us * $us)) + $b));
+            $right = (-$lambda + $k * log($lambda)) - self::logFactorial($k);
+            if ($left <= $right) {
+                return $k;
+            }
+        }
+
+        return self::poissonQuantile($this->uniform(), $lambda);
+    }
+
+    private static function logFactorial(int $value): float
+    {
+        static $cache = [0 => 0.0];
+        if (isset($cache[$value])) {
+            return $cache[$value];
+        }
+        $maximum = max(array_keys($cache));
+        for ($index = $maximum + 1; $index <= $value; $index++) {
+            $cache[$index] = $cache[$index - 1] + log($index);
+        }
+
+        return $cache[$value];
     }
 
     /**

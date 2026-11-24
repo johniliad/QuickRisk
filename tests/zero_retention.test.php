@@ -202,6 +202,10 @@ return [
             (float) $third['portfolio']['expectedAnnualLoss'] !== (float) $fourth['portfolio']['expectedAnnualLoss'],
             'A live calculation must not be served from a cached result'
         );
-        assertFalse($third['meta']['seedDisclosed'], 'The generated seed must never be disclosed');
+        assertTrue($third['meta']['seedDisclosed'], 'The disposable run seed must be disclosed for replay');
+        assertTrue(
+            (int) $third['meta']['simulationSeed'] !== (int) $fourth['meta']['simulationSeed'],
+            'A new in-memory seed must be generated per request'
+        );
     },
 ];

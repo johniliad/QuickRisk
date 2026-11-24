@@ -247,7 +247,7 @@ return [
 
     'decision custom lifecycle: create, list, compute with it and delete' => function (): void {
         $config = qk_decision_custom_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_custom_test_server();
         $session = qk_decision_custom_test_session($liveRepository, $config, $server);
@@ -298,7 +298,7 @@ return [
 
     'decision custom lifecycle: an incomplete definition is rejected and nothing is stored' => function (): void {
         $config = qk_decision_custom_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_custom_test_server();
         $session = qk_decision_custom_test_session($liveRepository, $config, $server);
@@ -324,7 +324,7 @@ return [
 
     'decision history: the saved-analysis list is scoped to the owning session' => function (): void {
         $config = qk_decision_custom_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_custom_test_server();
         $owner = qk_decision_custom_test_session($liveRepository, $config, $server);

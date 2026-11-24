@@ -1,7 +1,7 @@
 {
   "parametersSchemaVersion": "1.3.0",
-  "modelId": "FAIR-QK-1.3",
-  "calibrationVersion": "CAL-1.3",
+  "modelId": "FAIR-QK-2.0",
+  "calibrationVersion": "CAL-2.0",
   "classificationLegend": {
     "externally-evidenced": "Value is supported by an identified external source that is cited in the model documentation.",
     "internally-derived": "Value is derived inside this application from a stated internal construction or from another documented parameter.",
@@ -286,13 +286,36 @@
     }
   },
   "annualisation": {
-    "method": "frequency-times-severity-annualised-exposure",
-    "formula": "annualised exposure = loss event frequency x one sampled loss magnitude per simulated trial",
-    "realisedAnnualTotalsModelled": false,
-    "classification": "internally-derived",
-    "limitation": "The simulation estimates an annualised exposure approximation. It does not draw the number of loss events occurring in a year and does not sum per-event losses, so the reported percentiles are percentiles of the annualised exposure approximation and are not percentiles of realised annual loss totals.",
-    "evidence": "An independent event-based model (Poisson event counts with independently sampled per-event severities) reproduced the same expected value but materially different percentiles: for one scenario the event-based P10 and P50 were zero while the approximation reported non-zero values, and the event-based P90 was roughly 2.5x higher at a low event rate. This is why realised annual totals are declared as not modelled.",
-    "note": "Every calculation response declares this method and sets realisedAnnualTotalsModelled to false so that no consumer can present the percentiles as realised annual loss totals."
+    "method": "posterior-predictive-compound-poisson-annual-total",
+    "legacyMethod": "frequency-times-severity-annualised-exposure",
+    "formula": "annual total loss = sum of per-event positive severities over Poisson material-event counts, conditional on a shared posterior parameter draw",
+    "realisedAnnualTotalsModelled": true,
+    "classification": "externally-informed-bayesian",
+    "limitation": "Annual totals are posterior-predictive simulations conditional on public reference evidence, questionnaire elicitation assumptions and the named dependence model. They are not forecasts, guarantees, audited accounts or organisation-specific validation.",
+    "evidence": "Organisation-size attack prevalence, material-cost probability and positive-severity quantiles are informed by DSIT Cyber Security Breaches Survey 2025/2026. IBM Cost of a Data Breach 2025 is used only for a large-enterprise severity sensitivity. Scenario composition remains a weak elicitation prior because no source supplies all five annual rates.",
+    "note": "Every response declares the active annualisation method. Joint percentiles are produced only for the posterior joint model; the legacy annualised-exposure fallback reports no joint percentile."
+  },
+  "posteriorInference": {
+    "schemaVersion": "1.0.0",
+    "packageVersion": "PINF-QK-2.0.0",
+    "evidencePackageVersion": "EVID-QK-2.0.0",
+    "drawCount": 2000,
+    "annualEventModel": "poisson",
+    "severityModel": "lognormal-positive",
+    "jointDependence": "shared-posterior-draw",
+    "optionalEvidence": {
+      "materialLossEventCount": {
+        "period": "previous 12 months",
+        "missingPolicy": "retain-reference-posterior",
+        "minimum": 0,
+        "maximum": 1000,
+        "classification": "organisation-specific-likelihood-update"
+      }
+    },
+    "confidenceLanguage": {
+      "credibleInterval": "uncertainty about a model parameter",
+      "predictiveInterval": "uncertainty about a simulated future annual total"
+    }
   },
   "secondaryLoss": {
     "mechanism": "Secondary Loss = Bernoulli(SLEF) x SLM, drawn once per simulated trial",
@@ -334,11 +357,13 @@
     "note": "This is a model sensitivity of the expected value. It is not a variance-based attribution, not a causal analysis and not a guarantee that changing a control will produce the modelled change."
   },
   "plausibilityReview": {
-    "status": "pending-expert-review",
-    "note": "Combinations of the highest option levels produce very large compounded exposure. Those results are arithmetically valid but have not been validated as realistic forecasts. Extreme results should be treated as calibration-limited until a risk professional has reviewed the compound multipliers."
+    "status": "pending-prospective-validation",
+    "note": "Compound extreme answers can produce very large posterior-predictive losses. They are arithmetically valid under the model but have not been validated prospectively. Scenario composition and questionnaire multipliers remain elicitation assumptions and require external sensitivity review."
   },
   "unknownAnswerDisclosure": {
-    "classification": "internally-derived",
+    "classification": "legacy-fallback-only",
+    "appliesToEngine": "frequency-times-severity-annualised-exposure",
+    "note": "These measurements describe the legacy heuristic fallback only. The active posterior engine retains the reference posterior for an Unknown scenario answer.",
     "measuredOn": "Scenario S1 with the documented fixture profile, seed 20261029 and 20,000 iterations, both scenario questions Unknown compared with POSSIBLE and SIGNIFICANT.",
     "medianRatio": 1.14,
     "meanRatio": 5.99,

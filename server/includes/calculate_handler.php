@@ -26,6 +26,18 @@ function qk_load_model(array $config): QkModel
     return $model;
 }
 
+/** Loads the version-matched posterior package once per request. */
+function qk_load_inference(array $config, QkModel $model): QkInferenceRepository
+{
+    static $inference = null;
+
+    if (!$inference instanceof QkInferenceRepository) {
+        $inference = QkInferenceRepository::load($config, $model);
+    }
+
+    return $inference;
+}
+
 /**
  * Generates a calculation seed that exists only in process memory.
  *
@@ -50,11 +62,14 @@ function qk_handle_calculation(array $config, array $payload, ?int $iterations =
 
     $validated = QkValidation::validatePayload($model, $payload);
     unset($payload);
+    $actualSeed = $seed ?? qk_generate_seed();
+    $inference = qk_load_inference($config, $model);
 
-    $response = FairEngine::calculateAssessment(
+    $response = QkRiskEngine::calculateAssessment(
         $model,
+        $inference,
         $validated,
-        $seed ?? qk_generate_seed(),
+        $actualSeed,
         $iterations
     );
 

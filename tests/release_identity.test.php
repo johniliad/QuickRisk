@@ -166,18 +166,18 @@ return [
         $manifest = $model->manifest();
         $root = qk_test_repository_root();
 
-        assertSame('FAIR-QK-1.3', (string) $manifest['modelId'], 'The model identifier must be FAIR-QK-1.3');
-        assertSame('1.3.0', (string) $manifest['modelVersion'], 'The model version must be 1.3.0');
+        assertSame('FAIR-QK-2.0', (string) $manifest['modelId'], 'The model identifier must be FAIR-QK-2.0');
+        assertSame('2.0.0', (string) $manifest['modelVersion'], 'The model version must be 2.0.0');
         assertSame(
             (string) $manifest['modelVersion'],
             (string) $manifest['schemaVersion'],
             'The schema version must track the model version'
         );
-        assertSame('CAL-1.3', (string) $manifest['calibrationVersion'], 'The calibration version must be CAL-1.3');
-        assertSame('METH-1.3', (string) $manifest['methodologyVersion'], 'The methodology version must be METH-1.3');
-        assertSame('DISC-1.2', (string) $manifest['disclaimerVersion'], 'The disclaimer version must be DISC-1.2');
-        assertSame('1.3.3', (string) $manifest['applicationVersion'], 'The application version must be 1.3.3');
-        assertSame('1.2.0', (string) $manifest['supersedesModelVersion'], 'The release must supersede 1.2.0');
+        assertSame('CAL-2.0', (string) $manifest['calibrationVersion'], 'The calibration version must be CAL-2.0');
+        assertSame('METH-2.0', (string) $manifest['methodologyVersion'], 'The methodology version must be METH-2.0');
+        assertSame('DISC-2.0', (string) $manifest['disclaimerVersion'], 'The disclaimer version must be DISC-2.0');
+        assertSame('1.3.5', (string) $manifest['applicationVersion'], 'The application version must be 1.3.5');
+        assertSame('1.3.0', (string) $manifest['supersedesModelVersion'], 'The release must supersede 1.3.0');
 
         $recordPath = $model->modelPath() . '/versions/' . $manifest['modelVersion'] . '.json';
         assertTrue(is_file($recordPath), 'The version record must be named after the model version');
@@ -187,7 +187,7 @@ return [
         assertSame((string) $manifest['modelVersion'], (string) $record['modelVersion'], 'The record must repeat the model version');
         assertSame((string) $manifest['schemaVersion'], (string) $record['schemaVersion'], 'The record must repeat the schema version');
         assertSame((string) $manifest['calibrationVersion'], (string) $record['calibrationVersion'], 'The record must repeat the calibration version');
-        assertSame('1.2.0', (string) $record['supersedes'], 'The record must declare that it supersedes 1.2.0');
+        assertSame('1.3.0', (string) $record['supersedes'], 'The record must declare that it supersedes 1.3.0');
 
         $parameters = json_decode((string) file_get_contents($model->modelPath() . '/parameters.json'), true);
         assertSame((string) $manifest['calibrationVersion'], (string) $parameters['calibrationVersion'], 'The parameters must carry the calibration version');
@@ -207,7 +207,7 @@ return [
 
         $checklist = $qkRequirementDocument($root, 'RELEASE_CHECKLIST.md');
         if ($checklist !== '') {
-            assertContains('FAIR-QK-1.3', $checklist, 'The release checklist must document the current release');
+            assertContains('FAIR-QK-2.0', $checklist, 'The release checklist must document the current release');
             assertContains((string) $manifest['disclaimerVersion'], $checklist, 'The release checklist must state the disclaimer version');
         }
 

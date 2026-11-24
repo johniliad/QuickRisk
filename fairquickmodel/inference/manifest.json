@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0.0",
+  "modelId": "FAIR-QK-2.0",
+  "modelVersion": "2.0.0",
+  "calibrationVersion": "CAL-2.0",
+  "methodologyVersion": "METH-2.0",
+  "packageVersion": "PINF-QK-2.0.0",
+  "evidencePackageVersion": "EVID-QK-2.0.0",
+  "active": true,
+  "status": "reference-posterior-validated",
+  "synthetic": false,
+  "drawCount": 2000,
+  "seed": 20261124,
+  "files": {
+    "referenceClasses": "reference-classes.json",
+    "calibrationReport": "calibration-report.json",
+    "treatmentPosteriors": "treatment-posteriors.json",
+    "posteriorDraws": {
+      "micro": "posterior-micro.json",
+      "small": "posterior-small.json",
+      "medium": "posterior-medium.json",
+      "large": "posterior-large.json",
+      "large_enterprise": "posterior-large_enterprise.json",
+      "unknown": "posterior-unknown.json"
+    }
+  },
+  "hashes": {
+    "reference-classes.json": "522bcf56c8ae1a800c0822fc0dd3ea737be831186a6b7f2bf5ca08c41962b666",
+    "calibration-report.json": "8f6e75c9da4cbe63e3fced5320472052be5d7a230c4d4a30d02792cea91c4376",
+    "treatment-posteriors.json": "2b614cd7e3a42f34d5f96ca443dd67b6178e4c73b33b222840f5604fb8e113ff",
+    "posterior-micro.json": "31a013044a44a8927cc27cf3c616bd7c027db0c7c649969fea7986cdaa32a929",
+    "posterior-small.json": "4cc42e6b17b41b746b1fa86aae65c07bd507c41a2a869d6a98f138bd80179531",
+    "posterior-medium.json": "9f98ce63f7f1218ce996c316175c32ce65bd2419c56b229f2dada18434883faf",
+    "posterior-large.json": "7879963005eee8d1abfb40be7c5061073db7fc54515e8c1f84a1a48b1b123156",
+    "posterior-large_enterprise.json": "12acd85592e7fe7925dc071fb1dc85ebd4e057791a0cf00761dce6ba70d7bbf3",
+    "posterior-unknown.json": "14ad41f16b6073888756a50b678c683c6fcb2ca89488e933efc76ddfd7a42232"
+  },
+  "validationReport": "calibration-report.json",
+  "generatedAt": "2026-11-24T00:00:00Z"
+}

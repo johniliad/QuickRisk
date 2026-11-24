@@ -34,10 +34,18 @@ final class QkValidation
     private const CODE_PATTERN = '/^[A-Z0-9_]{1,32}$/';
     private const VERSION_PATTERN = '/^[0-9]{1,3}(\.[0-9]{1,3}){0,3}$/';
     private const MODEL_ID_PATTERN = '/^[A-Z0-9.\-]{1,32}$/';
-    private const ALLOWED_TOP_LEVEL = ['schemaVersion', 'modelId', 'disclaimer', 'organisationAnswers', 'scenarioAnswers'];
+    private const ALLOWED_TOP_LEVEL = [
+        'schemaVersion',
+        'modelId',
+        'disclaimer',
+        'organisationAnswers',
+        'scenarioAnswers',
+        'organisationEvidence',
+    ];
     private const ALLOWED_DISCLAIMER = ['acknowledged', 'version'];
     private const ALLOWED_ANSWER = ['questionCode', 'optionCode'];
     private const ALLOWED_SCENARIO_ANSWER = ['scenarioCode', 'answers'];
+    private const ALLOWED_EVIDENCE = ['materialLossEventCount'];
 
     /**
      * @param array<string,mixed> $payload
@@ -70,11 +78,53 @@ final class QkValidation
 
         $profileAnswers = self::validateOrganisationAnswers($model, $payload['organisationAnswers'] ?? null);
         $scenarioAnswers = self::validateScenarioAnswers($model, $payload['scenarioAnswers'] ?? null);
+        $organisationEvidence = self::validateOrganisationEvidence($payload['organisationEvidence'] ?? null);
 
         return [
             'profileAnswers' => $profileAnswers,
             'scenarioAnswers' => $scenarioAnswers,
+            'organisationEvidence' => $organisationEvidence,
         ];
+    }
+
+    /**
+     * @param mixed $value
+     * @return array{materialLossEventCount:int|null}
+     */
+    private static function validateOrganisationEvidence($value): array
+    {
+        if ($value === null) {
+            return ['materialLossEventCount' => null];
+        }
+        if (!is_array($value) || array_is_list($value)) {
+            throw new QkValidationException(
+                'ORGANISATION_EVIDENCE_INVALID',
+                'The organisation evidence block must be an object.'
+            );
+        }
+        foreach (array_keys($value) as $key) {
+            if (!in_array((string) $key, self::ALLOWED_EVIDENCE, true)) {
+                throw new QkValidationException(
+                    'UNEXPECTED_FIELD',
+                    'The organisation evidence block contains an unexpected field.'
+                );
+            }
+        }
+        if (!array_key_exists('materialLossEventCount', $value)) {
+            return ['materialLossEventCount' => null];
+        }
+        $count = $value['materialLossEventCount'];
+        if ($count === null) {
+            return ['materialLossEventCount' => null];
+        }
+        if (!is_int($count) || $count < 0 || $count > 1000) {
+            throw new QkValidationException(
+                'ORGANISATION_EVIDENCE_INVALID',
+                'The material loss event count must be a whole number from 0 to 1000, or Unknown.'
+            );
+        }
+
+        return ['materialLossEventCount' => $count];
     }
 
     /**

@@ -60,11 +60,17 @@ $checks[] = [
     (string) ($annualisation['method'] ?? '') === (string) ($manifest['annualisationMethod'] ?? ''),
     (string) ($annualisation['method'] ?? 'missing'),
 ];
+$posteriorMethod = 'posterior-predictive-compound-poisson-annual-total';
+$legacyMethod = (string) ($annualisation['legacyMethod'] ?? 'frequency-times-severity-annualised-exposure');
+$method = (string) ($annualisation['method'] ?? '');
+$realised = ($annualisation['realisedAnnualTotalsModelled'] ?? null) === true;
+$methodValid = in_array($method, [$posteriorMethod, $legacyMethod], true)
+    && $realised === ($method === $posteriorMethod)
+    && ($manifest['realisedAnnualTotalsModelled'] ?? null) === $realised;
 $checks[] = [
-    'Realised annual totals declared as not modelled',
-    ($annualisation['realisedAnnualTotalsModelled'] ?? true) === false
-        && ($manifest['realisedAnnualTotalsModelled'] ?? true) === false,
-    ($annualisation['realisedAnnualTotalsModelled'] ?? true) === false ? 'not modelled' : 'CLAIM INVALID',
+    'Annual-total semantics match the active engine',
+    $methodValid,
+    $realised ? 'posterior predictive annual totals' : 'legacy annualised exposure',
 ];
 $checks[] = [
     'Annualisation limitation documented',
@@ -82,20 +88,19 @@ $policyWeights = static function (array $policy): array {
 $frequencyWeights = $policyWeights($frequencyPolicy);
 $impactWeights = $policyWeights($impactPolicy);
 $checks[] = [
-    'Unknown frequency policy is a mixture',
+    'Legacy Unknown frequency policy is a mixture',
     (string) ($frequencyPolicy['type'] ?? '') === 'mixture' && abs(array_sum($frequencyWeights) - 1.0) < 1e-9,
     count($frequencyWeights) . ' component(s)',
 ];
 $checks[] = [
-    'Unknown impact policy is a mixture',
+    'Legacy Unknown impact policy is a mixture',
     (string) ($impactPolicy['type'] ?? '') === 'mixture' && abs(array_sum($impactWeights) - 1.0) < 1e-9,
     count($impactWeights) . ' component(s)',
 ];
 $checks[] = [
-    'Unknown answers cannot shift the central estimate to an extreme',
-    (string) ($frequencyPolicy['type'] ?? '') === 'mixture'
-        && (string) ($impactPolicy['type'] ?? '') === 'mixture',
-    'equal-weight mixture over the available answers',
+    'Posterior Unknown policy retains the reference posterior',
+    (string) (((array) ($parameters['unknownAnswerDisclosure'] ?? []))['appliesToEngine'] ?? '') !== '',
+    'legacy-only mixture disclosed',
 ];
 $checks[] = [
     'Likelihood answers are documented as pre-control frequency',
@@ -131,18 +136,28 @@ $checks[] = [
     (string) (((array) ($parameters['plausibilityReview'] ?? []))['status'] ?? 'missing'),
 ];
 $checks[] = [
-    'Widening mean-shift cap configured and documented',
+    'Legacy widening cap configured and documented',
     is_numeric(((array) ($parameters['sampling'] ?? []))['wideningMeanShiftCap'] ?? null)
         && (float) ((array) ($parameters['sampling'] ?? []))['wideningMeanShiftCap'] > 1.0
         && trim((string) (((array) ($parameters['sampling'] ?? []))['wideningMeanShiftCapRationale'] ?? '')) !== '',
     'cap ' . (string) (((array) ($parameters['sampling'] ?? []))['wideningMeanShiftCap'] ?? 'missing'),
 ];
 $checks[] = [
-    'Unknown-answer central effect disclosed and quantified',
+    'Legacy Unknown-answer effect disclosed and quantified',
     trim((string) (((array) ($parameters['unknownAnswerDisclosure'] ?? []))['interpretation'] ?? '')) !== ''
         && is_numeric(((array) ($parameters['unknownAnswerDisclosure'] ?? []))['allUnknownPortfolioMultipleOfAllKnown'] ?? null),
     'x' . (string) (((array) ($parameters['unknownAnswerDisclosure'] ?? []))['allUnknownPortfolioMultipleOfAllKnown'] ?? 'missing')
-        . ' for an all-Unknown assessment',
+        . ' (legacy fallback)',
+];
+
+$inference = QkInferenceRepository::load($config, $model);
+$inferenceMeta = $inference->metadata();
+$checks[] = [
+    'Validated posterior package is active and hash-verified',
+    $inference->isActive()
+        && (string) ($inferenceMeta['status'] ?? '') === 'reference-posterior-validated',
+    (string) ($inferenceMeta['packageVersion'] ?? 'missing')
+        . ' / ' . (string) ($inferenceMeta['status'] ?? 'missing'),
 ];
 
 $versionRecordPath = $modelPath . DIRECTORY_SEPARATOR . 'versions' . DIRECTORY_SEPARATOR . $versionMeta['modelVersion'] . '.json';

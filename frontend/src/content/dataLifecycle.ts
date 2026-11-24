@@ -140,11 +140,12 @@ export function resultsPortfolioEalProvenance(meta: {
   const years = formatIterations(meta.iterations);
   return {
     label: 'Portfolio expected annual loss',
-    source: `Sum of the ${meta.scenarioCount} scenario mean exposures, all produced by one server run of ${meta.modelId} model ${meta.modelVersion}.`,
-    method: `Each scenario draws ${years} simulated years. The result is an annualised exposure approximation: the model does not draw a number of events per year and does not sum per-event losses.`,
+    source: `Joint annual totals from ${meta.scenarioCount} scenarios, all produced by one server run of ${meta.modelId} model ${meta.modelVersion}.`,
+    method: `Each simulated year draws Poisson material-event counts and per-event severities for every scenario, then sums the annual totals. Shared posterior draws create the documented joint dependence model.`,
     independentOf: [
-      'It is not the figure QuickRisk Live shows. Live uses one scenario, not this sum.',
-      'It is the Decision Lab starting point: Decision Lab replays this run with the published seed and the same iteration count, so its baseline agrees with this sum to within Monte Carlo noise.',
+      'It is not the figure QuickRisk Live shows. Live uses one scenario, not this joint annual-total model.',
+      'It is the Decision Lab starting point: Decision Lab replays this run with the disclosed in-memory seed and the same iteration count, so its baseline agrees with this result exactly.',
+      `It is a posterior-predictive estimate across ${years} simulated years; it is not a forecast or organisation-specific validation.`,
     ],
   };
 }

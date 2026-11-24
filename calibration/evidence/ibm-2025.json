@@ -1,0 +1,35 @@
+{
+  "sourceId": "ibm-cost-of-a-data-breach-2025",
+  "publisher": "IBM Security and Ponemon Institute",
+  "title": "Cost of a Data Breach Report 2025",
+  "url": "https://www.ibm.com/think/x-force/2025-cost-of-a-data-breach-navigating-ai",
+  "publishedAt": "2025-07-30",
+  "currency": "USD",
+  "sampleOrganisations": 600,
+  "population": "Organisations researched by the Ponemon Institute; global, predominantly larger organisations",
+  "measure": "Average total cost of a data breach",
+  "averageBreachCost": 4440000,
+  "distributionAssumption": {
+    "family": "lognormal",
+    "sigma": 1.25,
+    "classification": "weak-prior",
+    "note": "The source reports a mean but not a median or variance. Sigma is an explicit weak prior used to construct a sensitivity distribution, not an observed source parameter."
+  },
+  "permittedUses": [
+    "large-enterprise positive-severity sensitivity",
+    "tail-severity sensitivity against DSIT reference classes"
+  ],
+  "prohibitedUses": [
+    "applying the average to every organisation",
+    "pooling the average directly with DSIT respondent-level quantiles as though populations were identical",
+    "treating average breach cost as annual expected loss or annual total loss",
+    "reported-breach frequency estimation"
+  ],
+  "limitations": [
+    "The sample is not representative of all UK businesses.",
+    "Sample selection favours organisations able to measure large breach costs.",
+    "Only the average is used; no median or quantile is claimed from the source.",
+    "The distribution shape and sigma are assumptions and must remain sensitivity-labelled.",
+    "The 2025 edition is used alone; headline values from different editions are not treated as independent observations."
+  ]
+}

@@ -5,13 +5,13 @@ import type { SensitivityAnalysis } from '@/domain/results';
 import { formatMoney } from '@/lib/format';
 
 /**
- * Sensitivity of the expected annualised exposure to each input.
+ * Sensitivity of expected annual total loss to each input.
  *
- * This is a genuine one-at-a-time sensitivity: the server re-evaluates the model's analytic
- * expected annual loss for every answer option of every factor while holding the other
- * answers fixed, and reports the ratio of the highest to the lowest resulting exposure. It is
- * a sensitivity of the expected value, not a variance-based attribution, not a causal
- * analysis and not a guarantee that changing a control will produce the modelled change.
+ * This is a one-at-a-time sensitivity: the server recomputes posterior-expected annual loss
+ * across the same joint draws for every answer option while holding the other answers fixed,
+ * and reports the ratio of the highest to the lowest resulting loss. It is not a variance-based
+ * attribution, a causal analysis or a guarantee that changing a control will produce the
+ * modelled change.
  */
 export function SensitivityChart({
   sensitivity,

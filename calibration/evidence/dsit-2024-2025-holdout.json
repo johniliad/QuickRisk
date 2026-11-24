@@ -1,0 +1,16 @@
+{
+  "sourceId": "dsit-csbs-2024-2025-holdout",
+  "publisher": "UK Department for Science, Innovation and Technology",
+  "title": "Cyber Security Breaches Survey 2025",
+  "url": "https://www.gov.uk/government/statistics/cyber-security-breaches-survey-2025/cyber-security-breaches-survey-2025",
+  "role": "prevalence holdout only; cost definitions are not comparable with the 2025/2026 perceived-total-cost definition",
+  "prevalence": {
+    "classes": [
+      { "sizeClass": "micro", "estimate": 0.35 },
+      { "sizeClass": "small", "estimate": 0.42 },
+      { "sizeClass": "medium", "estimate": 0.67 },
+      { "sizeClass": "large", "estimate": 0.74 },
+      { "sizeClass": "unknown", "estimate": 0.43 }
+    ]
+  }
+}

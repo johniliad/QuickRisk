@@ -1,0 +1,23 @@
+{
+  "sourceId": "ecb-annual-reference-rates-2025",
+  "publisher": "European Central Bank",
+  "title": "ECB euro foreign exchange reference rates, annual averages 2025",
+  "url": "https://data-api.ecb.europa.eu/service/data/EXR/",
+  "retrievedAt": "2026-11-24",
+  "baseCurrency": "EUR",
+  "rates": [
+    {
+      "currency": "GBP",
+      "ecbSeries": "EXR.A.GBP.EUR.SP00.A",
+      "ecbAnnualAverage": 0.8567923137255,
+      "eurPerUnit": 1.1671442611062
+    },
+    {
+      "currency": "USD",
+      "ecbSeries": "EXR.A.USD.EUR.SP00.A",
+      "ecbAnnualAverage": 1.1299831372549,
+      "eurPerUnit": 0.8849690277343
+    }
+  ],
+  "note": "ECB series quotes units of foreign currency per euro. eurPerUnit is the reciprocal and is used only for evidence conversion, with exchange-rate uncertainty retained in calibration sensitivity."
+}

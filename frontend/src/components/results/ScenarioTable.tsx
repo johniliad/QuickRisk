@@ -8,7 +8,7 @@ import { formatCount, formatMoney, formatPercent } from '@/lib/format';
 
 /**
  * Scenario results table: rank, expected annual loss, P10/P50/P90, the probability of
- * exceeding €1 million (reported with the number of simulated trials) and the input-confidence
+ * exceeding €1 million (reported with the number of simulated years) and the input-confidence
  * indicator for each scenario.
  */
 export function ScenarioTable({

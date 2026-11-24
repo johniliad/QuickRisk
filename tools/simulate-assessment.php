@@ -15,9 +15,10 @@ declare(strict_types=1);
  * The payload file, when supplied, must match the request schema documented in the
  * requirements:
  *   {
- *     "schemaVersion": "1.3.0",
- *     "modelId": "FAIR-QK-1.3",
- *     "disclaimer": { "acknowledged": true, "version": "DISC-1.2" },
+ *     "schemaVersion": "2.0.0",
+ *     "modelId": "FAIR-QK-2.0",
+ *     "disclaimer": { "acknowledged": true, "version": "DISC-2.0" },
+ *     "organisationEvidence": { "materialLossEventCount": null },
  *     "organisationAnswers": [ { "questionCode": "QP1", "optionCode": "50_250M" } ],
  *     "scenarioAnswers": [ { "scenarioCode": "S1", "answers": [ ... ] } ]
  *   }

@@ -1,0 +1,147 @@
+﻿{
+    "schemaVersion": "1.0.0",
+    "status": "elicitation-assumption",
+    "source": "QuickRisk curated three-point treatment assumptions; not measured efficacy",
+    "treatments": [
+        {
+            "id": "privileged-mfa",
+            "version": "1.0",
+            "name": "Privileged MFA",
+            "frequency": {
+                "min": 0.2,
+                "mostLikely": 0.35,
+                "max": 0.5
+            },
+            "magnitude": null
+        },
+        {
+            "id": "edr",
+            "version": "1.0",
+            "name": "Endpoint Detection and Response",
+            "frequency": {
+                "min": 0.15,
+                "mostLikely": 0.3,
+                "max": 0.45
+            },
+            "magnitude": {
+                "min": 0.15,
+                "mostLikely": 0.3,
+                "max": 0.45
+            }
+        },
+        {
+            "id": "immutable-backup",
+            "version": "1.0",
+            "name": "Immutable Backup Resilience",
+            "frequency": null,
+            "magnitude": {
+                "min": 0.25,
+                "mostLikely": 0.45,
+                "max": 0.65
+            }
+        },
+        {
+            "id": "network-segmentation",
+            "version": "1.0",
+            "name": "Network Segmentation",
+            "frequency": {
+                "min": 0.1,
+                "mostLikely": 0.25,
+                "max": 0.4
+            },
+            "magnitude": {
+                "min": 0.1,
+                "mostLikely": 0.25,
+                "max": 0.4
+            }
+        },
+        {
+            "id": "security-awareness",
+            "version": "1.0",
+            "name": "Security Awareness Programme",
+            "frequency": {
+                "min": 0.1,
+                "mostLikely": 0.2,
+                "max": 0.35
+            },
+            "magnitude": null
+        },
+        {
+            "id": "email-security",
+            "version": "1.0",
+            "name": "Email Security Enhancement",
+            "frequency": {
+                "min": 0.15,
+                "mostLikely": 0.3,
+                "max": 0.45
+            },
+            "magnitude": null
+        },
+        {
+            "id": "vulnerability-management",
+            "version": "1.0",
+            "name": "Vulnerability Management Improvement",
+            "frequency": {
+                "min": 0.15,
+                "mostLikely": 0.3,
+                "max": 0.5
+            },
+            "magnitude": null
+        },
+        {
+            "id": "identity-monitoring",
+            "version": "1.0",
+            "name": "Identity Monitoring",
+            "frequency": {
+                "min": 0.1,
+                "mostLikely": 0.2,
+                "max": 0.35
+            },
+            "magnitude": null
+        },
+        {
+            "id": "incident-response",
+            "version": "1.0",
+            "name": "Incident Response Improvement",
+            "frequency": null,
+            "magnitude": {
+                "min": 0.1,
+                "mostLikely": 0.25,
+                "max": 0.4
+            }
+        },
+        {
+            "id": "data-recovery",
+            "version": "1.0",
+            "name": "Data Recovery Improvement",
+            "frequency": null,
+            "magnitude": {
+                "min": 0.15,
+                "mostLikely": 0.35,
+                "max": 0.55
+            }
+        },
+        {
+            "id": "ddos-protection",
+            "version": "1.0",
+            "name": "DDoS Protection",
+            "frequency": null,
+            "magnitude": {
+                "min": 0.15,
+                "mostLikely": 0.35,
+                "max": 0.55
+            }
+        },
+        {
+            "id": "privileged-access-management",
+            "version": "1.0",
+            "name": "Privileged Access Management",
+            "frequency": {
+                "min": 0.2,
+                "mostLikely": 0.4,
+                "max": 0.55
+            },
+            "magnitude": null
+        }
+    ]
+}

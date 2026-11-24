@@ -129,18 +129,19 @@ describe('expected-annual-loss provenance', () => {
   const resultsMeta = {
     iterations: 5000,
     scenarioCount: 5,
-    modelId: 'FAIR-QK-1.3',
-    modelVersion: '1.3.0',
+    modelId: 'FAIR-QK-2.0',
+    modelVersion: '2.0.0',
   };
 
-  it('names the iteration count and the sum for the portfolio figure', () => {
+  it('names the iteration count and joint annual totals for the portfolio figure', () => {
     const provenance = resultsPortfolioEalProvenance(resultsMeta);
 
     expect(provenance.label).toBe('Portfolio expected annual loss');
-    expect(provenance.source).toContain('Sum of the 5 scenario mean exposures');
-    expect(provenance.source).toContain('FAIR-QK-1.3');
-    expect(provenance.method).toContain('5,000 simulated years');
+    expect(provenance.source).toContain('Joint annual totals from 5 scenarios');
+    expect(provenance.source).toContain('FAIR-QK-2.0');
+    expect(provenance.method).toContain('Poisson material-event counts');
     expect(provenance.independentOf.join(' ')).toContain('Live uses one scenario');
+    expect(provenance.independentOf.join(' ')).toContain('posterior-predictive');
   });
 
   it('distinguishes a single scenario figure from the portfolio sum', () => {

@@ -66,7 +66,7 @@ export function LossDistributionChart({ scenario, symbol }: { scenario: Scenario
   const p90Label = binLabelFor(scenario.statistics.p90, bins);
 
   const summary =
-    `Histogram of ${scenario.statistics.iterations.toLocaleString('en-GB')} simulated annualised losses for ` +
+    `Histogram of ${scenario.statistics.iterations.toLocaleString('en-GB')} simulated annual total losses for ` +
     `${scenario.shortLabel}. Expected annual loss ${formatMoney(scenario.statistics.expectedAnnualLoss, symbol)}, ` +
     `P10 ${formatMoney(scenario.statistics.p10, symbol)}, P90 ${formatMoney(scenario.statistics.p90, symbol)}. ` +
     `The final bar is an overflow bin for outcomes above ${formatMoney(scenario.distribution.overflowFrom, symbol)}.`;

@@ -24,7 +24,7 @@ final class QkDecisionArrayRepository implements QkDecisionRepository
     private int $customCounter = 0;
 
     /** @param array<int,string> $methodologyVersions */
-    public function __construct(array $methodologyVersions = ['1.0'])
+    public function __construct(array $methodologyVersions = ['2.0', '1.0'])
     {
         $this->methodologyVersions = $methodologyVersions;
     }

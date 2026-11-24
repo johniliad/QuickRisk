@@ -27,6 +27,8 @@ require_once __DIR__ . '/treatment_library.php';
 require_once __DIR__ . '/treatment_adapter.php';
 require_once __DIR__ . '/decision_engine.php';
 require_once __DIR__ . '/repository.php';
+require_once dirname(__DIR__) . '/inference_repository.php';
+require_once dirname(__DIR__) . '/risk_engine.php';
 
 /** Production repository for decision persistence. */
 function qk_decision_repository(array $liveConfig): QkDecisionRepository
@@ -133,7 +135,14 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
     $model = qk_load_model($appConfig);
     // The assessment validator is strict about its schema, so only the assessment fields are
     // passed to it. The Decision Lab keys are validated separately, below.
-    $assessmentFields = ['schemaVersion', 'modelId', 'disclaimer', 'organisationAnswers', 'scenarioAnswers'];
+    $assessmentFields = [
+        'schemaVersion',
+        'modelId',
+        'disclaimer',
+        'organisationAnswers',
+        'scenarioAnswers',
+        'organisationEvidence',
+    ];
     $validated = QkValidation::validatePayload(
         $model,
         array_intersect_key($payload, array_flip($assessmentFields))
@@ -166,8 +175,14 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
     $constraints = qk_decision_constraints($payload['constraints'] ?? null);
     $treatments = qk_decision_resolved_treatments($payload, $appConfig, $budget['maxCandidates']);
 
-    $vectors = FairEngine::lossVectors($model, $validated, $seed, $requestedIterations);
-    $realised = qk_decision_realise_effects($treatments, $seed);
+    $inference = QkInferenceRepository::load($appConfig, $model);
+    $vectors = QkRiskEngine::lossVectors($model, $inference, $validated, $seed, $requestedIterations);
+    $realised = qk_decision_realise_effects(
+        $treatments,
+        $seed,
+        (int) $vectors['meta']['iterations'],
+        $inference
+    );
 
     $versionMeta = $model->versionMeta();
     $candidates = [];
@@ -225,7 +240,12 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
     }
 
     if ($action === 'portfolios') {
-        $portfolioRealised = qk_decision_realise_effects($candidates, $seed);
+        $portfolioRealised = qk_decision_realise_effects(
+            $candidates,
+            $seed,
+            (int) $vectors['meta']['iterations'],
+            $inference
+        );
         $search = qk_decision_portfolio_search(
             $vectors,
             $candidates,
@@ -252,7 +272,7 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
             'portfolioCriteria' => $search['portfolioCriteria'],
             'excludedCriteria' => $search['excludedCriteria'],
             'notes' => $search['notes'],
-            'effects' => $portfolioRealised,
+            'effects' => qk_decision_public_effects($portfolioRealised),
             'provenance' => $provenance,
             'acronyms' => qk_decision_acronyms(),
         ]);
@@ -264,7 +284,7 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         return QkLiveResponse::ok([
             'action' => 'sensitivity',
             'sensitivity' => $sensitivity,
-            'effects' => $realised,
+            'effects' => qk_decision_public_effects($realised),
             'provenance' => $provenance,
         ]);
     }

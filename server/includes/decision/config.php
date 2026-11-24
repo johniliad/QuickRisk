@@ -11,13 +11,13 @@ declare(strict_types=1);
  */
 
 /** Version of the Decision Lab methodology (labels, rules, interaction defaults). */
-const QK_DECISION_METHODOLOGY_VERSION = '1.0';
+const QK_DECISION_METHODOLOGY_VERSION = '2.0';
 
 /** Version of the Board Risk Pack report structure. */
-const QK_BOARD_PACK_VERSION = '1.0';
+const QK_BOARD_PACK_VERSION = '2.0';
 
-/** Model of treatment effect combination (paired, multiplicative driver effects). */
-const QK_DECISION_EFFECT_MODEL = 'paired-driver-multiplicative';
+/** Model of treatment effect combination (paired, posterior-integrated driver effects). */
+const QK_DECISION_EFFECT_MODEL = 'posterior-predictive-shared-treatment-draws';
 
 /**
  * Evidence quality vocabulary. The label describes the provenance of the treatment
@@ -76,6 +76,8 @@ const QK_DECISION_DEFAULTS = [
     // comparison evaluates many portfolios from one simulated sample.
     'iterations' => 5000,
     'minimumIterations' => 1000,
+    'treatmentEffectDraws' => 5000,
+    'effectEssWarningThreshold' => 0.1,
     // Planning horizon used to annualise a one-time implementation cost.
     'planningHorizonYears' => 3,
     // A later treatment in the same mechanism group is assumed to deliver only this share of

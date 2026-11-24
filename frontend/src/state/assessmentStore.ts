@@ -10,6 +10,7 @@
 import { create } from 'zustand';
 import { publicModel } from '../../shared/publicModel';
 import type { CalculationRequest, OrganisationAnswers, ScenarioAnswers } from '@/domain/answers';
+import { EMPTY_ORGANISATION_EVIDENCE, type OrganisationEvidence } from '@/domain/evidence';
 import {
   activeStepsFor,
   answerForStep,
@@ -51,6 +52,7 @@ interface AssessmentState {
   disclaimerAcknowledged: boolean;
   organisationAnswers: OrganisationAnswers;
   scenarioAnswers: ScenarioAnswers;
+  organisationEvidence: OrganisationEvidence;
   status: AssessmentStatus;
   errorMessage: string | null;
   results: CalculationResponse | null;
@@ -64,6 +66,7 @@ interface AssessmentState {
   loadSampleAssessment: () => void;
   calculateLoadedAnswers: () => void;
   answerCurrentStep: (optionCode: string) => void;
+  setOrganisationEvidence: (evidence: OrganisationEvidence) => void;
   goToStep: (index: number) => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -120,6 +123,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   disclaimerAcknowledged: false,
   organisationAnswers: {},
   scenarioAnswers: {},
+  organisationEvidence: EMPTY_ORGANISATION_EVIDENCE,
   status: 'idle',
   errorMessage: null,
   results: null,
@@ -198,6 +202,8 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     set(withAnswer(state, step, optionCode));
   },
 
+  setOrganisationEvidence: (evidence) => set({ organisationEvidence: evidence }),
+
   goToStep: (index) => {
     const state = get();
     set({ stepIndex: Math.min(Math.max(index, 0), stepsForScope(state.scope, state.quickScenarioCode).length - 1) });
@@ -259,6 +265,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
           optionCode: state.scenarioAnswers[scenario.code]?.[question.code] ?? publicModel.unknownCode,
         })),
       })),
+      organisationEvidence: state.organisationEvidence,
     };
 
     const generation = ++submissionGeneration;
@@ -308,6 +315,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
       disclaimerAcknowledged: false,
       organisationAnswers: {},
       scenarioAnswers: {},
+      organisationEvidence: EMPTY_ORGANISATION_EVIDENCE,
       status: 'idle',
       errorMessage: null,
       results: null,

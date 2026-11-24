@@ -6,8 +6,8 @@
  * small captions, or in Analyst Mode.
  */
 
-export const DECISION_METHODOLOGY_VERSION = '1.0';
-export const BOARD_PACK_VERSION = '1.0';
+export const DECISION_METHODOLOGY_VERSION = '2.0';
+export const BOARD_PACK_VERSION = '2.0';
 
 export type EvidenceQuality =
   | 'measured_internal'

@@ -22,7 +22,7 @@ export function CalculatingView() {
         title="Calculating indicative exposure"
         lede={
           <p className="m-0">
-            {iterations.toLocaleString('en-GB')} simulated trials are being generated for each of the {scenarioCount}{' '}
+            {iterations.toLocaleString('en-GB')} simulated years are being generated for each of the {scenarioCount}{' '}
             scenarios on the server. This normally takes a few seconds.
           </p>
         }

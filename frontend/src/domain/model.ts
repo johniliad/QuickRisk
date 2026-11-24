@@ -83,6 +83,18 @@ export interface ModelVersionMeta {
   readonly lossThresholds: readonly number[];
   readonly requiredProfileQuestions: readonly string[];
   readonly optionalProfileQuestions: readonly string[];
+  readonly realisedAnnualTotalsModelled?: boolean;
+  readonly annualisationMethod?: string;
+  readonly portfolioPercentilesAvailable?: boolean;
+  readonly inference?: ModelInferenceMeta;
+}
+
+export interface ModelInferenceMeta {
+  readonly type: string;
+  readonly packagePath: string;
+  readonly annualModel: string;
+  readonly jointDependence: string;
+  readonly optionalEvidence: readonly string[];
 }
 
 export interface DisclaimerContent {
@@ -155,8 +167,8 @@ export interface ConfidenceNoticeContent {
 }
 
 /**
- * Published statement that the reported percentiles describe an annualised exposure
- * approximation rather than realised annual loss totals.
+ * Published statement that reported percentiles are posterior-predictive annual totals,
+ * not forecasts or organisation-specific validation.
  */
 export interface AnnualisationNoticeContent {
   readonly title: string;

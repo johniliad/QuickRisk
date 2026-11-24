@@ -72,7 +72,7 @@ database, are described in Section 8 and `requirements/QUICKRISK_LIVE.md` §6–
 3. **Schema**: strict allow-list validation; unexpected fields are rejected, not ignored.
 4. **Engine**: typed ranges, clamps, finite-value guarantees; a malformed model fails the
    request instead of producing a wrong number.
-5. **Response**: `no-store`, JSON only, no internal identifiers, no seed, no stack traces.
+5. **Response**: `no-store`, JSON only, no internal identifiers or persisted seed and no stack traces. The disposable in-memory simulation seed is disclosed as `meta.simulationSeed` solely so the run can be replayed; it is generated per request and stored nowhere.
 6. **Build**: type-check, model-boundary guard, browser-storage guard, unit tests, and a PHP
    test suite that includes security payload cases.
 

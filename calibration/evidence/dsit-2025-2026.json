@@ -1,0 +1,100 @@
+{
+  "sourceId": "dsit-csbs-2025-2026",
+  "publisher": "UK Department for Science, Innovation and Technology and Home Office",
+  "title": "Cyber Security Breaches Survey 2025/2026",
+  "url": "https://www.gov.uk/government/statistics/cyber-security-breaches-survey-20252026/cyber-security-breaches-survey-20252026",
+  "technicalReport": "https://www.gov.uk/government/statistics/cyber-security-breaches-survey-20252026/cyber-security-breaches-survey-20252026-technical-report",
+  "publishedAt": "2026-04-30",
+  "fieldwork": "2025-08/2025-12",
+  "currency": "GBP",
+  "exposureYears": 1.0,
+  "population": "UK businesses with at least one employee and an online presence; public-sector organisations and sole traders are excluded",
+  "design": "random-probability survey, predominantly telephone, weighted by business size, sector and region",
+  "marginOfError": "±1.6 to ±2.6 percentage points for overall business estimates at 95% confidence, based on effective sample sizes",
+  "prevalence": {
+    "definition": "Any cyber security breach or attack identified in the previous 12 months. This is not equivalent to a material financial loss event.",
+    "classes": [
+      { "sizeClass": "micro", "estimate": 0.42, "base": 1154 },
+      { "sizeClass": "small", "estimate": 0.46, "base": 507 },
+      { "sizeClass": "medium", "estimate": 0.65, "base": 296 },
+      { "sizeClass": "large", "estimate": 0.69, "base": 155 },
+      { "sizeClass": "unknown", "estimate": 0.43, "base": 2112 }
+    ]
+  },
+  "materialFinancialCost": {
+    "definition": "Among organisations identifying a breach or attack, the share whose most disruptive breach had a non-zero perceived financial cost.",
+    "derivation": "Non-zero-cost base divided by all-business base in Tables 4.2a and 4.1a. The bases are rounded published survey bases, not an exact respondent cross-tabulation.",
+    "classes": [
+      { "sizeClass": "micro_small", "successes": 310, "trials": 680, "estimate": 0.4558823529 },
+      { "sizeClass": "medium_large", "successes": 164, "trials": 272, "estimate": 0.6029411765 },
+      { "sizeClass": "all", "successes": 474, "trials": 952, "estimate": 0.4978991597 }
+    ],
+    "negativeOutcome": {
+      "estimate": 0.19,
+      "definition": "Businesses reporting any negative outcome from a breach or attack in the previous 12 months; not used directly as the materiality likelihood because it is measured across the whole business sample."
+    }
+  },
+  "positiveCostSeverity": {
+    "definition": "Perceived total cost of the most disruptive breach or attack among respondents reporting a non-zero cost. One incident per responding organisation; not an annual sum of all incidents.",
+    "table": "Table 4.2a, Cyber Security Breaches Survey 2025/2026",
+    "classes": [
+      {
+        "sizeClass": "micro_small",
+        "quantiles": [
+          { "probability": 0.25, "value": 50 },
+          { "probability": 0.5, "value": 200 },
+          { "probability": 0.75, "value": 1000 },
+          { "probability": 0.9, "value": 4150 },
+          { "probability": 0.95, "value": 8300 }
+        ],
+        "base": 310
+      },
+      {
+        "sizeClass": "medium_large",
+        "quantiles": [
+          { "probability": 0.25, "value": 100 },
+          { "probability": 0.5, "value": 300 },
+          { "probability": 0.75, "value": 1620 },
+          { "probability": 0.9, "value": 7300 },
+          { "probability": 0.95, "value": 28200 }
+        ],
+        "base": 164
+      },
+      {
+        "sizeClass": "all",
+        "quantiles": [
+          { "probability": 0.25, "value": 50 },
+          { "probability": 0.5, "value": 200 },
+          { "probability": 0.75, "value": 1000 },
+          { "probability": 0.9, "value": 4800 },
+          { "probability": 0.95, "value": 10000 }
+        ],
+        "base": 474
+      }
+    ]
+  },
+  "scenarioComposition": {
+    "status": "not-identified",
+    "note": "The survey reports breach types, but those categories do not map one-to-one to the five scenarios and do not provide an organisation-level annual scenario frequency. Scenario weights remain a weak elicitation prior and must be sensitivity-tested."
+  },
+  "limitations": [
+    "Only identified and reported breaches are observed; hidden, unreported and unmonitored events are omitted.",
+    "Costs are perceived and mainly cover the most disruptive incident, not all annual losses.",
+    "The non-zero-cost ratio is derived from rounded published bases rather than an exact cross-tabulation.",
+    "The survey is UK-specific and excludes sole traders and most public-sector organisations.",
+    "Detection and reporting practices vary by organisation size; lower small-organisation prevalence may partly reflect weaker detection.",
+    "Table bases include unweighted counts; model effective sample size must account for survey weighting and transportability."
+  ],
+  "permittedUses": [
+    "organisation-size prevalence prior",
+    "material-financial-cost probability prior",
+    "positive-cost severity quantile prior",
+    "validation of reference-class predictions against later consistent survey waves"
+  ],
+  "prohibitedUses": [
+    "treating any breach or attack as a material loss event",
+    "treating the most disruptive incident cost as annual total loss",
+    "mapping breach-type percentages directly to the five scenario annual rates",
+    "claiming organisation-specific validation from a national survey"
+  ]
+}

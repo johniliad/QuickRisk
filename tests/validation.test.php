@@ -216,7 +216,7 @@ return [
         );
 
         $wrongModel = qk_test_payload(qk_test_profile());
-        $wrongModel['modelId'] = 'FAIR-QK-2.0';
+        $wrongModel['modelId'] = 'FAIR-QK-9.9';
         assertThrows(
             static fn () => QkValidation::validatePayload($model, $wrongModel),
             QkValidationException::class,

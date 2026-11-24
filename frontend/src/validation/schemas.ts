@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { organisationEvidenceSchema } from '@/domain/evidence';
 
 export const codeSchema = z.string().regex(/^[A-Z0-9_]{1,32}$/, 'Unexpected answer code format');
 
@@ -29,6 +30,7 @@ export const calculationRequestSchema = z.object({
       }),
     )
     .length(5),
+  organisationEvidence: organisationEvidenceSchema.optional(),
 });
 
 const lossRangeSchema = z.object({
@@ -49,10 +51,26 @@ const mixtureComponentSchema = z.object({
  * A modelled input. `kind` is 'triangular' for a direct answer and 'mixture' when the answer
  * was Unknown; a mixture carries the components it samples from.
  */
-const inputRangeSchema = lossRangeSchema.extend({
-  kind: z.enum(['triangular', 'mixture']),
+const posteriorInputSchema = lossRangeSchema.extend({
+  kind: z.literal('posterior'),
   components: z.array(mixtureComponentSchema),
+  parameter: z.string().min(1),
+  mean: z.number(),
+  standardDeviation: z.number().nonnegative(),
+  q025: z.number(),
+  q500: z.number(),
+  q975: z.number(),
+  draws: z.number().int().positive(),
+  evidenceIds: z.array(z.string()).optional(),
 });
+
+const inputRangeSchema = z.union([
+  lossRangeSchema.extend({
+    kind: z.enum(['triangular', 'mixture']),
+    components: z.array(mixtureComponentSchema),
+  }),
+  posteriorInputSchema,
+]);
 
 const confidenceSchema = z.object({
   score: z.number().int().min(0).max(100),
@@ -63,6 +81,16 @@ const confidenceSchema = z.object({
   displayLabel: z.string().min(1),
   levelCapApplied: z.boolean(),
   maximumLevelWhenProvisional: z.string(),
+});
+
+const thresholdIntervalSchema = z.object({
+  lower: z.number(),
+  upper: z.number(),
+  estimate: z.number(),
+  successes: z.number().int().nonnegative(),
+  trials: z.number().int().nonnegative(),
+  sufficientCount: z.boolean(),
+  note: z.string(),
 });
 
 const statisticsSchema = z.object({
@@ -87,6 +115,8 @@ const statisticsSchema = z.object({
   iterations: z.number().int().positive(),
   thresholdProbabilities: z.record(z.string(), z.number()),
   thresholdExceedanceCounts: z.record(z.string(), z.number().int().nonnegative()),
+  meanStandardError: z.number().nonnegative().optional(),
+  thresholdIntervals: z.record(z.string(), thresholdIntervalSchema).optional(),
 });
 
 const distributionSchema = z.object({
@@ -124,7 +154,12 @@ const scenarioResultSchema = z.object({
       unknown: z.boolean(),
     }),
   ),
-  lossAnchorSource: z.enum(['reported-daily-disruption-cost', 'derived-from-profile']),
+  lossAnchorSource: z.enum([
+    'reported-daily-disruption-cost',
+    'derived-from-profile',
+    'elicitation-adjusted-reference-severity',
+    'reference-class-severity',
+  ]),
   statistics: statisticsSchema,
   distribution: distributionSchema,
   confidence: confidenceSchema,
@@ -173,17 +208,62 @@ export const calculationResponseSchema = z.object({
     scenarioCount: z.number().int().positive(),
     calculatedAt: z.string(),
     seedPersisted: z.literal(false),
-    seedDisclosed: z.literal(false),
-    jointPercentilesAvailable: z.literal(false),
-    annualisationMethod: z.literal('frequency-times-severity-annualised-exposure'),
-    realisedAnnualTotalsModelled: z.literal(false),
+    seedDisclosed: z.boolean(),
+    simulationSeed: z.number().int().positive().optional(),
+    jointPercentilesAvailable: z.boolean(),
+    annualisationMethod: z.enum([
+      'frequency-times-severity-annualised-exposure',
+      'posterior-predictive-compound-poisson-annual-total',
+    ]),
+    realisedAnnualTotalsModelled: z.boolean(),
     annualisationLimitation: z.string().min(1),
     calibrationStatus: z.string(),
+    inference: z
+      .object({
+        mode: z.enum(['posterior-reference-class', 'legacy-heuristic']),
+        active: z.boolean(),
+        packageVersion: z.string(),
+        evidencePackageVersion: z.string(),
+        status: z.string(),
+        drawCount: z.number().int().nonnegative(),
+        referencePackageHash: z.string(),
+        validationScope: z.array(z.string()),
+        knownValidationGap: z.string(),
+        evidenceSources: z.array(
+          z.object({
+            id: z.string(),
+            role: z.string(),
+            classification: z.string(),
+          }),
+        ),
+        evidenceUpdate: z
+          .object({
+            evidenceUsed: z.boolean(),
+            materialLossEventCount: z.number().int().nonnegative().nullable(),
+            effectiveSampleSize: z.number().nonnegative(),
+            lowEffectiveSampleSize: z.boolean().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   }),
   portfolio: z.object({
     label: z.string(),
     expectedAnnualLoss: z.number(),
     annualisationNote: z.string().min(1),
+    p10: z.number().optional(),
+    p25: z.number().optional(),
+    p50: z.number().optional(),
+    p75: z.number().optional(),
+    p90: z.number().optional(),
+    minimum: z.number().optional(),
+    maximum: z.number().optional(),
+    standardDeviation: z.number().optional(),
+    meanStandardError: z.number().optional(),
+    thresholdProbabilities: z.record(z.string(), z.number()).optional(),
+    thresholdExceedanceCounts: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    thresholdIntervals: z.record(z.string(), thresholdIntervalSchema).optional(),
+    scenarioContributions: z.array(z.unknown()).optional(),
     topScenarios: z.array(
       z.object({
         rank: z.number().int().positive(),
@@ -226,7 +306,7 @@ export const calculationResponseSchema = z.object({
       ),
       factorCount: z.number().int().positive(),
       baselineExpectedAnnualLoss: z.number().nonnegative(),
-      baselineMethod: z.literal('analytic-expected-value'),
+      baselineMethod: z.enum(['analytic-expected-value', 'posterior-draw-expected-value']),
       method: z.string().min(1),
       note: z.string().min(1),
       truncated: z.boolean(),

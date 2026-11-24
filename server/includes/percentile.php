@@ -82,6 +82,84 @@ final class QkPercentile
     }
 
     /**
+     * Number of observations strictly greater than the threshold.
+     *
+     * @param array<int,float> $sortedValues
+     */
+    public static function countGreaterThan(array $sortedValues, float $threshold): int
+    {
+        $count = count($sortedValues);
+        $low = 0;
+        $high = $count;
+        while ($low < $high) {
+            $middle = intdiv($low + $high, 2);
+            if ((float) $sortedValues[$middle] > $threshold) {
+                $high = $middle;
+            } else {
+                $low = $middle + 1;
+            }
+        }
+
+        return $count - $low;
+    }
+
+    /** Standard error of the arithmetic mean. */
+    public static function standardError(array $values): float
+    {
+        $count = count($values);
+        if ($count < 2) {
+            return 0.0;
+        }
+
+        return self::standardDeviation($values) / sqrt($count);
+    }
+
+    /**
+     * Wilson score interval for a binomial proportion.
+     *
+     * @return array{lower:float,upper:float,estimate:float,successes:int,trials:int}
+     */
+    public static function wilsonInterval(
+        int $successes,
+        int $trials,
+        float $z = 1.959963984540054
+    ): array {
+        if ($trials <= 0) {
+            return ['lower' => 0.0, 'upper' => 1.0, 'estimate' => 0.0, 'successes' => 0, 'trials' => 0];
+        }
+        $successes = max(0, min($trials, $successes));
+        $estimate = $successes / $trials;
+        $denominator = 1.0 + ($z * $z / $trials);
+        $centre = $estimate + ($z * $z / (2.0 * $trials));
+        $margin = $z * sqrt(
+            ($estimate * (1.0 - $estimate) / $trials)
+            + ($z * $z / (4.0 * $trials * $trials))
+        );
+
+        return [
+            'lower' => max(0.0, ($centre - $margin) / $denominator),
+            'upper' => min(1.0, ($centre + $margin) / $denominator),
+            'estimate' => $estimate,
+            'successes' => $successes,
+            'trials' => $trials,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public static function exceedanceDiagnostics(int $successes, int $trials): array
+    {
+        $interval = self::wilsonInterval($successes, $trials);
+
+        return [
+            ...$interval,
+            'sufficientCount' => $successes >= 10,
+            'note' => $successes < 10
+                ? 'Fewer than ten exceeding trials: the estimated probability is imprecise.'
+                : 'The exceedance count supports a binomial uncertainty estimate.',
+        ];
+    }
+
+    /**
      * @param array<int,float> $values
      */
     public static function mean(array $values): float

@@ -100,9 +100,18 @@ const manifestSchema = z.object({
   disclaimerVersion: z.string().min(1),
   privacyNoticeVersion: z.string().min(1),
   retentionMode: z.string().min(1),
-  /** Declared by the model so the browser cannot present percentiles as realised totals. */
-  realisedAnnualTotalsModelled: z.literal(false),
+  realisedAnnualTotalsModelled: z.boolean(),
   annualisationMethod: z.string().min(1),
+  portfolioPercentilesAvailable: z.boolean().optional(),
+  inference: z
+    .object({
+      type: z.string().min(1),
+      packagePath: z.string().min(1),
+      annualModel: z.string().min(1),
+      jointDependence: z.string().min(1),
+      optionalEvidence: z.array(z.string().min(1)),
+    })
+    .optional(),
   sensitivityAvailable: z.boolean(),
   requiredProfileQuestions: z.array(z.string().min(1)),
   optionalProfileQuestions: z.array(z.string().min(1)),
@@ -251,6 +260,10 @@ function parsePublicModel(raw: unknown): PublicModel {
     lossThresholds: manifest.lossThresholds,
     requiredProfileQuestions: manifest.requiredProfileQuestions,
     optionalProfileQuestions: manifest.optionalProfileQuestions,
+    realisedAnnualTotalsModelled: manifest.realisedAnnualTotalsModelled,
+    annualisationMethod: manifest.annualisationMethod,
+    portfolioPercentilesAvailable: manifest.portfolioPercentilesAvailable ?? false,
+    inference: manifest.inference,
   };
 
   const contentBundle: ContentBundle = {

@@ -4,7 +4,7 @@ import { publicModel } from '@/model';
 /**
  * Mandatory disclaimer.
  *
- * The full wording is versioned in the authoritative model (DISC-1.2) and appears
+ * The full wording is versioned in the authoritative model (DISC-2.0) and appears
  * before the assessment, in the footer, on the methodology view and on the report.
  * The acknowledgement is held in browser memory only and is never stored.
  */

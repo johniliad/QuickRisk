@@ -107,11 +107,19 @@ function qk_decision_portfolio_metrics(array $vectors, array $kappa, array $thre
 
     foreach ($vectors['scenarios'] as $scenario) {
         $code = (string) $scenario['code'];
-        $factor = (float) ($kappa[$code] ?? 1.0);
+        $factor = $kappa[$code] ?? 1.0;
+        $lossSeries = is_array($factor) && is_array($factor['lossSeries'] ?? null)
+            ? array_values($factor['lossSeries'])
+            : null;
+        $factorValue = is_array($factor)
+            ? (float) ($factor['kappa'] ?? 1.0)
+            : (float) $factor;
         $losses = $scenario['losses'];
         $sum = 0.0;
         for ($index = 0; $index < $iterations; $index++) {
-            $value = $factor * (float) $losses[$index];
+            $value = $lossSeries !== null
+                ? (float) ($lossSeries[$index] ?? 0.0)
+                : $factorValue * (float) $losses[$index];
             $totals[$index] += $value;
             $sum += $value;
         }
@@ -120,7 +128,7 @@ function qk_decision_portfolio_metrics(array $vectors, array $kappa, array $thre
             'name' => (string) $scenario['name'],
             'shortLabel' => (string) $scenario['shortLabel'],
             'expectedAnnualLoss' => $iterations > 0 ? $sum / $iterations : 0.0,
-            'factor' => $factor,
+            'factor' => $factorValue,
         ];
     }
 
@@ -356,11 +364,11 @@ function qk_decision_compare(
     }
 
     $baseline = qk_decision_portfolio_metrics($vectors, $baselineFactors, $thresholds);
-    $factors = qk_decision_scenario_factors($vectors, $treatments, $realised['effects'], $config);
+    $factors = qk_decision_scenario_factors($vectors, $treatments, $realised, $config);
 
     $kappa = [];
     foreach ($factors['byScenario'] as $code => $entry) {
-        $kappa[(string) $code] = (float) $entry['kappa'];
+        $kappa[(string) $code] = $entry;
     }
     $treated = qk_decision_portfolio_metrics($vectors, $kappa, $thresholds);
 
@@ -395,8 +403,8 @@ function qk_decision_compare(
             $cost
         ),
         'riskReductionEfficiency' => qk_decision_risk_reduction_efficiency($deltaEal, $cost),
-        'factors' => $factors,
-        'effects' => $realised,
+        'factors' => qk_decision_public_factors($factors),
+        'effects' => qk_decision_public_effects($realised),
         'treatmentIds' => array_values(array_map(static fn (array $t): string => (string) $t['id'], $treatments)),
     ];
 }
@@ -520,10 +528,10 @@ function qk_decision_portfolio_search(
             }
         }
 
-        $factors = qk_decision_scenario_factors($vectors, $subset, $realised['effects'], $config);
+        $factors = qk_decision_scenario_factors($vectors, $subset, $realised, $config);
         $kappa = [];
         foreach ($factors['byScenario'] as $code => $entry) {
-            $kappa[(string) $code] = (float) $entry['kappa'];
+            $kappa[(string) $code] = $entry;
         }
         $metrics = qk_decision_portfolio_metrics($vectors, $kappa, $thresholds);
         $cost = qk_decision_cost($subset, $config);
@@ -798,10 +806,23 @@ function qk_decision_sensitivity(
                 'magnitude' => $effect['magnitude'] === null ? null : min(0.99, (float) $effect['magnitude'] * $scale),
             ];
         }
-        $factors = qk_decision_scenario_factors($vectors, $treatments, $scaled, $config);
+        $scaledPackage = $realised;
+        $scaledPackage['effects'] = $scaled;
+        $scaledPackage['series'] = [];
+        foreach ($realised['series'] ?? [] as $id => $series) {
+            $scaledPackage['series'][$id] = [
+                'frequency' => $series['frequency'] === null
+                    ? null
+                    : array_map(static fn ($value): float => min(0.99, (float) $value * $scale), $series['frequency']),
+                'magnitude' => $series['magnitude'] === null
+                    ? null
+                    : array_map(static fn ($value): float => min(0.99, (float) $value * $scale), $series['magnitude']),
+            ];
+        }
+        $factors = qk_decision_scenario_factors($vectors, $treatments, $scaledPackage, $config);
         $kappa = [];
         foreach ($factors['byScenario'] as $code => $entry) {
-            $kappa[(string) $code] = (float) $entry['kappa'];
+            $kappa[(string) $code] = $entry;
         }
         $metrics = qk_decision_portfolio_metrics($vectors, $kappa, $thresholds);
 

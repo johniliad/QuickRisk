@@ -970,7 +970,15 @@ final class FairEngine
             ];
         }
 
-        return self::portfolioSummary($model, $results, $confidenceScores, $iterations, $profileAnswers, $scenarioAnswers);
+        return self::portfolioSummary(
+            $model,
+            $results,
+            $confidenceScores,
+            $iterations,
+            $profileAnswers,
+            $scenarioAnswers,
+            $seed
+        );
     }
 
     /**
@@ -1071,17 +1079,47 @@ final class FairEngine
      * @param array<string,mixed> $right
      * @param array{min:float,max:float} $clamp
      */
-    private static function expectedClampedProduct(array $left, array $right, array $clamp): float
-    {
+    private static function expectedClampedProduct(
+        array $left,
+        array $right,
+        array $clamp,
+        float $relativeTolerance = 1.0e-4,
+        int $maxPoints = 384
+    ): float {
         $minimumProduct = self::inputMinimum($left) * self::inputMinimum($right);
         $maximumProduct = self::inputMaximum($left) * self::inputMaximum($right);
         if ($minimumProduct >= (float) $clamp['min'] && $maximumProduct <= (float) $clamp['max']) {
-            // The clamp cannot bind anywhere in the support, so the independent product's
-            // expectation is exact without numerical integration.
             return self::inputMean($left) * self::inputMean($right);
         }
 
-        $points = 24;
+        $tolerance = max(1.0e-9, $relativeTolerance);
+        $maximumPoints = max(24, $maxPoints);
+        $previous = null;
+        for ($points = 24; $points <= $maximumPoints; $points *= 2) {
+            $current = self::midpointClampedProduct($left, $right, $clamp, $points);
+            if ($previous !== null) {
+                $scale = max(1.0, abs($current));
+                if (abs($current - $previous) <= $tolerance * $scale) {
+                    return $current;
+                }
+            }
+            $previous = $current;
+            if ($points * 2 > $maximumPoints) {
+                break;
+            }
+        }
+
+        return $previous ?? 0.0;
+    }
+
+    /**
+     * @param array<string,mixed> $left
+     * @param array<string,mixed> $right
+     * @param array{min:float,max:float} $clamp
+     */
+    private static function midpointClampedProduct(array $left, array $right, array $clamp, int $points): float
+    {
+        $points = max(2, $points);
         $total = 0.0;
         for ($leftIndex = 0; $leftIndex < $points; $leftIndex++) {
             $leftValue = self::inputQuantile($left, ($leftIndex + 0.5) / $points);
@@ -1357,7 +1395,8 @@ final class FairEngine
         array $confidenceScores,
         int $iterations,
         array $profileAnswers,
-        array $scenarioAnswers
+        array $scenarioAnswers,
+        int $seed
     ): array {
         $parameters = $model->parameters();
         $annualisation = (array) ($parameters['annualisation'] ?? []);
@@ -1443,12 +1482,27 @@ final class FairEngine
                 'scenarioCount' => count($results),
                 'calculatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
                 'seedPersisted' => false,
-                'seedDisclosed' => false,
+                'seedDisclosed' => true,
+                'simulationSeed' => $seed,
                 'jointPercentilesAvailable' => false,
-                'annualisationMethod' => (string) ($annualisation['method'] ?? 'frequency-times-severity-annualised-exposure'),
+                'annualisationMethod' => (string) (
+                    $annualisation['legacyMethod'] ?? 'frequency-times-severity-annualised-exposure'
+                ),
                 'realisedAnnualTotalsModelled' => false,
-                'annualisationLimitation' => (string) ($annualisation['limitation'] ?? ''),
+                'annualisationLimitation' => 'Legacy annualised exposure: loss-event frequency multiplied by one sampled magnitude per trial; not realised annual totals.',
                 'calibrationStatus' => (string) ($parameters['plausibilityReview']['status'] ?? ''),
+                'inference' => [
+                    'mode' => 'legacy-heuristic',
+                    'active' => false,
+                    'packageVersion' => '',
+                    'evidencePackageVersion' => '',
+                    'status' => 'fallback',
+                    'drawCount' => 0,
+                    'referencePackageHash' => '',
+                    'validationScope' => [],
+                    'knownValidationGap' => 'Legacy heuristic fallback; no posterior package was active.',
+                    'evidenceSources' => [],
+                ],
             ],
             'portfolio' => [
                 'label' => 'Sum of scenario expected annual loss exposure',

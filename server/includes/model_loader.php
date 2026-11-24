@@ -489,24 +489,37 @@ final class QkModel
             }
         }
 
-        // Corrections for the independent audit must not be silently reverted: the model has to
-        // keep declaring that it reports an annualised exposure approximation and not realised
-        // annual loss totals, and the confidence indicator must keep declaring its basis.
+        // The annualisation declaration must match the engine contract. The legacy
+        // annualised-exposure approximation and the posterior predictive annual-total model
+        // are both valid, but neither may claim the other's semantics.
         $annualisation = $parameters['annualisation'] ?? null;
         if (!is_array($annualisation) || (string) ($annualisation['method'] ?? '') === '') {
             throw new QkModelException('MODEL_ANNUALISATION_MISSING');
         }
-        if (($annualisation['realisedAnnualTotalsModelled'] ?? true) !== false) {
+        $annualisationMethod = (string) $annualisation['method'];
+        $posteriorMethod = 'posterior-predictive-compound-poisson-annual-total';
+        $legacyMethod = (string) ($annualisation['legacyMethod'] ?? 'frequency-times-severity-annualised-exposure');
+        if (!in_array($annualisationMethod, [$posteriorMethod, $legacyMethod], true)) {
+            throw new QkModelException('MODEL_ANNUALISATION_CLAIM_INVALID');
+        }
+        $declaresRealised = ($annualisation['realisedAnnualTotalsModelled'] ?? null) === true;
+        if ($declaresRealised !== ($annualisationMethod === $posteriorMethod)) {
             throw new QkModelException('MODEL_ANNUALISATION_CLAIM_INVALID');
         }
         if (trim((string) ($annualisation['limitation'] ?? '')) === '') {
             throw new QkModelException('MODEL_ANNUALISATION_LIMITATION_MISSING');
         }
-        if (($this->manifest['realisedAnnualTotalsModelled'] ?? true) !== false) {
+        if (($this->manifest['realisedAnnualTotalsModelled'] ?? null) !== $declaresRealised) {
             throw new QkModelException('MODEL_MANIFEST_ANNUALISATION_CLAIM_INVALID');
         }
-        if ((string) ($this->manifest['annualisationMethod'] ?? '') !== (string) $annualisation['method']) {
+        if ((string) ($this->manifest['annualisationMethod'] ?? '') !== $annualisationMethod) {
             throw new QkModelException('MODEL_ANNUALISATION_METHOD_MISMATCH');
+        }
+        if ($annualisationMethod === $posteriorMethod) {
+            $posterior = $parameters['posteriorInference'] ?? null;
+            if (!is_array($posterior) || (int) ($posterior['drawCount'] ?? 0) < 100) {
+                throw new QkModelException('MODEL_POSTERIOR_INFERENCE_MISSING');
+            }
         }
 
         $confidence = (array) ($parameters['confidence'] ?? []);

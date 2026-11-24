@@ -5,21 +5,21 @@ import { countUnknownAnswers } from '@/domain/answers';
 
 describe('public model adapter', () => {
   it('exposes the frozen model metadata', () => {
-    expect(publicModel.version.modelId).toBe('FAIR-QK-1.3');
-    expect(publicModel.version.modelVersion).toBe('1.3.0');
-    expect(publicModel.version.calibrationVersion).toBe('CAL-1.3');
+    expect(publicModel.version.modelId).toBe('FAIR-QK-2.0');
+    expect(publicModel.version.modelVersion).toBe('2.0.0');
+    expect(publicModel.version.calibrationVersion).toBe('CAL-2.0');
     expect(publicModel.version.defaultIterations).toBe(5000);
     expect(publicModel.version.retentionMode).toBe('zero-retention');
     expect(publicModel.version.lossThresholds).toContain(1_000_000);
   });
 
   it('publishes the annualisation and input-confidence limitations', () => {
-    expect(publicModel.content.annualisationNotice.statement).toContain('annualised exposure');
-    expect(publicModel.content.annualisationNotice.statement).toContain('not percentiles of realised annual loss');
+    expect(publicModel.content.annualisationNotice.statement).toContain('annual total losses');
+    expect(publicModel.content.annualisationNotice.statement).toContain('not a guarantee');
     expect(publicModel.content.confidenceNotice.statement).toContain('not statistical confidence');
-    expect(publicModel.content.reportLabels.annualisationNote).toContain('annualised exposure');
+    expect(publicModel.content.reportLabels.annualisationNote).toContain('annual total losses');
     expect(publicModel.content.reportLabels.confidenceNote).toContain('not statistical confidence');
-    expect(publicModel.content.limitations.items.join(' ')).toContain('realised annual loss totals');
+    expect(publicModel.content.limitations.items.join(' ')).toContain('organisation-specific validation');
   });
 
   it('asks for threat event frequency before control effectiveness', () => {

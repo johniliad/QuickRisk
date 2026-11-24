@@ -1,0 +1,137 @@
+{
+    "modelId": "FAIR-QK-2.0",
+    "modelVersion": "2.0.0",
+    "schemaVersion": "2.0.0",
+    "calibrationVersion": "CAL-2.0",
+    "generatedAt": "2026-11-24T17:14:48Z",
+    "generator": "tools/generate-baseline.php",
+    "fixture": {
+        "profileAnswers": {
+            "QP1": "50_250M",
+            "QP2": "HIGH",
+            "QP3": "SIGNIFICANT",
+            "QP4": "SIGNIFICANT",
+            "QP5": "MODERATE",
+            "QP6": "MODERATE",
+            "QP7": "MODERATE",
+            "QP8": "100_500K"
+        },
+        "scenarioAnswers": {
+            "S1": {
+                "S1A": "POSSIBLE",
+                "S1B": "SIGNIFICANT"
+            },
+            "S2": {
+                "S2A": "POSSIBLE",
+                "S2B": "SIGNIFICANT"
+            },
+            "S3": {
+                "S3A": "POSSIBLE",
+                "S3B": "SIGNIFICANT"
+            },
+            "S4": {
+                "S4A": "POSSIBLE",
+                "S4B": "SIGNIFICANT"
+            },
+            "S5": {
+                "S5A": "POSSIBLE",
+                "S5B": "SIGNIFICANT"
+            }
+        },
+        "seed": 20261029,
+        "iterations": 5000
+    },
+    "tolerances": {
+        "expectedAnnualLoss": 0.02,
+        "percentiles": 0.03,
+        "thresholdProbability": 0.05,
+        "portfolio": 0.02
+    },
+    "portfolio": {
+        "expectedAnnualLoss": 952.3719316284305,
+        "confidenceScore": 70,
+        "confidenceLevel": "Medium"
+    },
+    "scenarios": {
+        "S1": {
+            "expectedAnnualLoss": 247.02039377018394,
+            "p10": 0,
+            "p50": 0,
+            "p90": 0,
+            "expectedLossEventFrequency": 0.058584440763231556,
+            "expectedLossMagnitude": 4216.484625474441,
+            "confidenceScore": 70,
+            "thresholdProbabilities": {
+                "100000": 0.0002,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S2": {
+            "expectedAnnualLoss": 188.21444135097005,
+            "p10": 0,
+            "p50": 0,
+            "p90": 0,
+            "expectedLossEventFrequency": 0.05876178193719182,
+            "expectedLossMagnitude": 3203.007722811148,
+            "confidenceScore": 70,
+            "thresholdProbabilities": {
+                "100000": 0.0002,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S3": {
+            "expectedAnnualLoss": 227.14557179634053,
+            "p10": 0,
+            "p50": 0,
+            "p90": 0,
+            "expectedLossEventFrequency": 0.058886976268045475,
+            "expectedLossMagnitude": 3857.314234685865,
+            "confidenceScore": 70,
+            "thresholdProbabilities": {
+                "100000": 0.0004,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S4": {
+            "expectedAnnualLoss": 116.79745303309765,
+            "p10": 0,
+            "p50": 0,
+            "p90": 0,
+            "expectedLossEventFrequency": 0.04383400906241481,
+            "expectedLossMagnitude": 2664.5396013581812,
+            "confidenceScore": 70,
+            "thresholdProbabilities": {
+                "100000": 0.0002,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        },
+        "S5": {
+            "expectedAnnualLoss": 173.19407167783828,
+            "p10": 0,
+            "p50": 0,
+            "p90": 0,
+            "expectedLossEventFrequency": 0.05898160644278138,
+            "expectedLossMagnitude": 2936.4081808428787,
+            "confidenceScore": 70,
+            "thresholdProbabilities": {
+                "100000": 0.0002,
+                "500000": 0,
+                "1000000": 0,
+                "5000000": 0,
+                "10000000": 0
+            }
+        }
+    }
+}

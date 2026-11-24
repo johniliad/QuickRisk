@@ -1,5 +1,10 @@
 # FAIR QuickRisk — Model documentation and calibration review
 
+> **Historical reference.** This document describes the superseded `FAIR-QK-1.3` release. The
+> active model is `FAIR-QK-2.0`; see [`MODEL_DOCUMENTATION_FAIR-QK-2.0.md`](MODEL_DOCUMENTATION_FAIR-QK-2.0.md).
+> The 1.3 engine is retained only as an explicit fallback when no validated posterior package is active.
+
+
 **Model identifier:** `FAIR-QK-1.3`
 **Model version:** `1.3.0` · **Schema version:** `1.3.0` · **Calibration version:** `CAL-1.3`
 **Release status:** `provisional-release` · **Released:** 2026-11-07 · **Supersedes:** `1.2.0`

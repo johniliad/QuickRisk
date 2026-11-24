@@ -22,6 +22,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/distributions.php';
 require_once dirname(__DIR__) . '/modifiers.php';
+require_once dirname(__DIR__) . '/percentile.php';
+require_once dirname(__DIR__) . '/inference_repository.php';
 
 /**
  * Realises each treatment's uncertain effect from its three-point estimate.
@@ -33,9 +35,15 @@ require_once dirname(__DIR__) . '/modifiers.php';
  * @param array<int,array<string,mixed>> $treatments
  * @return array<string,mixed>
  */
-function qk_decision_realise_effects(array $treatments, int $seed): array
-{
+function qk_decision_realise_effects(
+    array $treatments,
+    int $seed,
+    int $iterations = 1,
+    ?QkInferenceRepository $inference = null
+): array {
+    $iterations = max(1, $iterations);
     $effects = [];
+    $series = [];
     $draws = [];
     $seen = [];
 
@@ -48,9 +56,9 @@ function qk_decision_realise_effects(array $treatments, int $seed): array
         $version = (string) ($treatment['version'] ?? '1.0');
         $treatmentSeed = (int) (abs(crc32($seed . '|' . $id . '|' . $version)) % 2147483647);
         $rng = new QkDistributions($treatmentSeed === 0 ? 1 : $treatmentSeed);
-
         $entry = ['frequency' => null, 'magnitude' => null];
         $draw = ['treatmentId' => $id, 'seed' => $treatmentSeed, 'frequency' => null, 'magnitude' => null];
+        $series[$id] = ['frequency' => null, 'magnitude' => null];
 
         foreach (['frequency', 'magnitude'] as $lever) {
             $estimate = $treatment['causalEffects'][$lever] ?? null;
@@ -62,13 +70,26 @@ function qk_decision_realise_effects(array $treatments, int $seed): array
                 (float) ($estimate['mostLikely'] ?? 0.0),
                 (float) ($estimate['max'] ?? 0.0)
             );
-            $value = QkDistributions::clamp($rng->sampleTriangular($min, $mode, $max), 0.0, 0.99);
-            $entry[$lever] = $value;
+            $values = [];
+            for ($index = 0; $index < $iterations; $index++) {
+                $posterior = $inference?->treatmentEffect($id, $version, $index);
+                $value = is_array($posterior) && is_array($posterior[$lever] ?? null)
+                    ? (float) $posterior[$lever]['value']
+                    : $rng->sampleTriangular($min, $mode, $max);
+                $values[] = QkDistributions::clamp($value, 0.0, 0.99);
+            }
+            $mean = array_sum($values) / count($values);
+            $entry[$lever] = $mean;
+            $series[$id][$lever] = $values;
             $draw[$lever] = [
                 'min' => $min,
                 'mostLikely' => $mode,
                 'max' => $max,
-                'realised' => $value,
+                'realised' => $mean,
+                'mean' => $mean,
+                'status' => is_array($inference?->treatmentEffect($id, $version, 0))
+                    ? 'assumption-only-posterior-integrated'
+                    : 'assumption-only',
             ];
         }
 
@@ -76,7 +97,36 @@ function qk_decision_realise_effects(array $treatments, int $seed): array
         $draws[] = $draw;
     }
 
-    return ['effects' => $effects, 'draws' => $draws];
+    return [
+        'effects' => $effects,
+        'series' => $series,
+        'draws' => $draws,
+        'effectUncertaintyIntegrated' => true,
+        'iterations' => $iterations,
+    ];
+}
+
+/** Removes server-only effect series before a response or saved record is encoded. */
+function qk_decision_public_effects(array $realised): array
+{
+    unset($realised['series']);
+
+    return $realised;
+}
+
+/** Removes paired loss vectors from scenario factors while disclosing their presence. */
+function qk_decision_public_factors(array $factors): array
+{
+    foreach ((array) ($factors['byScenario'] ?? []) as $code => $entry) {
+        $hasSeries = isset($entry['lossSeries']) && is_array($entry['lossSeries']);
+        unset($entry['lossSeries']);
+        if ($hasSeries) {
+            $entry['pairedLossSeriesAvailable'] = true;
+        }
+        $factors['byScenario'][$code] = $entry;
+    }
+
+    return $factors;
 }
 
 /**
@@ -171,6 +221,9 @@ function qk_decision_scale_input(array $input, float $multiplier, array $clamp):
  */
 function qk_decision_scenario_factors(array $vectors, array $treatments, array $effects, array $config): array
 {
+    if (!isset($effects['effects'])) {
+        $effects = ['effects' => $effects, 'series' => []];
+    }
     $defaultCoverage = (float) ($config['sameGroupIndependentCoverage'] ?? 0.65);
     $ordered = $treatments;
     usort($ordered, static fn (array $left, array $right): int => strcmp((string) $left['id'], (string) $right['id']));
@@ -185,6 +238,9 @@ function qk_decision_scenario_factors(array $vectors, array $treatments, array $
         $magnitudeMultiplier = 1.0;
         $groupSeen = [];
         $applied = [];
+        $iterations = count((array) $scenario['losses']);
+        $frequencySeries = array_fill(0, $iterations, 1.0);
+        $magnitudeSeries = array_fill(0, $iterations, 1.0);
 
         foreach ($ordered as $treatment) {
             $applicable = (array) ($treatment['applicableScenarios'] ?? []);
@@ -199,14 +255,60 @@ function qk_decision_scenario_factors(array $vectors, array $treatments, array $
                 : (float) (($treatment['interactionDefaults']['sameGroupIndependentCoverage'] ?? $defaultCoverage));
             $groupSeen[$group] = $coverage + 1;
 
-            $effect = $effects[$id] ?? ['frequency' => null, 'magnitude' => null];
-            if ($effect['frequency'] !== null) {
-                $frequencyMultiplier *= max(0.0, 1.0 - $groupCoverage * (float) $effect['frequency']);
-            }
-            if ($effect['magnitude'] !== null) {
-                $magnitudeMultiplier *= max(0.0, 1.0 - $groupCoverage * (float) $effect['magnitude']);
+            $effect = $effects['effects'][$id] ?? ['frequency' => null, 'magnitude' => null];
+            foreach (['frequency', 'magnitude'] as $lever) {
+                if ($effect[$lever] === null) {
+                    continue;
+                }
+                $leverSeries = $effects['series'][$id][$lever] ?? null;
+                for ($index = 0; $index < $iterations; $index++) {
+                    $value = is_array($leverSeries)
+                        ? (float) ($leverSeries[$index] ?? $effect[$lever])
+                        : (float) $effect[$lever];
+                    $factor = max(0.0, 1.0 - $groupCoverage * $value);
+                    if ($lever === 'frequency') {
+                        $frequencySeries[$index] *= $factor;
+                    } else {
+                        $magnitudeSeries[$index] *= $factor;
+                    }
+                }
             }
             $applied[] = ['id' => $id, 'group' => $group, 'coverage' => $groupCoverage];
+        }
+
+        $frequencyMultiplier = $iterations > 0 ? array_sum($frequencySeries) / $iterations : 1.0;
+        $magnitudeMultiplier = $iterations > 0 ? array_sum($magnitudeSeries) / $iterations : 1.0;
+
+        if (isset($scenario['events'], $scenario['materialRates'], $scenario['frequencyUniforms'])) {
+            $lossSeries = [];
+            for ($index = 0; $index < $iterations; $index++) {
+                $rate = max(0.0, (float) $scenario['materialRates'][$index] * $frequencySeries[$index]);
+                $count = QkDistributions::poissonQuantile(
+                    (float) $scenario['frequencyUniforms'][$index],
+                    $rate
+                );
+                $events = (array) ($scenario['events'][$index] ?? []);
+                $count = min($count, count($events));
+                $treatedLoss = 0.0;
+                for ($eventIndex = 0; $eventIndex < $count; $eventIndex++) {
+                    $treatedLoss += (float) $events[$eventIndex]['loss'] * $magnitudeSeries[$index];
+                }
+                $lossSeries[] = $treatedLoss;
+            }
+            $baseMean = QkPercentile::mean((array) $scenario['losses']);
+            $treatedMean = QkPercentile::mean($lossSeries);
+            $byScenario[$code] = [
+                'frequencyFactor' => $frequencyMultiplier,
+                'magnitudeFactor' => $magnitudeMultiplier,
+                'kappa' => $baseMean > 0.0 ? $treatedMean / $baseMean : 1.0,
+                'frequencyMultiplierRequested' => $frequencyMultiplier,
+                'magnitudeMultiplierRequested' => $magnitudeMultiplier,
+                'clampBound' => false,
+                'applied' => $applied,
+                'lossSeries' => $lossSeries,
+                'effectiveMode' => 'posterior-event-count-and-severity',
+            ];
+            continue;
         }
 
         $inputs = [

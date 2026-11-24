@@ -1,6 +1,6 @@
 {
-  "contentVersion": "1.3.0",
-  "disclaimerVersion": "DISC-1.2",
+  "contentVersion": "2.0.0",
+  "disclaimerVersion": "DISC-2.0",
   "disclaimer": {
     "title": "IMPORTANT — PLEASE READ BEFORE USING THIS APPLICATION",
     "acknowledgementLabel": "I have read and understood the limitations and disclaimer.",
@@ -8,8 +8,8 @@
     "paragraphs": [
       "QuickRisk is a free, independently developed demonstration and educational application designed to illustrate how quantitative cyber-risk assessment, real-time risk analysis and decision-support analysis can be performed. It is provided to demonstrate methodology and capabilities, not as a managed risk-assessment service or a substitute for professional risk analysis.",
       "QuickRisk is FAIR-inspired and independently developed. It is not an official FAIR implementation, is not a FAIR certification or accreditation tool, and is not endorsed, approved, certified or validated by the FAIR Institute, The Open Group or any other standards body, regulator, government authority or third party.",
-      "The results are model estimates, not facts. They are not forecasts, predictions or guarantees of the amount an organisation will actually lose. Expected Annual Loss (EAL) is the model's expected, annualised loss exposure under the stated scenario assumptions; it should not be interpreted as a guaranteed budget requirement, a realised loss or a prediction for a particular year.",
-      "The modelled exposure represents the selected scenarios and the assumptions entered, not the organisation's total cyber risk. Scenarios outside the modelled set, dependencies between scenarios, and uncertainty about the model's own structure and calibration are not captured.",
+      "The results are model estimates, not facts. They are not forecasts, predictions or guarantees of the amount an organisation will actually lose. Expected Annual Loss (EAL) is the posterior-predictive mean annual loss under the stated scenario, evidence and elicitation assumptions; it should not be interpreted as a guaranteed budget requirement, an audited loss or a prediction for a particular year.",
+      "The modelled distribution represents the selected scenarios and the assumptions entered, not the organisation's total cyber risk. Scenarios outside the modelled set and uncertainty about the model's own structure, transportability and calibration are not fully captured. Shared posterior draws represent the documented dependence model; they do not prove causal or statistical dependence for a particular organisation.",
       "QuickRisk does not independently verify the factual accuracy, completeness or appropriateness of the information entered. The quality of the result depends materially on the quality, completeness and relevance of those assumptions and inputs, and different information, assumptions, model versions or professional analyses may produce materially different results.",
       "Uncertainty in the results reflects uncertainty within the model inputs and assumptions. It does not mean that those assumptions have been independently verified: a distribution of simulated outcomes can be wide while the underlying assumptions are still inaccurate.",
       "QuickRisk is not an audit, assurance engagement, penetration test, vulnerability assessment, security-control assessment or certification, and it does not determine or certify compliance with any law, regulation, standard, contractual requirement or regulatory framework. A result should not be presented as evidence of compliance, non-compliance, security or acceptable risk.",
@@ -22,7 +22,7 @@
       "QuickRisk Live uses synthetic SOC data and application-defined coefficients; it is not connected to any production SIEM, EDR or SOC feed, and its index and multiplier are illustrative overlays rather than a probability of compromise. Decision Lab treatment effects are stated assumptions, not measured outcomes.",
       "By proceeding, you acknowledge that you understand and accept these limitations and that the application is a demonstration and educational tool intended as an initial indication for further investigation."
     ],
-    "legalReviewNote": "This wording is version controlled in the model (DISC-1.2) and should be reviewed by qualified legal counsel before production use. No disclaimer can guarantee exclusion of liability where mandatory law does not permit such exclusion."
+    "legalReviewNote": "This wording is version controlled in the model (DISC-2.0) and should be reviewed by qualified legal counsel before production use. No disclaimer can guarantee exclusion of liability where mandatory law does not permit such exclusion."
   },
   "privacyNotice": {
     "version": "PRIV-1.1",
@@ -54,9 +54,9 @@
     "timeEstimate": "Typically 10–15 minutes (hard target: under 20 minutes)."
   },
   "methodology": {
-    "version": "METH-1.0",
+    "version": "METH-2.0",
     "title": "Methodology",
-    "summary": "FAIR QuickRisk answers one question in business terms: roughly how much could cyber risk cost in a typical year, and in a bad year (1 in 10)? Your answers become ranges rather than single numbers, the server runs thousands of simulated years per scenario, and the result is an annualised exposure estimate — not a forecast. \"Typical year\" is the median (P50) and \"bad year\" is the 90th percentile (P90).",
+    "summary": "FAIR QuickRisk estimates how much cyber risk could cost in a year. A Bayesian reference-class posterior, informed by documented public evidence and your answers, is propagated through simulated material-loss event counts and per-event severities. The result is a posterior-predictive annual total distribution — an evidence-informed model estimate, not a forecast or guarantee. \"Typical year\" is the median (P50) and \"bad year\" is the 90th percentile (P90).",
     "sections": [
       {
         "id": "why-five-scenarios",
@@ -89,50 +89,50 @@
         "bullets": [
           "A full FAIR analysis decomposes frequency and magnitude into many factors and sub-factors. This application uses a small fixed factor set derived from a short questionnaire.",
           "Only five scenarios are assessed. Other material cyber-risk scenarios are outside the model.",
-          "Scenario dependencies and correlations are not modelled, so no joint portfolio distribution is presented. Only the sum of scenario expected values is shown, clearly labelled as such.",
-          "Secondary loss is represented by a single occurrence probability and a single magnitude distribution per scenario.",
-          "The model does not calculate statutory fines, regulatory penalties or specific legal liabilities. Where regulatory or reputational exposure influences a secondary-loss assumption, it is a generic financial-loss assumption only.",
-          "Scenario-specific control effectiveness is not assessed in detail; one organisation-level control-maturity answer acts as a broad susceptibility modifier.",
-          "One loss magnitude is sampled per simulated year and applied to that year's simulated event frequency. This is a deliberate simplification of per-event severity variation."
+          "Scenario dependence is represented by shared posterior parameter draws and a shared organisation attack rate. This is a transparent structural model, not an empirically estimated correlation matrix.",
+          "Each material event draws one total positive severity, split between primary and secondary loss by an uncertain allocation. The split is an elicitation assumption rather than two separately estimated severity models.",
+          "The model does not calculate statutory fines, regulatory penalties or specific legal liabilities. Where regulatory or reputational exposure influences severity, it is a generic financial-loss assumption only.",
+          "Scenario-specific control effectiveness is not assessed in detail; organisation-level answers act as broad, uncertain modifiers.",
+          "Event counts are drawn from Poisson distributions. This captures count uncertainty but does not model clustering, contagion or event dependence within a year."
         ]
       },
       {
         "id": "answers-to-ranges",
-        "heading": "How your answers become ranges",
+        "heading": "How your answers become posterior evidence",
         "paragraphs": [
-          "Each answer maps to a distribution stored in the versioned model files, not to a single number. A likelihood answer maps to a range of annual threat event frequencies with a most-likely value: how often the scenario is attempted or contacted, before considering whether your controls would stop it. An impact answer maps to a range of multipliers against your organisation's daily disruption-cost anchor.",
-          "Control effectiveness is applied once, and only once, as susceptibility. That is why the likelihood question asks you not to discount your answer for existing controls: if you did, the model would count the same control twice.",
-          "Organisation-profile answers act as modifiers: internet-facing exposure scales threat event frequency, control maturity scales susceptibility, disruption-cost and recovery-capability answers scale loss magnitude, sensitive-information exposure scales the secondary-loss probability, and third-party dependency scales the third-party scenario.",
-          "An Unknown answer is modelled as an equal-weight mixture of the available answers. That widens the range while keeping the central estimate inside the range of the answers you could have chosen, so Unknown is neither treated as a favourable answer nor assumed to be an adverse extreme.",
-          "Because the answer bands are multiplicative, the average of the five answers sits above the middle answer: an Unknown answer therefore raises the modelled mean while leaving the typical (median) simulated value close to the middle answer, and it widens the upper tail substantially. The measured effect is disclosed in the model: for a scenario answered Unknown, the median simulated value changes by about 1.1x, the upper end by about 7.8x and the mean by about 6x. Widening is also bounded so that it cannot inflate a central estimate beyond the model's documented limit."
+          "The reference posterior supplies organisation-size attack prevalence, material-cost probability and positive-severity distributions. A likelihood answer applies an uncertain frequency multiplier to the relevant scenario share; an impact answer applies an uncertain severity multiplier. These multipliers are elicitation assumptions and are identified as such in the calibration package.",
+          "Control effectiveness enters through the maturity modifier and the likelihood answer is requested before discounting for controls, so the same control is not counted twice.",
+          "Organisation-profile answers act as uncertain modifiers: exposure and maturity affect frequency or materiality; disruption cost, sensitive information and recovery capability affect severity. Unknown retains the reference posterior rather than inventing a favourable or adverse extreme.",
+          "Scenario weights come from a weak Dirichlet prior because no public source supplies annual rates for all five scenarios. The result is sensitive to that assumption; the calibration report states it explicitly.",
+          "The optional material-loss event count is applied as a Poisson likelihood to the shared posterior draws. It updates correlated parameters together, and the resulting effective sample size is reported. If omitted, the reference posterior is retained."
         ]
       },
       {
         "id": "monte-carlo",
         "heading": "How the simulation works",
         "bullets": [
-          "For each scenario, 5,000 simulated trials are generated on the server.",
-          "In each trial the model samples a threat event frequency, samples susceptibility, and derives the loss event frequency (TEF x susceptibility).",
-          "It then samples one loss magnitude (primary loss plus, if a secondary-loss draw succeeds, a secondary loss) and multiplies the loss event frequency by that magnitude to obtain the trial's annualised exposure.",
-          "The 5,000 annualised exposure values are sorted and summarised. Simulation is a standard technique for combining several uncertain ranges; it is not a prediction of a specific year."
+          "The server selects a shared joint posterior draw, then computes each scenario's material-loss event rate from attack frequency, materiality, scenario weight and your answers.",
+          "For each simulated year it draws a Poisson material-event count, then samples a positive lognormal severity for every material event. Zero-event years are represented explicitly as zero loss.",
+          "Scenario losses in the same year share the posterior draw, so portfolio totals are formed by summing scenario losses year by year rather than by adding independent percentiles.",
+          "The resulting annual-total values are sorted and summarised as posterior-predictive percentiles. Simulation is a method for propagating assumptions; it is not a forecast of a specific year."
         ]
       },
       {
         "id": "annualisation",
-        "heading": "Annualised exposure, and what is not modelled",
+        "heading": "Annual totals, dependence and what is not modelled",
         "paragraphs": [
-          "Each simulated trial multiplies a sampled loss event frequency by one sampled loss magnitude. The result is an annualised exposure approximation: it represents the frequency-weighted exposure for a typical year, not the total of the losses actually incurred in a particular year.",
-          "The model does not draw how many loss events occur in a year and does not sum separate losses per event. As a consequence, the reported percentiles describe the annualised exposure approximation. They are not percentiles of realised annual loss totals, and a year with no loss event is not represented as a zero-loss outcome.",
-          "This is a declared limitation of the model, and every calculation response states the method used and that realised annual totals are not modelled.",
-          "The expected annual loss figure is the mean of that approximation. A mean of a frequency-times-severity distribution is the standard expected-loss construct and is more robust than the percentiles, but it is still a model output based on the assumptions you provide."
+          "Each simulated year draws a material-loss event count and sums independently sampled positive severities for those events. The reported percentiles therefore describe simulated annual total losses, including zero-loss years.",
+          "Scenarios are simulated jointly using a shared posterior parameter draw. This produces a model-dependent joint distribution; it does not estimate empirical correlation or assert independence for a particular organisation.",
+          "The model is evidence-informed at the reference-class level. It is not validated for an individual organisation, and it does not include insurance recoveries, indemnities, statutory fines or all cyber scenarios.",
+          "The expected annual loss figure is the mean of the simulated annual totals. It is a model output conditional on public evidence, your evidence and the documented elicitation assumptions, not an audited budget requirement or guarantee."
         ]
       },
       {
         "id": "sensitivity",
         "heading": "Which inputs matter most",
         "paragraphs": [
-          "The results view includes a sensitivity analysis that recalculates the model's expected annual loss for every answer option of each factor while holding your other answers fixed. It shows the lowest and highest expected loss attributable to each factor and ranks the factors by how much they move the result.",
-          "This is a deterministic one-at-a-time sensitivity of the expected value. It is not a variance-based attribution, not a causal analysis, and not a guarantee that changing a control will produce the modelled change. In this model the daily disruption-cost anchor, the likelihood answer and the impact answer are usually the strongest influences."
+          "Sensitivity and treatment results are reported with their assumptions. Treatment effects are propagated across simulation iterations and remain curated assumptions, not measured causal effects.",
+          "A one-at-a-time comparison is not a variance-based attribution, not a causal analysis and not a guarantee that changing a control will produce the modelled change. The calibration report and tests disclose the assumptions behind questionnaire multipliers and scenario weights."
         ]
       },
       {
@@ -140,16 +140,16 @@
         "heading": "What P10, P50 and P90 mean",
         "paragraphs": [
           "P10 is the value that 10% of simulated trials fell below — the low end of the modelled range. P50 is the median simulated value. P90 is the value that 90% of simulated trials fell below — the high end of the modelled range.",
-          "These are percentiles of the annualised exposure approximation described above. They are not percentiles of realised annual loss totals, not a confidence interval, and not a prediction interval.",
-          "A wide P10–P90 range is a statement about uncertainty in the inputs and assumptions. It is not a confidence interval around a known true value, and it does not include uncertainty about whether the model structure or calibration is correct."
+          "These are posterior-predictive percentiles of simulated annual total loss under the documented model. They are not a confidence interval and not a forecast for a particular organisation.",
+          "A wide P10–P90 range is a statement about uncertainty in the inputs and assumptions. It does not by itself include all uncertainty about whether the model structure, scenario weights or calibration are correct."
         ]
       },
       {
         "id": "expected-annual-loss",
         "heading": "What expected annual loss means",
         "paragraphs": [
-          "Expected annual loss is the arithmetic mean of the simulated annualised exposure values for a scenario: the long-run average of the modelled approximation, not the most likely outcome and not a forecast for the coming year.",
-          "The total shown on the results page is the sum of the five scenario expected annual losses. That sum is mathematically exact for expected values, because the expected value of a sum is the sum of expected values regardless of dependence between scenarios. Because dependencies are not modelled, no joint portfolio percentile is presented."
+          "Expected annual loss is the arithmetic mean of simulated annual total losses for a scenario. It is a long-run model mean, not the most likely outcome and not a forecast.",
+          "The portfolio mean is the sum of scenario means, and portfolio percentiles are computed from the year-by-year joint portfolio totals. The joint result depends on the documented shared-posterior dependence model."
         ]
       },
       {
@@ -157,7 +157,7 @@
         "heading": "Why uncertainty matters, and what is not covered",
         "paragraphs": [
           "Risk decisions are usually made under uncertainty, and a range communicates the decision-relevant question better than a single number: how bad could this reasonably get, and how likely is that?",
-          "The simulation propagates the uncertainty encoded in the answers and in the model's parameters. It does not resolve uncertainty about the model itself. The scenario set, the distribution shapes, the calibration multipliers and the independence assumptions are all design choices that the simulation cannot validate.",
+          "The simulation propagates posterior parameter uncertainty and annual event uncertainty. It does not resolve all uncertainty about the model itself: scenario weights, questionnaire multipliers, transportability and source relevance remain assumptions that external validation must test.",
           "The input confidence indicator describes answer completeness and the width of the resulting distribution. It is a heuristic indicator, not statistical confidence, and it is not a probability that the result is correct. While the calibration remains provisional the highest available level is capped at Medium."
         ]
       },
@@ -219,8 +219,8 @@
         "plain": "The financial cost of one loss event if it happens, combining direct response and recovery costs with indirect consequences."
       },
       {
-        "term": "Annualised exposure",
-        "plain": "The modelled exposure for a typical year: the loss event frequency multiplied by one sampled loss magnitude. It is an approximation of frequency-weighted exposure and not a total of the losses actually incurred in a particular year."
+        "term": "Posterior-predictive annual loss",
+        "plain": "The distribution of simulated annual total losses obtained by drawing material-event counts and event severities from a Bayesian posterior and its predictive distributions. It includes zero-loss years and is not a forecast or guarantee."
       },
       {
         "term": "Primary Loss",
@@ -232,15 +232,15 @@
       },
       {
         "term": "Expected annual loss",
-        "plain": "The average of the simulated annualised exposure values. It is the long-run average of the modelled approximation, not a forecast for a specific year."
+        "plain": "The mean of simulated annual total losses under the model and its assumptions. It is not a forecast for a specific year or an audited budget requirement."
       },
       {
         "term": "P10 / P50 / P90",
-        "plain": "Percentiles of the simulated annualised exposure approximation. P10 is the level that only 10% of simulated trials fell below, P50 is the median, and P90 is the level that 90% of simulated trials fell below. They are not a confidence interval and not percentiles of realised annual loss totals."
+        "plain": "Posterior-predictive percentiles of simulated annual total loss. P10 is the level that only 10% of simulated years fell below, P50 is the median, and P90 is the level that 90% of simulated years fell below. They are not a confidence interval."
       },
       {
         "term": "Threshold exceedance probability",
-        "plain": "The share of simulated trials in which the modelled annualised exposure exceeded a stated amount, for example €1 million. A result of zero means no simulated trial exceeded it in this run; it is not evidence that the threshold cannot be exceeded."
+        "plain": "The share of simulated years in which annual total loss exceeded a stated amount, for example €1 million. A result of zero does not prove that the threshold cannot be exceeded. Wilson intervals and counts are reported when the simulation is used for threshold decisions."
       },
       {
         "term": "Monte Carlo simulation",
@@ -260,12 +260,12 @@
     "title": "What this result does not mean",
     "items": [
       "It is not a forecast of the coming year and not a prediction that a specific event will occur.",
-      "It is not a distribution of realised annual loss totals. The model reports an annualised exposure approximation: it does not draw how many loss events occur in a year and does not sum per-event losses, so a year with no loss event is not represented as a zero-loss outcome.",
+      "It is not organisation-specific validation. National reference evidence and your optional event count inform a model, but they cannot prove the next year's loss or the correctness of the model structure.",
       "It is not a full FAIR analysis, audit, certification, compliance assessment or assurance opinion.",
       "It is not a calculation or prediction of statutory fines, regulatory penalties or legal liabilities.",
       "It does not assess whether specific controls are implemented, effective or compliant with any framework.",
-      "It does not capture uncertainty about the model itself: the scenario set, the distribution shapes, the calibration multipliers and the independence assumptions are design choices that the simulation cannot validate.",
-      "It does not model dependencies or correlation between the five scenarios, so the total is the sum of expected values and not a joint distribution percentile. Correlation would change a portfolio percentile in either direction, which is why none is presented.",
+      "It does not capture all uncertainty about the model itself: scenario weights, questionnaire multipliers, transportability and source relevance are design choices that external validation must test.",
+      "The joint portfolio distribution depends on a documented shared-posterior dependence model. It is not an empirically estimated correlation structure and may understate or overstate dependence for a particular organisation.",
       "It does not cover cyber-risk scenarios outside the five assessed, so the true exposure is likely to be broader than the figure shown.",
       "It does not account for existing insurance recoveries, indemnities or contractual transfers of loss.",
       "Extreme combinations of the highest option levels produce very large compounded figures. Those results are arithmetically valid but have not been validated as realistic forecasts and should be treated as calibration-limited.",
@@ -278,13 +278,13 @@
     "statement": "Input confidence is a heuristic indicator of how complete your answers were and how wide the resulting distribution is. It is not statistical confidence, not a confidence interval, and not a probability that the result is correct.",
     "bullets": [
       "It falls when answers are Unknown, when the daily disruption-cost anchor is not provided, or when the resulting distribution is very wide.",
-      "While the calibration remains provisional the highest available level is capped at Medium, because the calibration values are heuristic and have not been externally validated.",
+      "While the release remains provisional the highest available level is capped at Medium. The active reference posterior is calibrated against documented evidence, but it has not been validated prospectively for individual organisations.",
       "A higher input confidence does not mean the estimate is accurate; it means fewer inputs were missing and the modelled range is narrower."
     ]
   },
   "annualisationNotice": {
-    "title": "Annualised exposure, not realised annual loss",
-    "statement": "Percentiles describe an annualised exposure approximation: loss event frequency multiplied by one sampled event magnitude per simulated trial. They are not percentiles of realised annual loss totals, not a confidence interval and not a prediction interval."
+    "title": "Posterior-predictive annual totals, not a forecast",
+    "statement": "Percentiles describe simulated annual total losses under the model, including zero-loss years. They are posterior-predictive intervals conditional on public reference evidence, your answers and documented assumptions. They are not a guarantee, a forecast for a particular year or organisation-specific validation."
   },
   "outOfScope": [
     "User-created or custom scenarios",
@@ -336,7 +336,7 @@
     "subtitle": "Rapid quantitative cyber-risk estimation",
     "generatedNote": "This report was generated in your browser from the current in-memory assessment. FAIR QuickRisk does not retain the questionnaire assessment, and this report was not uploaded or stored by the application.",
     "prohibitedTitleNote": "This report is not a FAIR certification report and must not be presented as one.",
-    "annualisationNote": "Reported percentiles describe an annualised exposure approximation (loss event frequency multiplied by one sampled event magnitude per trial). They are not percentiles of realised annual loss totals, not a confidence interval and not a prediction interval.",
+    "annualisationNote": "Reported percentiles describe simulated annual total losses under the posterior-predictive model. They are not forecasts, guarantees, confidence intervals or organisation-specific validation.",
     "confidenceNote": "Estimate precision (Good / Moderate / Rough) is a heuristic indicator of answer completeness and distribution width. It is not statistical confidence.",
     "sections": {
       "cover": "Cover",

@@ -56,7 +56,7 @@ $payload = [
     'scenarioId' => 'S1',
     'scenarioName' => 'Ransomware',
     'baselineEal' => 125000.0,
-    'baselineSource' => ['modelId' => 'FAIR-QK-1.3', 'modelVersion' => '1.3.0'],
+    'baselineSource' => ['modelId' => 'FAIR-QK-2.0', 'modelVersion' => '2.0.0'],
     'inputState' => $state,
     'riskResult' => $result,
     'timeline' => [[

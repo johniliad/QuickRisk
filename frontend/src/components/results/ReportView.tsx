@@ -184,10 +184,10 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
                 bad year {formatMoney(scenario.statistics.p90, symbol)}; P(&gt;
                 {formatMoney(millionThreshold, symbol)}){' '}
                 {thresholdExceedanceCount(scenario, millionThreshold) === 0
-                  ? `0 of ${formatCount(scenario.statistics.iterations)} simulated trials`
+                  ? `0 of ${formatCount(scenario.statistics.iterations)} simulated years`
                   : `${formatPercent(thresholdProbability(scenario, millionThreshold))} (${formatCount(
                       thresholdExceedanceCount(scenario, millionThreshold),
-                    )} of ${formatCount(scenario.statistics.iterations)} simulated trials)`}
+                    )} of ${formatCount(scenario.statistics.iterations)} simulated years)`}
                 ; precision {precisionFor(scenario.confidence.level)}.
               </p>
               <p className="m-0 text-small text-muted">{scenario.interpretation.rangeStatement}</p>
@@ -248,6 +248,18 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
             <li>Calibration version: {response.meta.calibrationVersion}</li>
             <li>Methodology version: {response.meta.methodologyVersion}</li>
             <li>Disclaimer version: {response.meta.disclaimerVersion}</li>
+            {response.meta.inference === undefined ? null : (
+              <>
+                <li>
+                  Inference: {response.meta.inference.mode} · {response.meta.inference.packageVersion}
+                </li>
+                <li>Evidence package: {response.meta.inference.evidencePackageVersion}</li>
+                <li>Validation status: {response.meta.inference.status}</li>
+              </>
+            )}
+            {response.meta.simulationSeed === undefined ? null : (
+              <li>Run seed: {response.meta.simulationSeed} (in memory only; not retained)</li>
+            )}
             <li>
               Simulation: {formatIterations(response.meta.iterations)} iterations per scenario ×{' '}
               {response.meta.scenarioCount} scenarios

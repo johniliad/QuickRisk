@@ -1,8 +1,62 @@
 # Changelog
 
 All notable changes to FAIR QuickRisk are recorded here. Versions follow the release
-identity in `fairquickmodel/manifest.json`; the model, schema and application versions move
-together, and a published version's meaning is never edited in place.
+identity in `fairquickmodel/manifest.json`. The model, schema, calibration, methodology and
+disclaimer versions move with a model release; the application version is tracked separately.
+A published version's meaning is never edited in place.
+
+## [FAIR-QK-2.0 / application 1.3.5] — 2026-11-24
+
+### Added
+
+- **A validated Bayesian reference-class posterior now drives the active assessment.** The
+  offline package in `fairquickmodel/inference/` is fitted from versioned public evidence and
+  contains joint posterior draws, reference-class metadata, assumption-labelled questionnaire
+  multipliers, treatment draws and a validation report. `QkInferenceRepository` verifies model,
+  calibration, status and SHA-256 integrity, then `QkRiskEngine` selects `QkPosteriorEngine`;
+  an unavailable or invalid package falls back explicitly to the legacy engine.
+- **Annual totals are simulated rather than approximated by frequency × one severity.** Each
+  simulated year draws Poisson material-loss event counts, samples a positive lognormal severity
+  for each event and sums event losses. Zero-event years are zero-loss years. Scenario results
+  share a posterior draw per year, producing joint portfolio percentiles.
+- **One optional organisation evidence field:** `organisationEvidence.materialLossEventCount`
+  for the previous 12 months. It is applied as a Poisson likelihood with likelihood-weighted
+  joint resampling; effective sample size is returned, and Unknown retains the reference
+  posterior. The field is held in memory only and excluded from saved reports.
+- **Treatment uncertainty is integrated across simulation iterations.** Decision Lab now draws a
+  treatment-effect series and applies frequency effects through common Poisson uniforms and
+  severity effects per event. The response carries a paired loss series internally; no effect
+  series is sent to the browser or saved.
+- **Diagnostics that state their limits:** actual run seed disclosure for replay (never stored),
+  mean standard error, threshold exceedance counts, Wilson score intervals and low-count notes.
+- **Offline calibration pipeline** in `calibration/` with versioned evidence files, standard
+  library fitting, validation reports and deterministic export. DSIT 2025/2026 informs frequency,
+  materiality and ordinary severity; IBM 2025 is a large-enterprise severity sensitivity; DBIR
+  2026 is composition context only; ECB 2025 rates provide conversion provenance.
+
+### Changed
+
+- Model identity moved to `FAIR-QK-2.0` / `2.0.0`, calibration `CAL-2.0`, methodology `METH-2.0`
+  and disclaimer `DISC-2.0`. Historical 1.x records keep their original identifiers.
+- Scenario-level simulation uses independent random streams, while parameter draws remain shared;
+  changing one scenario's answers no longer changes another scenario's simulation noise.
+- Sensitivity is recomputed across posterior draws instead of an analytic legacy-band helper.
+- The public model, request schema and result schema accept posterior inputs and explicit
+  inference provenance.
+- Model documentation and the known-answer baseline are named by model `2.0.0`; the frontend
+  package metadata and published error-page footers use application version `1.3.5`.
+
+### Security and privacy
+
+- The browser receives the actual in-memory seed so a run can be replayed; it receives no
+  persisted seed and no assessment identifier. Zero-retention remains unchanged.
+
+### Known limitations
+
+- No independent organisation-level prospective loss dataset exists; national evidence is not
+  organisation-specific validation.
+- Scenario weights and questionnaire multipliers remain elicitation assumptions.
+- Shared posterior draws are a structural dependence model, not an estimated correlation matrix.
 
 ## [Unreleased]
 

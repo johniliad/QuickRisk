@@ -10,10 +10,10 @@ return [
     'model: the authoritative model loads and validates' => function (): void {
         $model = qk_test_model();
 
-        assertSame('FAIR-QK-1.3', $model->modelId(), 'The model identifier must be explicit');
-        assertSame('1.3.0', (string) $model->manifest()['modelVersion'], 'The model version must be explicit');
-        assertSame('1.3.0', (string) $model->manifest()['schemaVersion'], 'The schema version must be explicit');
-        assertSame('CAL-1.3', (string) $model->manifest()['calibrationVersion'], 'The calibration version must be explicit');
+        assertSame('FAIR-QK-2.0', $model->modelId(), 'The model identifier must be explicit');
+        assertSame('2.0.0', (string) $model->manifest()['modelVersion'], 'The model version must be explicit');
+        assertSame('2.0.0', (string) $model->manifest()['schemaVersion'], 'The schema version must be explicit');
+        assertSame('CAL-2.0', (string) $model->manifest()['calibrationVersion'], 'The calibration version must be explicit');
         assertTrue(is_dir($model->modelPath()), 'The model directory must exist');
     },
 
@@ -107,7 +107,7 @@ return [
     'model: calibration parameters are classified and sourced' => function (): void {
         $parameters = qk_test_model()->parameters();
 
-        assertSame('CAL-1.3', $parameters['calibrationVersion'], 'The calibration version must be declared');
+        assertSame('CAL-2.0', $parameters['calibrationVersion'], 'The calibration version must be declared');
         assertTrue(isset($parameters['classificationLegend']), 'A classification legend must be documented');
 
         foreach (['frequency', 'impactMultiplier', 'disruptionCostAnchor', 'susceptibility', 'secondaryLoss', 'scenarioScaling'] as $group) {

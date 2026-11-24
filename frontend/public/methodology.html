@@ -116,8 +116,9 @@
         <p class="eyebrow">FAIR QuickRisk</p>
         <h1>Methodology, limitations and disclaimer</h1>
         <p class="lede">
-          Estimate your likely annual cyber-loss across five common scenarios — an indication, not a full FAIR
-          analysis, an audit, a certification or professional advice.
+          Estimate your likely annual cyber-loss across five common scenarios using the active FAIR-QK-2.0
+          posterior-predictive model — an indication, not a full FAIR analysis, an audit, a certification or
+          professional advice.
         </p>
         <p><a class="button" href="./">Start the assessment</a></p>
       </div>
@@ -127,10 +128,15 @@
       <h2>What the application does</h2>
       <p>
         FAIR QuickRisk asks eight organisation-profile questions and exactly two questions for each of five
-        predefined scenarios, then runs a server-side Monte Carlo simulation of 5,000 simulated
-        annualised-exposure trials per scenario. It reports expected annual loss, a typical-year to bad-year
-        (1 in 10) range, the chance of exceeding key thresholds, and an estimate-precision indicator for each
-        scenario.
+        predefined scenarios. A Bayesian reference-class posterior, informed by documented public evidence and
+        your answers, supplies correlated frequency, materiality and severity parameters. The server then
+        simulates 5,000 years per scenario: each year draws a Poisson count of material-loss events and a
+        severity for every event, and the scenario and portfolio annual totals are summarised.
+      </p>
+      <p>
+        The active model is FAIR-QK-2.0 · schema 2.0.0 · calibration CAL-2.0. It reports expected annual loss,
+        posterior-predictive P10/P50/P90 annual totals, the chance of exceeding key thresholds, and an
+        estimate-precision indicator for each scenario.
       </p>
 
       <h2>Why these five scenarios</h2>
@@ -155,61 +161,72 @@
         are each explained in plain language inside the application.
       </p>
       <ul>
-        <li>A full FAIR analysis decomposes frequency and magnitude into many factors. This application uses a small fixed factor set.</li>
+        <li>A full FAIR analysis decomposes frequency and magnitude into many factors. This application uses a small fixed factor set and posterior reference classes.</li>
         <li>Only five scenarios are assessed; other material scenarios are outside the model.</li>
-        <li>Scenario dependencies and correlations are not modelled, so no joint portfolio percentile is presented.</li>
-        <li>Secondary loss is represented by one occurrence probability and one magnitude distribution per scenario.</li>
+        <li>Scenario dependence is represented by shared posterior draws and a shared organisation attack rate. This is a documented structural dependence model, not an empirically estimated correlation matrix.</li>
+        <li>Each material event draws one total positive severity, split between primary and secondary loss by an uncertain allocation. The split is an elicitation assumption rather than two separately estimated severity models.</li>
         <li>Statutory fines, regulatory penalties and specific legal liabilities are explicitly out of scope.</li>
-        <li>One loss magnitude is sampled per simulated trial rather than once per event, so the reported values are an annualised exposure approximation and not realised annual loss totals.</li>
-        <li>The model does not capture uncertainty about its own structure, distribution shapes, calibration or scenario correlation.</li>
+        <li>Annual material-event counts are Poisson draws and per-event severities are summed. Zero-event years are zero-loss years, so the reported percentiles describe simulated annual totals.</li>
+        <li>The model does not capture all uncertainty about its own structure, distribution shapes, calibration, transportability or organisation-specific dependence.</li>
+        <li>National reference evidence is not organisation-specific prospective validation. Scenario weights and questionnaire multipliers remain explicit elicitation assumptions.</li>
       </ul>
 
-      <h2>How answers become ranges</h2>
+      <h2>How answers become posterior evidence</h2>
       <p>
-        Each answer maps to a range stored in versioned model files rather than to a single number. The likelihood
-        question asks how often the scenario is attempted or contacted in a typical 12-month period, before
-        considering whether your defences would stop it: that answer is "how often" (technical name: threat event
-        frequency), and your defences are applied separately and only once, so the same control is never counted
-        twice. An impact answer maps to a range of multipliers against your organisation's typical daily disruption
-        cost. Organisation-profile answers act as modifiers. An Unknown answer is modelled as an equal-weight mixture
-        of the available answers, which widens the range, keeps the central estimate inside the range of the answers
-        you could have chosen, and reduces the estimate-precision rating.
+        The reference posterior supplies organisation-size attack prevalence, material-cost probability and
+        positive-severity distributions. A likelihood answer applies an uncertain frequency multiplier to that
+        scenario's share; an impact answer applies an uncertain severity multiplier. Organisation-profile answers
+        act as uncertain modifiers: exposure and maturity affect frequency or materiality, while disruption cost,
+        sensitive-information exposure and recovery capability affect severity.
+      </p>
+      <p>
+        The likelihood question asks how often the scenario is attempted or contacted in a typical 12-month period,
+        before considering whether your defences would stop it. Controls therefore enter through the maturity
+        modifier without being counted twice. An Unknown answer retains the reference posterior rather than
+        inventing a favourable or adverse extreme, and it reduces the estimate-precision rating. An optional
+        material-loss event count can be supplied; it updates the shared posterior through a Poisson likelihood
+        and is held in memory only.
       </p>
 
       <h2>What "typical year" and "bad year (1 in 10)" mean</h2>
       <p>
-        "Typical year" is the middle of the simulated outcomes: half of the simulated outcomes are cheaper,
-        half costlier. "Bad year (1 in 10)" is the level that only 1 in 10 simulated outcomes is worse than.
-        "Best case (1 in 10)" is the level that only 1 in 10 simulated outcomes falls below. The technical
-        names for these are P50 (the median), P90 (the 90th percentile) and P10 (the 10th percentile). They
-        describe an annualised exposure approximation, not realised annual loss totals. A wide
-        typical-to-bad range is a statement about uncertainty in your inputs and assumptions — not a
-        confidence interval around a known true value.
+        "Typical year" is the middle of the simulated annual totals: half of the simulated years are cheaper,
+        half costlier. "Bad year (1 in 10)" is the level that only 1 in 10 simulated years is worse than.
+        "Best case (1 in 10)" is the level that only 1 in 10 simulated years falls below. The technical
+        names for these are P50 (the median), P90 (the 90th percentile) and P10 (the 10th percentile).
+      </p>
+      <p>
+        These are posterior-predictive intervals under the documented model. Because material-event counts are
+        often zero and severity is heavy-tailed, P50 can be zero and the mean can exceed P90. A wide
+        typical-to-bad range is a statement about uncertainty in the inputs, evidence and assumptions — not a
+        confidence interval around a known true value and not a forecast for a particular organisation.
       </p>
 
       <h2>What expected annual loss means</h2>
       <p>
-        Expected annual loss is the arithmetic mean of the simulated annualised exposure values for a scenario: the
-        long-run average of the modelled approximation, not the most likely outcome and not a forecast for the
-        coming year. The total shown is the sum of the five scenario expected annual losses, which is exact for
-        expected values. Because dependencies between scenarios are not modelled, that sum is not presented as a
-        joint distribution percentile.
+        Expected annual loss is the arithmetic mean of the simulated annual total losses for a scenario, including
+        zero-loss years. It is a long-run model mean, not the most likely outcome and not a forecast for the coming
+        year. The portfolio mean is the sum of scenario means, while portfolio percentiles are calculated from the
+        year-by-year joint portfolio totals. That joint result depends on the documented shared-posterior dependence
+        model and is not organisation-specific validation.
       </p>
 
-      <h2>Versioning</h2>
+      <h2>Versioning and evidence</h2>
       <p>
-        The model identifier, model version, schema version and calibration version are shown on every result
-        and report. Scenario definitions, questions, answer options and calibration parameters live in
-        version-controlled model files outside the public web root. Calibration changes create a new version.
-        Because the questionnaire retains no assessment, a calibration change cannot alter any past assessment.
+        The model identifier, model version, schema version, calibration version, methodology version and evidence
+        package version are shown on every result and report. Scenario definitions, questions, answer options and
+        the read-only posterior package live outside the public web root and are version controlled. Activation
+        requires a hash-verified, non-synthetic package whose calibration report is validated. Historical 1.x
+        calculations retain their original model and methodology identifiers.
       </p>
 
       <h2>Your data and retention</h2>
       <p class="callout">
-        The QuickRisk questionnaire is zero-retention: your answers and calculated results are processed
-        transiently to produce this assessment, and the application does not store them in a database,
-        account, browser storage, cookie or application file. No account or login is required. If you close
-        or refresh the page, the assessment cannot be recovered by the application.
+        The QuickRisk questionnaire is zero-retention: your answers, the optional material-loss event count and
+        calculated results are processed transiently to produce this assessment, and the application does not
+        store them in a database, account, browser storage, cookie or application file. The optional event count
+        is held only in page memory, is excluded from saved reports, and no account or login is required. If you
+        close or refresh the page, the assessment cannot be recovered by the application.
       </p>
       <p>
         The optional QuickRisk Live overlay is separate. If you use it and explicitly save an assessment, the
@@ -267,20 +284,23 @@
         establish that the organisation is non-compliant or materially exposed.
       </p>
 
-      <h2>Contextual evidence sources</h2>
+      <h2>Evidence sources and their roles</h2>
       <p>
-        The scenario set is informed by current public threat reporting. Those sources provide contextual
-        justification only and are not used as direct model coefficients. Calibration values are documented
-        separately and classified as externally evidenced, internally derived, heuristic, or placeholder
-        requiring future validation.
+        Calibration is evidence-informed, not a claim of organisation-specific validation. The active package
+        records each source's permitted and prohibited uses:
       </p>
       <ul>
-        <li><a href="https://www.enisa.europa.eu/publications/enisa-threat-landscape-2025">ENISA Threat Landscape 2025</a></li>
-        <li><a href="https://www.enisa.europa.eu/topics/cyber-threats/threat-landscape">ENISA Threat Landscape (current edition)</a></li>
-        <li><a href="https://www.verizon.com/business/resources/reports/">Verizon Data Breach Investigations Report 2025</a></li>
-        <li><a href="https://www.ibm.com/think/x-force/threat-intelligence-index-2026-securing-identities-ai-detection">IBM X-Force Threat Intelligence Index 2026</a></li>
-        <li><a href="https://www.fairinstitute.org/">FAIR Institute — FAIR Standard v3.0 (conceptual reference only)</a></li>
+        <li><a href="https://www.gov.uk/government/statistics/cyber-security-breaches-survey-20252026/cyber-security-breaches-survey-20252026">DSIT Cyber Security Breaches Survey 2025/2026</a> — organisation-size attack prevalence, material-cost probability and positive-cost severity quantiles.</li>
+        <li><a href="https://www.ibm.com/think/x-force/2025-cost-of-a-data-breach-navigating-ai">IBM Cost of a Data Breach Report 2025</a> — large-enterprise severity sensitivity only; its mean is not pooled with DSIT respondent quantiles.</li>
+        <li><a href="https://www.verizon.com/business/resources/reports/dbir/">Verizon Data Breach Investigations Report 2026</a> — conditional scenario-composition context and sensitivity only; it is not an organisation-level annual frequency source.</li>
+        <li><a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html">European Central Bank euro reference rates</a> — 2025 currency-conversion provenance.</li>
+        <li><a href="https://www.fairinstitute.org/">FAIR Institute — FAIR Standard (conceptual reference only)</a>.</li>
       </ul>
+      <p>
+        Questionnaire multipliers, scenario weights, the primary/secondary allocation and the IBM distribution
+        shape are labelled as assumptions in the calibration package. The known validation gap — no independent
+        organisation-level prospective loss dataset — is disclosed in every result response.
+      </p>
     </main>
 
     <footer>

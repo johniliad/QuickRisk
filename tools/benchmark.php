@@ -54,7 +54,8 @@ echo 'PHP ' . PHP_VERSION . ' · ' . PHP_OS_FAMILY . "\n";
 echo str_repeat('=', 72) . "\n\n";
 
 $modelLoadStart = microtime(true);
-QkModel::load($config);
+$loadedModel = QkModel::load($config);
+$inference = QkInferenceRepository::load($config, $loadedModel);
 $modelLoadMs = (microtime(true) - $modelLoadStart) * 1000;
 
 printf("Model file load (cold):        %8.2f ms\n\n", $modelLoadMs);
@@ -67,7 +68,13 @@ foreach ([
     $startedAt = microtime(true);
     $beforeMemory = memory_get_usage(true);
 
-    $response = FairEngine::calculateAssessment($model, $payload, 20261029, $iterations);
+    $response = QkRiskEngine::calculateAssessment(
+        $model,
+        $inference,
+        $payload,
+        20261029,
+        $iterations
+    );
 
     $elapsedMs = (microtime(true) - $startedAt) * 1000;
     $peakMb = memory_get_peak_usage(true) / 1048576;

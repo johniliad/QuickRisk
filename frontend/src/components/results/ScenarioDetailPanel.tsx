@@ -62,9 +62,19 @@ export function ScenarioDetailPanel({
     thresholds.find((value) => value === 1_000_000) ?? thresholds[thresholds.length - 1] ?? 1_000_000;
   const isAnalyst = useViewModeStore((state) => state.mode) === 'analyst';
 
-  // Inputs modelled as an Unknown-answer mixture are disclosed explicitly, so that an Unknown
-  // answer can never look like a precise assumption.
+  // Unknown answers are disclosed explicitly. The active posterior engine retains the reference
+  // posterior; the legacy fallback uses an equal-weight mixture.
   const mixtureInputs = Object.entries(scenario.inputs).filter(([, input]) => input.kind === 'mixture');
+  const usesPosterior = Object.values(scenario.inputs).some((input) => input.kind === 'posterior');
+  const posteriorUnknown = scenario.answers.some((answer) => answer.unknown) && usesPosterior;
+  const lossAnchorLabel =
+    scenario.lossAnchorSource === 'reported-daily-disruption-cost'
+      ? 'your reported daily disruption cost'
+      : scenario.lossAnchorSource === 'derived-from-profile'
+        ? 'derived from your organisation profile (daily disruption cost was Unknown)'
+        : scenario.lossAnchorSource === 'reference-class-severity'
+          ? 'reference-class positive severity (daily disruption cost was Unknown)'
+          : 'your daily disruption cost applied as a weak severity elasticity to reference-class positive severity';
 
   return (
     <section className="grid gap-5" aria-labelledby={`detail-${scenario.code}`}>
@@ -105,7 +115,11 @@ export function ScenarioDetailPanel({
               {scenario.answers.map((answer) => (
                 <DefinitionItem key={answer.questionCode} term={answer.questionCode}>
                   {answer.label}
-                  {answer.unknown ? ' (Unknown — modelled as a mixture of the available answers)' : ''}
+                  {answer.unknown
+                    ? posteriorUnknown
+                      ? ' (Unknown — reference posterior retained)'
+                      : ' (Unknown — modelled as a mixture of the available answers)'
+                    : ''}
                 </DefinitionItem>
               ))}
             </DefinitionList>
@@ -116,7 +130,9 @@ export function ScenarioDetailPanel({
               </p>
               {scenario.appliedModifiers.length === 0 ? (
                 <p className="m-0 text-small text-muted">
-                  No organisation-profile modifier applied to this scenario.
+                  {usesPosterior
+                    ? 'Profile answers are incorporated into the shared posterior parameters; legacy per-factor multipliers are not listed for this result.'
+                    : 'No organisation-profile modifier applied to this scenario.'}
                 </p>
               ) : (
                 <ul className="m-0 grid gap-1 pl-5 text-small text-muted">
@@ -130,16 +146,23 @@ export function ScenarioDetailPanel({
                 </ul>
               )}
               <p className="m-0 text-micro text-muted">
-                Loss anchor:{' '}
-                {scenario.lossAnchorSource === 'reported-daily-disruption-cost'
-                  ? 'your reported daily disruption cost'
-                  : 'derived from your organisation profile (daily disruption cost was Unknown)'}
-                .
+                Loss anchor: {lossAnchorLabel}.
               </p>
+              {posteriorUnknown ? (
+                <div className="grid gap-1">
+                  <p className="m-0 text-micro font-bold uppercase tracking-[0.08em] text-muted">
+                    Unknown answers retained the reference posterior
+                  </p>
+                  <p className="m-0 text-small text-muted">
+                    No synthetic mixture or extreme value was inserted. The estimate uses the reference-class
+                    posterior unchanged for frequency or severity, and the input-confidence rating is lower.
+                  </p>
+                </div>
+              ) : null}
               {mixtureInputs.length === 0 ? null : (
                 <div className="grid gap-2">
                   <p className="m-0 text-micro font-bold uppercase tracking-[0.08em] text-muted">
-                    Unknown answers modelled as a mixture
+                    Legacy fallback: Unknown answers modelled as a mixture
                   </p>
                   {mixtureInputs.map(([code, input]) => (
                     <div key={code} className="grid gap-1">
@@ -182,14 +205,14 @@ export function ScenarioDetailPanel({
               <DefinitionItem term={`P(> ${formatMoney(millionThreshold, symbol)})`}>
                 {thresholdExceedanceCount(scenario, millionThreshold) === 0 ? (
                   <span className="text-muted">
-                    0 of {formatCount(scenario.statistics.iterations)} simulated trials
+                    0 of {formatCount(scenario.statistics.iterations)} simulated years
                   </span>
                 ) : (
                   <>
                     {formatPercent(thresholdProbability(scenario, millionThreshold))}{' '}
                     <span className="text-muted">
                       ({formatCount(thresholdExceedanceCount(scenario, millionThreshold))} of{' '}
-                      {formatCount(scenario.statistics.iterations)} simulated trials)
+                      {formatCount(scenario.statistics.iterations)} simulated years)
                     </span>
                   </>
                 )}

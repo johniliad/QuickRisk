@@ -1,0 +1,38 @@
+{
+  "modelId": "FAIR-QK-2.0",
+  "modelVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "calibrationVersion": "CAL-2.0",
+  "methodologyVersion": "METH-2.0",
+  "disclaimerVersion": "DISC-2.0",
+  "applicationVersion": "1.3.5",
+  "supersedes": "1.3.0",
+  "releasedOn": "2026-11-24",
+  "releaseStatus": "provisional-release",
+  "evidencePackage": "EVID-QK-2.0.0",
+  "posteriorPackage": "PINF-QK-2.0.0",
+  "changes": [
+    "Replaces the active heuristic answer-band calibration with a reference-class Bayesian posterior.",
+    "Simulates annual material-event counts and per-event positive severities instead of LEF multiplied by one magnitude.",
+    "Produces joint scenario percentiles from shared posterior draws.",
+    "Adds one optional organisation evidence field: materialLossEventCount for the previous 12 months.",
+    "Integrates treatment-effect uncertainty across simulation iterations.",
+    "Discloses the actual in-memory assessment seed so Decision Lab can replay the same run.",
+    "Uses object-local MT19937 state and Wilson exceedance diagnostics.",
+    "Retains the 1.3 annualised-exposure engine only as a validated fallback when no active posterior package is available."
+  ],
+  "evidenceSources": [
+    "DSIT Cyber Security Breaches Survey 2025/2026",
+    "IBM Cost of a Data Breach Report 2025 (large-enterprise sensitivity only)",
+    "Verizon DBIR 2026 (scenario-composition sensitivity only)",
+    "ECB 2025 annual euro reference rates"
+  ],
+  "knownLimitations": [
+    "No independent organisation-level prospective loss dataset validates individual predictions.",
+    "Questionnaire-to-parameter multipliers remain elicitation assumptions.",
+    "Scenario composition is not identified by a source that covers all five annual rates.",
+    "National survey costs are perceived costs of the most disruptive incident, not audited annual total losses.",
+    "The model remains provisional and is not a forecast, guarantee, audit or compliance determination."
+  ],
+  "calibrationChangePolicy": "Evidence, model code, posterior draws and validation gates are versioned together. A package may be active only when its calibration report is validated, non-synthetic and hash-verified."
+}

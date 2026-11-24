@@ -37,7 +37,7 @@ export function ScenarioRankingChart({
     <ChartFrame
       id="scenario-ranking"
       title="Scenario ranking by expected annual loss"
-      description="Expected annual loss is the average of the simulated annualised losses for each scenario. It is not a forecast for a specific year."
+      description="Expected annual loss is the mean of simulated annual total losses for each scenario, including zero-loss years. It is not a forecast for a specific year."
       summary={summary}
       table={
         <TableWrap>

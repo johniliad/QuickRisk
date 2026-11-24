@@ -79,15 +79,13 @@ import {
 } from '@/decision/domain/selectableTreatment';
 
 /**
- * The published assessment seed.
+ * Fallback seed for the sample or for a legacy response that did not disclose one.
  *
- * It mirrors `tools/generate-baseline.php`, `tests/helpers.php` and the audited baseline. Decision
- * Lab sends it, with the iteration count the results response reports, so the server replays the
- * results page configuration instead of choosing another modelling basis. The assessment endpoint
- * seeds each calculation randomly, so the two figures are draws from the same model and agree to
- * within Monte Carlo noise rather than being the same draw.
+ * Current responses disclose their actual in-memory seed in `meta.simulationSeed`. Decision Lab
+ * sends that value with the reported iteration count, so the server replays the exact Results run
+ * instead of choosing another modelling basis. The seed is disposable and is never persisted.
  */
-const RESULTS_SIMULATION_SEED = 20261029;
+const RESULTS_SIMULATION_SEED_FALLBACK = 20261029;
 
 /** Iteration budget used only if the results response does not report one. */
 const RESULTS_ITERATION_FALLBACK = 5_000;
@@ -107,6 +105,7 @@ const BASELINE_NOISE_TOLERANCE = 0.02;
 function buildAnswersPayload(
   organisationAnswers: Record<string, string>,
   scenarioAnswers: Record<string, Record<string, string>>,
+  organisationEvidence?: { readonly materialLossEventCount?: number | null },
 ) {
   return {
     schemaVersion: publicModel.version.schemaVersion,
@@ -123,6 +122,7 @@ function buildAnswersPayload(
         optionCode: scenarioAnswers[scenario.code]?.[question.code] ?? publicModel.unknownCode,
       })),
     })),
+    organisationEvidence,
   };
 }
 
@@ -311,6 +311,7 @@ function TreatmentCard({
 export function DecisionLabView() {
   const organisationAnswers = useAssessmentStore((state) => state.organisationAnswers);
   const scenarioAnswers = useAssessmentStore((state) => state.scenarioAnswers);
+  const organisationEvidence = useAssessmentStore((state) => state.organisationEvidence);
   const results = useAssessmentStore((state) => state.results);
   const setView = useAssessmentStore((state) => state.setView);
   const initSession = useLiveStore((state) => state.initSession);
@@ -336,6 +337,8 @@ export function DecisionLabView() {
   // The assessment's own run: the same published seed and iteration budget are re-sent below, so
   // the server replays the results page configuration instead of choosing another basis.
   const resultsIterations = results?.meta.iterations ?? RESULTS_ITERATION_FALLBACK;
+  const resultsSimulationSeed =
+    results?.meta.simulationSeed ?? RESULTS_SIMULATION_SEED_FALLBACK;
   const resultsPortfolioEal =
     typeof results?.portfolio?.expectedAnnualLoss === 'number'
     && Number.isFinite(results.portfolio.expectedAnnualLoss)
@@ -379,8 +382,8 @@ export function DecisionLabView() {
   }, [reloadCatalogue]);
 
   const answers = useMemo(
-    () => buildAnswersPayload(organisationAnswers, scenarioAnswers),
-    [organisationAnswers, scenarioAnswers],
+    () => buildAnswersPayload(organisationAnswers, scenarioAnswers, organisationEvidence),
+    [organisationAnswers, scenarioAnswers, organisationEvidence],
   );
 
   const selections = useMemo(
@@ -412,11 +415,11 @@ export function DecisionLabView() {
         answers,
         treatments: selectedTreatments.map(selectionIdentity),
         appetite,
-        seed: RESULTS_SIMULATION_SEED,
+        seed: resultsSimulationSeed,
         iterations: resultsIterations,
         decisionMethodologyVersion: methodologyVersion,
       }),
-    [answers, appetite, methodologyVersion, resultsIterations, selectedTreatments],
+    [answers, appetite, methodologyVersion, resultsIterations, resultsSimulationSeed, selectedTreatments],
   );
 
   const currentKeyRef = useRef(currentKey);
@@ -457,19 +460,20 @@ export function DecisionLabView() {
     comparison === null || resultsPortfolioEal === null
       ? null
       : Math.abs(comparison.baseline.expectedAnnualLoss - resultsPortfolioEal)
-        <= BASELINE_NOISE_TOLERANCE * resultsPortfolioEal;
+        <= (results?.meta.simulationSeed === undefined ? BASELINE_NOISE_TOLERANCE : 1.0e-9)
+          * resultsPortfolioEal;
   const portfolioDecisionAvailable =
     appetite.annualLossLimit !== null && Number.isFinite(appetite.annualLossLimit) && appetite.annualLossLimit > 0;
 
   const computeBody = useCallback(
     (extra: Record<string, unknown>) => ({
       ...answers,
-      seed: RESULTS_SIMULATION_SEED,
+      seed: resultsSimulationSeed,
       iterations: resultsIterations,
       appetite,
       ...extra,
     }),
-    [answers, appetite, resultsIterations],
+    [answers, appetite, resultsIterations, resultsSimulationSeed],
   );
 
   const runComparison = useCallback(async () => {
@@ -904,29 +908,29 @@ export function DecisionLabView() {
         <p className="m-0 text-small text-muted">
           {baselineCarriedFromResults === false ? (
             <>
-              Decision Lab replays the results page run with the published assessment seed{' '}
-              {RESULTS_SIMULATION_SEED} and {formatIterations(resultsIterations)} simulated years. This
-              baseline is further from the results page than sampling noise explains, so your answers
+              Decision Lab replays the results page run with the disclosed seed{' '}
+              {resultsSimulationSeed} and {formatIterations(resultsIterations)} simulated years. This
+              baseline is further from the results page than the replay tolerance explains, so your answers
               changed after that calculation.
             </>
           ) : (
             <>
-              Baseline carried from the results page: the same QuickRisk model, the published assessment
-              seed {RESULTS_SIMULATION_SEED} and the same {formatIterations(resultsIterations)} simulated
-              years, so the two figures agree to within Monte Carlo noise instead of describing separate
+              Baseline carried from the results page: the same QuickRisk model, the disclosed run
+              seed {resultsSimulationSeed} and the same {formatIterations(resultsIterations)} simulated
+              years, so the two figures replay the same model run rather than describing separate
               runs.
             </>
           )}{' '}
           Treated figures are recalculated on the server from your {questionCount} answers with QuickRisk
           model {results.meta.modelId} version {results.meta.modelVersion} · Decision Lab methodology{' '}
-          {comparison?.provenance.decisionMethodologyVersion ?? '1.0'}.
+          {comparison?.provenance.decisionMethodologyVersion ?? '2.0'}.
         </p>
         {comparison !== null && baselineCarriedFromResults === false && resultsPortfolioEal !== null ? (
           <Alert tone="warning" title="The baseline no longer matches the results page">
             <p className="m-0">
               Your answers changed after the results were calculated. This baseline is{' '}
               {formatBoardMoney(comparison.baseline.expectedAnnualLoss, symbol)}, while the results page
-              shows {formatBoardMoney(resultsPortfolioEal, symbol)} — a gap larger than Monte Carlo noise at{' '}
+              shows {formatBoardMoney(resultsPortfolioEal, symbol)} — a gap larger than the replay tolerance at{' '}
               {formatIterations(resultsIterations)} iterations. Recalculate the assessment so both screens
               describe the same answers.
             </p>
@@ -965,7 +969,7 @@ export function DecisionLabView() {
                 'Not calculated'}
             </code>
             <p className="m-0 mt-1 text-micro text-muted">
-              Seed {RESULTS_SIMULATION_SEED} · {formatIterations(resultsIterations)} iterations · Analyst Mode
+              Seed {resultsSimulationSeed} · {formatIterations(resultsIterations)} iterations · Analyst Mode
               only. The fingerprint identifies the validated compute input; it is not a security token.
             </p>
           </div>
@@ -1123,8 +1127,8 @@ export function DecisionLabView() {
               Expected Annual Loss (EAL) is the average annual modeled loss. High-End Modeled Loss is the P90
               (90th percentile): about 10% of modeled years exceed it.{' '}
               {baselineCarriedFromResults === false
-                ? 'The baseline is further from the results page than sampling noise explains, so it describes changed answers.'
-                : 'The baseline replays the results page run with the same seed and iteration count, so it agrees with that figure to within Monte Carlo noise.'}{' '}
+                ? 'The baseline is further from the results page than the replay tolerance explains, so it describes changed answers.'
+                : 'The baseline replays the results page run with the same disclosed seed and iteration count, so it reproduces that run.'}{' '}
               The treated figures apply your selected treatments to those same simulated years. Neither figure
               comes from QuickRisk Live, and neither one changes the results page or your saved Live
               snapshots.

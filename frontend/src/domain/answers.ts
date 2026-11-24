@@ -6,6 +6,7 @@
  */
 
 import type { OptionCode } from './model';
+import type { OrganisationEvidence } from './evidence';
 
 /** questionCode -> optionCode */
 export type OrganisationAnswers = Readonly<Record<string, OptionCode>>;
@@ -34,6 +35,7 @@ export interface CalculationRequest {
   readonly disclaimer: DisclaimerAcknowledgement;
   readonly organisationAnswers: readonly OrganisationAnswerEntry[];
   readonly scenarioAnswers: readonly ScenarioAnswerEntry[];
+  readonly organisationEvidence?: OrganisationEvidence;
 }
 
 export function isUnknownAnswer(optionCode: OptionCode | undefined, unknownCode: string): boolean {

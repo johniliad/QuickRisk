@@ -1,0 +1,2200 @@
+{
+    "status": "ok",
+    "meta": {
+        "applicationVersion": "1.3.5",
+        "modelId": "FAIR-QK-2.0",
+        "modelVersion": "2.0.0",
+        "schemaVersion": "2.0.0",
+        "calibrationVersion": "CAL-2.0",
+        "methodologyVersion": "METH-2.0",
+        "disclaimerVersion": "DISC-2.0",
+        "privacyNoticeVersion": "PRIV-1.1",
+        "releaseStatus": "provisional-release",
+        "retentionMode": "zero-retention",
+        "currency": "EUR",
+        "currencySymbol": "\u20ac",
+        "iterations": 1000,
+        "scenarioCount": 5,
+        "calculatedAt": "2026-11-24T17:59:19Z",
+        "seedPersisted": false,
+        "seedDisclosed": true,
+        "simulationSeed": 20261124,
+        "jointPercentilesAvailable": true,
+        "annualisationMethod": "posterior-predictive-compound-poisson-annual-total",
+        "realisedAnnualTotalsModelled": true,
+        "annualisationLimitation": "Annual totals are posterior-predictive simulations conditional on public reference evidence, questionnaire elicitation assumptions and the named dependence model. They are not forecasts, guarantees, audited accounts or organisation-specific validation.",
+        "calibrationStatus": "provisional-release",
+        "inference": {
+            "mode": "posterior-reference-class",
+            "active": true,
+            "packageVersion": "PINF-QK-2.0.0",
+            "evidencePackageVersion": "EVID-QK-2.0.0",
+            "status": "reference-posterior-validated",
+            "drawCount": 2000,
+            "referencePackageHash": "522bcf56c8ae1a800c0822fc0dd3ea737be831186a6b7f2bf5ca08c41962b666",
+            "validationScope": [
+                "lognormal positive-severity quantile calibration",
+                "temporal holdout of organisation-size attack prevalence",
+                "source-role and prohibited-use enforcement",
+                "joint-draw structural validation at load time"
+            ],
+            "knownValidationGap": "No independent organisation-level prospective loss dataset is available; national aggregate evidence cannot validate individual organisations.",
+            "evidenceSources": [
+                {
+                    "id": "dsit-csbs-2025-2026",
+                    "file": "dsit-2025-2026.json",
+                    "role": "frequency, materiality and ordinary-severity reference",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "ibm-cost-of-a-data-breach-2025",
+                    "file": "ibm-2025.json",
+                    "role": "large-enterprise severity sensitivity",
+                    "classification": "externally-evidenced mean; weak-prior distribution shape"
+                },
+                {
+                    "id": "verizon-dbir-2026",
+                    "file": "dbir-2026.json",
+                    "role": "scenario-composition sensitivity only; no activated frequency parameters",
+                    "classification": "contextual and sensitivity-only"
+                },
+                {
+                    "id": "ecb-annual-reference-rates-2025",
+                    "file": "fx-2025.json",
+                    "role": "currency conversion provenance",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "dsit-csbs-2024-2025-holdout",
+                    "file": "dsit-2024-2025-holdout.json",
+                    "role": "prior-wave prevalence holdout only",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "quickrisk-treatment-priors",
+                    "file": "treatment-priors.json",
+                    "role": "curated treatment effect priors",
+                    "classification": "elicitation-assumption-only"
+                }
+            ],
+            "evidenceUpdate": {
+                "evidenceUsed": false,
+                "materialLossEventCount": null,
+                "effectiveSampleSize": 2000
+            }
+        }
+    },
+    "portfolio": {
+        "label": "Posterior-predictive annual total loss",
+        "expectedAnnualLoss": 1091.3106918684896,
+        "standardDeviation": 11726.973622656062,
+        "meanStandardError": 370.83946708309117,
+        "p10": 0,
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 491.6837976563747,
+        "minimum": 0,
+        "maximum": 276723.3273274179,
+        "iterations": 1000,
+        "thresholdProbabilities": {
+            "100000": 0.002,
+            "500000": 0,
+            "1000000": 0,
+            "5000000": 0,
+            "10000000": 0
+        },
+        "thresholdExceedanceCounts": {
+            "100000": 2,
+            "500000": 0,
+            "1000000": 0,
+            "5000000": 0,
+            "10000000": 0
+        },
+        "thresholdIntervals": {
+            "100000": {
+                "lower": 0.0005486435881207279,
+                "upper": 0.007262807863492177,
+                "estimate": 0.002,
+                "successes": 2,
+                "trials": 1000,
+                "sufficientCount": false,
+                "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+            },
+            "500000": {
+                "lower": 2.1601063852437764e-19,
+                "upper": 0.003826758485555124,
+                "estimate": 0,
+                "successes": 0,
+                "trials": 1000,
+                "sufficientCount": false,
+                "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+            },
+            "1000000": {
+                "lower": 2.1601063852437764e-19,
+                "upper": 0.003826758485555124,
+                "estimate": 0,
+                "successes": 0,
+                "trials": 1000,
+                "sufficientCount": false,
+                "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+            },
+            "5000000": {
+                "lower": 2.1601063852437764e-19,
+                "upper": 0.003826758485555124,
+                "estimate": 0,
+                "successes": 0,
+                "trials": 1000,
+                "sufficientCount": false,
+                "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+            },
+            "10000000": {
+                "lower": 2.1601063852437764e-19,
+                "upper": 0.003826758485555124,
+                "estimate": 0,
+                "successes": 0,
+                "trials": 1000,
+                "sufficientCount": false,
+                "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+            }
+        },
+        "scenarioContributions": [
+            {
+                "code": "S1",
+                "name": "Ransomware / destructive extortion",
+                "shortLabel": "Ransomware",
+                "expectedAnnualLoss": 133.22424747195458,
+                "factor": 1
+            },
+            {
+                "code": "S2",
+                "name": "Identity / phishing / social-engineering compromise",
+                "shortLabel": "Identity compromise",
+                "expectedAnnualLoss": 352.44688319405395,
+                "factor": 1
+            },
+            {
+                "code": "S3",
+                "name": "Public-facing vulnerability exploitation",
+                "shortLabel": "Vulnerability exploitation",
+                "expectedAnnualLoss": 233.42991680039648,
+                "factor": 1
+            },
+            {
+                "code": "S4",
+                "name": "Third-party / supplier compromise",
+                "shortLabel": "Third-party compromise",
+                "expectedAnnualLoss": 325.32489923405535,
+                "factor": 1
+            },
+            {
+                "code": "S5",
+                "name": "DDoS / service disruption",
+                "shortLabel": "DDoS / disruption",
+                "expectedAnnualLoss": 46.88474516802912,
+                "factor": 1
+            }
+        ],
+        "annualisationNote": "P10/P50/P90 describe simulated annual total losses, including years with no material event. Because counts are zero-inflated and severities are heavy-tailed, the mean can exceed P90. These are posterior-predictive intervals, not confidence intervals or guarantees.",
+        "topScenarios": [
+            {
+                "code": "S2",
+                "name": "Identity / phishing / social-engineering compromise",
+                "shortLabel": "Identity compromise",
+                "expectedAnnualLoss": 352.44688319405395,
+                "confidence": "Medium",
+                "rank": 1
+            },
+            {
+                "code": "S4",
+                "name": "Third-party / supplier compromise",
+                "shortLabel": "Third-party compromise",
+                "expectedAnnualLoss": 325.32489923405535,
+                "confidence": "Medium",
+                "rank": 2
+            },
+            {
+                "code": "S3",
+                "name": "Public-facing vulnerability exploitation",
+                "shortLabel": "Vulnerability exploitation",
+                "expectedAnnualLoss": 233.42991680039648,
+                "confidence": "Medium",
+                "rank": 3
+            }
+        ],
+        "highestP90": {
+            "code": "S1",
+            "name": "Ransomware / destructive extortion",
+            "shortLabel": "Ransomware",
+            "p90": 0
+        },
+        "highestProbabilityAboveThreshold": {
+            "code": "S1",
+            "name": "Ransomware / destructive extortion",
+            "shortLabel": "Ransomware",
+            "threshold": 1000000,
+            "probability": 0
+        },
+        "confidence": {
+            "score": 70,
+            "level": "Medium",
+            "reasons": [
+                "Overall input confidence is the average of the five scenario input-confidence scores.",
+                "Some uncertainty remains in the inputs or the calibration, so the range should be read as indicative."
+            ],
+            "basis": "heuristic-input-quality",
+            "isStatisticalConfidence": false,
+            "displayLabel": "Input confidence",
+            "levelCapApplied": false,
+            "maximumLevelWhenProvisional": "Medium"
+        },
+        "summary": "The joint posterior-predictive mean annual loss is \u20ac1k.",
+        "jointPercentilesNote": "Scenario losses share the same posterior parameter draw and are simulated jointly; joint percentiles are available under the documented dependence model.",
+        "sensitivity": {
+            "factors": [
+                {
+                    "kind": "profile",
+                    "questionCode": "QP8",
+                    "scenarioCode": null,
+                    "label": "Daily disruption cost",
+                    "lowOption": "LT25K",
+                    "lowExpectedAnnualLoss": 514.6343716061981,
+                    "highOption": "GT10M",
+                    "highExpectedAnnualLoss": 3007.7067195909854,
+                    "spreadRatio": 5.844356470407896,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S1A",
+                    "scenarioCode": "S1",
+                    "label": "Ransomware: Based on your organisation's exposure and the level of threat activity directed at your sector, how often is ransomware or destructive extortion attempted or contacted in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+                    "lowOption": "VERY_UNLIKELY",
+                    "lowExpectedAnnualLoss": 740.0135415932558,
+                    "highOption": "VERY_LIKELY",
+                    "highExpectedAnnualLoss": 4037.9585818356186,
+                    "spreadRatio": 5.456600933466511,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "profile",
+                    "questionCode": "QP4",
+                    "scenarioCode": null,
+                    "label": "Sensitive-information exposure",
+                    "lowOption": "LIMITED",
+                    "lowExpectedAnnualLoss": 519.9133635349173,
+                    "highOption": "CRITICAL",
+                    "highExpectedAnnualLoss": 1767.7054360187183,
+                    "spreadRatio": 3.399999999999999,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S1B",
+                    "scenarioCode": "S1",
+                    "label": "Ransomware: If critical systems were disrupted and/or data were exfiltrated through ransomware, what level of financial and business impact would you expect?",
+                    "lowOption": "MINOR",
+                    "lowExpectedAnnualLoss": 806.638693921384,
+                    "highOption": "CRITICAL",
+                    "highExpectedAnnualLoss": 2705.4555352730463,
+                    "spreadRatio": 3.353986804328436,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S2A",
+                    "scenarioCode": "S2",
+                    "label": "Identity compromise: Based on your organisation's exposure and the level of threat activity directed at your sector, how often is an identity, phishing or social-engineering attack attempted against your users or accounts in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+                    "lowOption": "VERY_UNLIKELY",
+                    "lowExpectedAnnualLoss": 857.8716613347013,
+                    "highOption": "VERY_LIKELY",
+                    "highExpectedAnnualLoss": 2859.3773844211614,
+                    "spreadRatio": 3.3331062363949173,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S3A",
+                    "scenarioCode": "S3",
+                    "label": "Vulnerability exploitation: Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a public-facing service or vulnerability probed or attacked in a typical 12-month period? Answer before considering whether your patching and hardening would prevent success.",
+                    "lowOption": "VERY_UNLIKELY",
+                    "lowExpectedAnnualLoss": 875.8678557483335,
+                    "highOption": "VERY_LIKELY",
+                    "highExpectedAnnualLoss": 2679.415440284843,
+                    "spreadRatio": 3.0591548972825073,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S4A",
+                    "scenarioCode": "S4",
+                    "label": "Third-party compromise: Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a material incident attempted through or originating from a third party or supplier in a typical 12-month period? Answer before considering whether your supplier controls would prevent it from propagating.",
+                    "lowOption": "VERY_UNLIKELY",
+                    "lowExpectedAnnualLoss": 890.9742565374928,
+                    "highOption": "VERY_LIKELY",
+                    "highExpectedAnnualLoss": 2528.35143239325,
+                    "spreadRatio": 2.8377379187350913,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "scenario",
+                    "questionCode": "S5A",
+                    "scenarioCode": "S5",
+                    "label": "DDoS / disruption: Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a denial-of-service or service-disruption attempt directed at your internet-facing services in a typical 12-month period? Answer before considering whether your mitigation would prevent disruption.",
+                    "lowOption": "VERY_UNLIKELY",
+                    "lowExpectedAnnualLoss": 898.5622657725379,
+                    "highOption": "VERY_LIKELY",
+                    "highExpectedAnnualLoss": 2452.471340042801,
+                    "spreadRatio": 2.7293282095863343,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "profile",
+                    "questionCode": "QP2",
+                    "scenarioCode": null,
+                    "label": "Critical-service dependency",
+                    "lowOption": "LOW",
+                    "lowExpectedAnnualLoss": 623.8960362419006,
+                    "highOption": "EXTREME",
+                    "highExpectedAnnualLoss": 1663.7227633117348,
+                    "spreadRatio": 2.6666666666666665,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                },
+                {
+                    "kind": "profile",
+                    "questionCode": "QP6",
+                    "scenarioCode": null,
+                    "label": "Recovery capability",
+                    "lowOption": "VERY_HIGH",
+                    "lowExpectedAnnualLoss": 675.8873725953921,
+                    "highOption": "VERY_LOW",
+                    "highExpectedAnnualLoss": 1559.7400906047517,
+                    "spreadRatio": 2.307692307692309,
+                    "baselineExpectedAnnualLoss": 1039.8267270698345
+                }
+            ],
+            "factorCount": 18,
+            "baselineExpectedAnnualLoss": 1039.8267270698345,
+            "baselineMethod": "posterior-draw-expected-value",
+            "method": "Expected annual loss is recomputed across the same posterior draws for each answer option, holding other answers fixed. This is a model sensitivity, not a causal effect.",
+            "note": "Factors are ranked by spread. Questionnaire multipliers and scenario weights remain assumptions.",
+            "truncated": true
+        },
+        "inference": {
+            "mode": "posterior-reference-class",
+            "active": true,
+            "packageVersion": "PINF-QK-2.0.0",
+            "evidencePackageVersion": "EVID-QK-2.0.0",
+            "status": "reference-posterior-validated",
+            "drawCount": 2000,
+            "referencePackageHash": "522bcf56c8ae1a800c0822fc0dd3ea737be831186a6b7f2bf5ca08c41962b666",
+            "validationScope": [
+                "lognormal positive-severity quantile calibration",
+                "temporal holdout of organisation-size attack prevalence",
+                "source-role and prohibited-use enforcement",
+                "joint-draw structural validation at load time"
+            ],
+            "knownValidationGap": "No independent organisation-level prospective loss dataset is available; national aggregate evidence cannot validate individual organisations.",
+            "evidenceSources": [
+                {
+                    "id": "dsit-csbs-2025-2026",
+                    "file": "dsit-2025-2026.json",
+                    "role": "frequency, materiality and ordinary-severity reference",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "ibm-cost-of-a-data-breach-2025",
+                    "file": "ibm-2025.json",
+                    "role": "large-enterprise severity sensitivity",
+                    "classification": "externally-evidenced mean; weak-prior distribution shape"
+                },
+                {
+                    "id": "verizon-dbir-2026",
+                    "file": "dbir-2026.json",
+                    "role": "scenario-composition sensitivity only; no activated frequency parameters",
+                    "classification": "contextual and sensitivity-only"
+                },
+                {
+                    "id": "ecb-annual-reference-rates-2025",
+                    "file": "fx-2025.json",
+                    "role": "currency conversion provenance",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "dsit-csbs-2024-2025-holdout",
+                    "file": "dsit-2024-2025-holdout.json",
+                    "role": "prior-wave prevalence holdout only",
+                    "classification": "externally-evidenced"
+                },
+                {
+                    "id": "quickrisk-treatment-priors",
+                    "file": "treatment-priors.json",
+                    "role": "curated treatment effect priors",
+                    "classification": "elicitation-assumption-only"
+                }
+            ],
+            "evidenceUpdate": {
+                "evidenceUsed": false,
+                "materialLossEventCount": null,
+                "effectiveSampleSize": 2000
+            }
+        }
+    },
+    "scenarios": [
+        {
+            "code": "S1",
+            "order": 1,
+            "name": "Ransomware / destructive extortion",
+            "shortLabel": "Ransomware",
+            "shortDescription": "Criminal intrusion, encryption or destruction of systems and extortion pressure.",
+            "statement": "A criminal threat actor gains sufficient access to disrupt or encrypt critical systems and/or exfiltrate data, followed by extortion, causing operational disruption, response costs and potentially secondary losses.",
+            "answers": [
+                {
+                    "questionCode": "S1A",
+                    "questionText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is ransomware or destructive extortion attempted or contacted in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+                    "optionCode": "POSSIBLE",
+                    "label": "Possible",
+                    "unknown": false
+                },
+                {
+                    "questionCode": "S1B",
+                    "questionText": "If critical systems were disrupted and/or data were exfiltrated through ransomware, what level of financial and business impact would you expect?",
+                    "optionCode": "SIGNIFICANT",
+                    "label": "Significant",
+                    "unknown": false
+                }
+            ],
+            "inputs": {
+                "threatEventFrequency": {
+                    "kind": "posterior",
+                    "parameter": "scenarioEventRate",
+                    "min": 0.00028161374593487756,
+                    "mode": 0.08840122367198874,
+                    "max": 0.8165236751703432,
+                    "components": [],
+                    "mean": 0.11788170519181282,
+                    "standardDeviation": 0.1085023112601932,
+                    "q025": 0.002983477942673475,
+                    "q500": 0.08840122367198874,
+                    "q975": 0.39944123366703765,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "susceptibility": {
+                    "kind": "posterior",
+                    "parameter": "materialLossProbability",
+                    "min": 0.2395335534802108,
+                    "mode": 0.4946826769420739,
+                    "max": 0.7539166659181907,
+                    "components": [],
+                    "mean": 0.49512078034481255,
+                    "standardDeviation": 0.08892307466513183,
+                    "q025": 0.32317087117226223,
+                    "q500": 0.4946826769420739,
+                    "q975": 0.6679290393323177,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "lossMagnitudeAnchor": {
+                    "kind": "posterior",
+                    "parameter": "positiveEventSeverity",
+                    "min": 0,
+                    "mode": 0,
+                    "max": 23877.34758720844,
+                    "components": [],
+                    "mean": 132.6278923357883,
+                    "standardDeviation": 1230.059924912785,
+                    "q025": 0,
+                    "q500": 0,
+                    "q975": 483.4195795659119,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                }
+            },
+            "appliedModifiers": [],
+            "lossAnchorSource": "elicitation-adjusted-reference-severity",
+            "statistics": {
+                "minimum": 0,
+                "p10": 0,
+                "p25": 0,
+                "p50": 0,
+                "p75": 0,
+                "p90": 0,
+                "maximum": 23877.34758720844,
+                "expectedAnnualLoss": 133.22424747195458,
+                "standardDeviation": 1230.4291100801838,
+                "coefficientOfVariation": 9.235774518742955,
+                "meanStandardError": 38.90958487227425,
+                "expectedThreatEventFrequency": 0.11788170519181282,
+                "meanSusceptibility": 0.49512078034481255,
+                "expectedLossEventFrequency": 0.05838928204588308,
+                "expectedLossMagnitude": 2281.6558588143826,
+                "expectedPrimaryLossMagnitude": 1646.2161331204659,
+                "expectedSecondaryLossMagnitude": 635.439725693917,
+                "secondaryLossShare": 0.27849937283009485,
+                "secondaryLossOccurrenceRate": 0.054,
+                "iterations": 1000,
+                "thresholdProbabilities": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdExceedanceCounts": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdIntervals": {
+                    "100000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "500000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "1000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "5000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "10000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    }
+                }
+            },
+            "distribution": {
+                "binEdges": [
+                    0,
+                    84.07,
+                    168.15,
+                    252.22,
+                    336.3,
+                    420.37,
+                    504.45,
+                    588.52,
+                    672.6,
+                    756.67,
+                    840.74,
+                    924.82,
+                    1008.89,
+                    1092.97,
+                    1177.04,
+                    1261.12,
+                    1345.19,
+                    1429.27,
+                    1513.34,
+                    1597.41,
+                    1681.49,
+                    1765.56,
+                    1849.64,
+                    1933.71,
+                    2017.79,
+                    2101.86,
+                    2185.93,
+                    2270.01,
+                    2354.08,
+                    2438.16,
+                    2522.23,
+                    2606.31,
+                    2690.38,
+                    2774.46,
+                    2858.53,
+                    2942.6,
+                    3026.68,
+                    3110.75,
+                    3194.83,
+                    3278.9,
+                    3362.98
+                ],
+                "counts": [
+                    965,
+                    7,
+                    1,
+                    1,
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    2,
+                    0,
+                    1,
+                    2,
+                    1,
+                    3,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1
+                ],
+                "overflowFrom": 3362.98,
+                "overflowCount": 10,
+                "binWidth": 84.07
+            },
+            "confidence": {
+                "score": 70,
+                "level": "Medium",
+                "reasons": [
+                    "The simulated loss distribution is very wide relative to its average.",
+                    "The active calibration is provisional: its values are heuristics and have not been externally validated."
+                ],
+                "basis": "heuristic-input-quality",
+                "isStatisticalConfidence": false,
+                "displayLabel": "Input confidence",
+                "levelCapApplied": false,
+                "maximumLevelWhenProvisional": "Medium"
+            },
+            "drivers": [
+                {
+                    "code": "threatEventFrequency",
+                    "label": "Expected scenario event rate",
+                    "value": 0.11788170519181282,
+                    "unit": "events/year",
+                    "detail": "Posterior mean annual scenario event rate after questionnaire evidence."
+                },
+                {
+                    "code": "susceptibility",
+                    "label": "Material-loss probability",
+                    "value": 0.49512078034481255,
+                    "unit": "probability",
+                    "detail": "Probability that an identified event carries a material financial cost."
+                },
+                {
+                    "code": "lossEventFrequency",
+                    "label": "Expected material loss events per year",
+                    "value": 0.05838928204588308,
+                    "unit": "events/year",
+                    "detail": "Posterior mean Poisson rate used to draw each simulated year."
+                },
+                {
+                    "code": "primaryLossMagnitude",
+                    "label": "Expected primary loss per event",
+                    "value": 1646.2161331204659,
+                    "unit": "currency",
+                    "detail": "Allocated direct-loss share of simulated material event severity."
+                },
+                {
+                    "code": "secondaryLossProbability",
+                    "label": "Years with secondary loss",
+                    "value": 0.054,
+                    "unit": "probability",
+                    "detail": "Share of simulated years containing a secondary-loss component."
+                },
+                {
+                    "code": "secondaryLossMagnitude",
+                    "label": "Expected secondary loss per event",
+                    "value": 635.439725693917,
+                    "unit": "currency",
+                    "detail": "Allocated consequential share; the allocation is an elicitation assumption."
+                },
+                {
+                    "code": "secondaryLossShare",
+                    "label": "Share of expected annual loss from secondary loss",
+                    "value": 0.27849937283009485,
+                    "unit": "probability",
+                    "detail": "Modelled secondary share of annual total loss."
+                }
+            ],
+            "driverIndex": {
+                "frequency": 100,
+                "magnitude": 100,
+                "secondary": 0
+            },
+            "interpretation": {
+                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac133 for Ransomware.",
+                "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
+                "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
+                "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
+                "unknownStatement": "",
+                "doesNotMean": "This is not a prediction that ransomware will occur, and it does not measure the effectiveness of any specific control.",
+                "investigationPromptNote": "Evidence-informed estimates are not organisation-specific validation."
+            },
+            "investigationPrompts": [
+                "Verify backup and restore capability, including offline or immutable copies and tested restore times.",
+                "Confirm privileged access controls, administrative tiering and remote-access hardening.",
+                "Review network segmentation and lateral-movement containment.",
+                "Validate incident-response readiness, including extortion decision-making and communications."
+            ]
+        },
+        {
+            "code": "S2",
+            "order": 2,
+            "name": "Identity / phishing / social-engineering compromise",
+            "shortLabel": "Identity compromise",
+            "shortDescription": "Credential theft, phishing or social engineering leading to account compromise.",
+            "statement": "An attacker uses phishing, social engineering, stolen credentials, session theft or related techniques to compromise a user or privileged account and causes unauthorised access, fraud, data exposure or operational impact.",
+            "answers": [
+                {
+                    "questionCode": "S2A",
+                    "questionText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is an identity, phishing or social-engineering attack attempted against your users or accounts in a typical 12-month period? Answer before considering whether your controls would prevent it.",
+                    "optionCode": "POSSIBLE",
+                    "label": "Possible",
+                    "unknown": false
+                },
+                {
+                    "questionCode": "S2B",
+                    "questionText": "If a compromised account resulted in unauthorised access, fraud or data exposure, what level of financial and business impact would you expect?",
+                    "optionCode": "SIGNIFICANT",
+                    "label": "Significant",
+                    "unknown": false
+                }
+            ],
+            "inputs": {
+                "threatEventFrequency": {
+                    "kind": "posterior",
+                    "parameter": "scenarioEventRate",
+                    "min": 0.00025225605131056524,
+                    "mode": 0.09322053699973004,
+                    "max": 0.7766618351944219,
+                    "components": [],
+                    "mean": 0.12054172002991367,
+                    "standardDeviation": 0.1088719000916093,
+                    "q025": 0.003034516640075991,
+                    "q500": 0.09322053699973004,
+                    "q975": 0.4091183695041115,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "susceptibility": {
+                    "kind": "posterior",
+                    "parameter": "materialLossProbability",
+                    "min": 0.19564377489157364,
+                    "mode": 0.49489620495998154,
+                    "max": 0.7516475412005728,
+                    "components": [],
+                    "mean": 0.49140148583991,
+                    "standardDeviation": 0.09149043120412255,
+                    "q025": 0.30789726743188195,
+                    "q500": 0.49489620495998154,
+                    "q975": 0.662394687354581,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "lossMagnitudeAnchor": {
+                    "kind": "posterior",
+                    "parameter": "positiveEventSeverity",
+                    "min": 0,
+                    "mode": 0,
+                    "max": 220807.56711237924,
+                    "components": [],
+                    "mean": 351.7426884562324,
+                    "standardDeviation": 7169.224028747645,
+                    "q025": 0,
+                    "q500": 0,
+                    "q975": 258.49967330786365,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                }
+            },
+            "appliedModifiers": [],
+            "lossAnchorSource": "elicitation-adjusted-reference-severity",
+            "statistics": {
+                "minimum": 0,
+                "p10": 0,
+                "p25": 0,
+                "p50": 0,
+                "p75": 0,
+                "p90": 0,
+                "maximum": 220807.56711237924,
+                "expectedAnnualLoss": 352.44688319405395,
+                "standardDeviation": 7169.228579391099,
+                "coefficientOfVariation": 20.34130225360452,
+                "meanStandardError": 226.71091377249158,
+                "expectedThreatEventFrequency": 0.12054172002991367,
+                "meanSusceptibility": 0.49140148583991,
+                "expectedLossEventFrequency": 0.05887634594701408,
+                "expectedLossMagnitude": 5986.222098620717,
+                "expectedPrimaryLossMagnitude": 4489.557019442729,
+                "expectedSecondaryLossMagnitude": 1496.6650791779869,
+                "secondaryLossShare": 0.250018301112288,
+                "secondaryLossOccurrenceRate": 0.046,
+                "iterations": 1000,
+                "thresholdProbabilities": {
+                    "100000": 0.001,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdExceedanceCounts": {
+                    "100000": 1,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdIntervals": {
+                    "100000": {
+                        "lower": 0.00017654637062607817,
+                        "upper": 0.0056425585979579355,
+                        "estimate": 0.001,
+                        "successes": 1,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "500000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "1000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "5000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "10000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    }
+                }
+            },
+            "distribution": {
+                "binEdges": [
+                    0,
+                    39.1,
+                    78.2,
+                    117.31,
+                    156.41,
+                    195.51,
+                    234.61,
+                    273.71,
+                    312.82,
+                    351.92,
+                    391.02,
+                    430.12,
+                    469.22,
+                    508.33,
+                    547.43,
+                    586.53,
+                    625.63,
+                    664.74,
+                    703.84,
+                    742.94,
+                    782.04,
+                    821.14,
+                    860.25,
+                    899.35,
+                    938.45,
+                    977.55,
+                    1016.65,
+                    1055.76,
+                    1094.86,
+                    1133.96,
+                    1173.06,
+                    1212.16,
+                    1251.27,
+                    1290.37,
+                    1329.47,
+                    1368.57,
+                    1407.67,
+                    1446.78,
+                    1485.88,
+                    1524.98,
+                    1564.08
+                ],
+                "counts": [
+                    961,
+                    4,
+                    1,
+                    4,
+                    1,
+                    2,
+                    2,
+                    1,
+                    0,
+                    1,
+                    1,
+                    2,
+                    2,
+                    0,
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    2
+                ],
+                "overflowFrom": 1564.08,
+                "overflowCount": 10,
+                "binWidth": 39.1
+            },
+            "confidence": {
+                "score": 70,
+                "level": "Medium",
+                "reasons": [
+                    "The simulated loss distribution is very wide relative to its average.",
+                    "The active calibration is provisional: its values are heuristics and have not been externally validated."
+                ],
+                "basis": "heuristic-input-quality",
+                "isStatisticalConfidence": false,
+                "displayLabel": "Input confidence",
+                "levelCapApplied": false,
+                "maximumLevelWhenProvisional": "Medium"
+            },
+            "drivers": [
+                {
+                    "code": "threatEventFrequency",
+                    "label": "Expected scenario event rate",
+                    "value": 0.12054172002991367,
+                    "unit": "events/year",
+                    "detail": "Posterior mean annual scenario event rate after questionnaire evidence."
+                },
+                {
+                    "code": "susceptibility",
+                    "label": "Material-loss probability",
+                    "value": 0.49140148583991,
+                    "unit": "probability",
+                    "detail": "Probability that an identified event carries a material financial cost."
+                },
+                {
+                    "code": "lossEventFrequency",
+                    "label": "Expected material loss events per year",
+                    "value": 0.05887634594701408,
+                    "unit": "events/year",
+                    "detail": "Posterior mean Poisson rate used to draw each simulated year."
+                },
+                {
+                    "code": "primaryLossMagnitude",
+                    "label": "Expected primary loss per event",
+                    "value": 4489.557019442729,
+                    "unit": "currency",
+                    "detail": "Allocated direct-loss share of simulated material event severity."
+                },
+                {
+                    "code": "secondaryLossProbability",
+                    "label": "Years with secondary loss",
+                    "value": 0.046,
+                    "unit": "probability",
+                    "detail": "Share of simulated years containing a secondary-loss component."
+                },
+                {
+                    "code": "secondaryLossMagnitude",
+                    "label": "Expected secondary loss per event",
+                    "value": 1496.6650791779869,
+                    "unit": "currency",
+                    "detail": "Allocated consequential share; the allocation is an elicitation assumption."
+                },
+                {
+                    "code": "secondaryLossShare",
+                    "label": "Share of expected annual loss from secondary loss",
+                    "value": 0.250018301112288,
+                    "unit": "probability",
+                    "detail": "Modelled secondary share of annual total loss."
+                }
+            ],
+            "driverIndex": {
+                "frequency": 100,
+                "magnitude": 100,
+                "secondary": 0
+            },
+            "interpretation": {
+                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac352 for Identity compromise.",
+                "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
+                "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
+                "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
+                "unknownStatement": "",
+                "doesNotMean": "This is not a measure of user awareness training effectiveness or of any specific authentication control.",
+                "investigationPromptNote": "Evidence-informed estimates are not organisation-specific validation."
+            },
+            "investigationPrompts": [
+                "Confirm multi-factor authentication coverage for all users, administrators and external access paths.",
+                "Review phishing-resistant authentication options for privileged and high-value accounts.",
+                "Check monitoring and alerting for anomalous authentication, session and mailbox activity.",
+                "Review joiner/mover/leaver and privileged-access provisioning processes."
+            ]
+        },
+        {
+            "code": "S3",
+            "order": 3,
+            "name": "Public-facing vulnerability exploitation",
+            "shortLabel": "Vulnerability exploitation",
+            "shortDescription": "Exploitation of a vulnerability in an internet-facing system or appliance.",
+            "statement": "An attacker exploits a vulnerability or insecure condition in an internet-facing application, appliance, VPN, gateway or other exposed technology component and gains unauthorised access or causes a material security incident.",
+            "answers": [
+                {
+                    "questionCode": "S3A",
+                    "questionText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a public-facing service or vulnerability probed or attacked in a typical 12-month period? Answer before considering whether your patching and hardening would prevent success.",
+                    "optionCode": "POSSIBLE",
+                    "label": "Possible",
+                    "unknown": false
+                },
+                {
+                    "questionCode": "S3B",
+                    "questionText": "If an internet-facing system were successfully exploited, what level of financial and business impact would you expect?",
+                    "optionCode": "SIGNIFICANT",
+                    "label": "Significant",
+                    "unknown": false
+                }
+            ],
+            "inputs": {
+                "threatEventFrequency": {
+                    "kind": "posterior",
+                    "parameter": "scenarioEventRate",
+                    "min": 7.066065385105136e-5,
+                    "mode": 0.09072540155903315,
+                    "max": 0.740407883387873,
+                    "components": [],
+                    "mean": 0.11985726947750022,
+                    "standardDeviation": 0.10788856816110766,
+                    "q025": 0.0028412318829104718,
+                    "q500": 0.09072540155903315,
+                    "q975": 0.3883261875101777,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "susceptibility": {
+                    "kind": "posterior",
+                    "parameter": "materialLossProbability",
+                    "min": 0.24581509230315962,
+                    "mode": 0.49669474640958106,
+                    "max": 0.782667545373236,
+                    "components": [],
+                    "mean": 0.49486817535601324,
+                    "standardDeviation": 0.08737285537469346,
+                    "q025": 0.3227914963350011,
+                    "q500": 0.49669474640958106,
+                    "q975": 0.6582826288522954,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "lossMagnitudeAnchor": {
+                    "kind": "posterior",
+                    "parameter": "positiveEventSeverity",
+                    "min": 0,
+                    "mode": 0,
+                    "max": 60267.521582185786,
+                    "components": [],
+                    "mean": 228.85294606632797,
+                    "standardDeviation": 2899.6690930019495,
+                    "q025": 0,
+                    "q500": 0,
+                    "q975": 697.3446362832622,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                }
+            },
+            "appliedModifiers": [],
+            "lossAnchorSource": "elicitation-adjusted-reference-severity",
+            "statistics": {
+                "minimum": 0,
+                "p10": 0,
+                "p25": 0,
+                "p50": 0,
+                "p75": 0,
+                "p90": 0,
+                "maximum": 60267.521582185786,
+                "expectedAnnualLoss": 233.42991680039648,
+                "standardDeviation": 2902.5463436975515,
+                "coefficientOfVariation": 12.434337395491124,
+                "meanStandardError": 91.78657460278178,
+                "expectedThreatEventFrequency": 0.11985726947750022,
+                "meanSusceptibility": 0.49486817535601324,
+                "expectedLossEventFrequency": 0.05929133981372174,
+                "expectedLossMagnitude": 3936.9985150238417,
+                "expectedPrimaryLossMagnitude": 2591.4623196068364,
+                "expectedSecondaryLossMagnitude": 1345.5361954170066,
+                "secondaryLossShare": 0.34176700607895916,
+                "secondaryLossOccurrenceRate": 0.057,
+                "iterations": 1000,
+                "thresholdProbabilities": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdExceedanceCounts": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdIntervals": {
+                    "100000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "500000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "1000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "5000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "10000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    }
+                }
+            },
+            "distribution": {
+                "binEdges": [
+                    0,
+                    86.24,
+                    172.47,
+                    258.71,
+                    344.95,
+                    431.18,
+                    517.42,
+                    603.66,
+                    689.9,
+                    776.13,
+                    862.37,
+                    948.61,
+                    1034.84,
+                    1121.08,
+                    1207.32,
+                    1293.55,
+                    1379.79,
+                    1466.03,
+                    1552.26,
+                    1638.5,
+                    1724.74,
+                    1810.98,
+                    1897.21,
+                    1983.45,
+                    2069.69,
+                    2155.92,
+                    2242.16,
+                    2328.4,
+                    2414.63,
+                    2500.87,
+                    2587.11,
+                    2673.34,
+                    2759.58,
+                    2845.82,
+                    2932.05,
+                    3018.29,
+                    3104.53,
+                    3190.77,
+                    3277,
+                    3363.24,
+                    3449.48
+                ],
+                "counts": [
+                    955,
+                    9,
+                    4,
+                    1,
+                    0,
+                    2,
+                    1,
+                    3,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    2,
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    1
+                ],
+                "overflowFrom": 3449.48,
+                "overflowCount": 10,
+                "binWidth": 86.24
+            },
+            "confidence": {
+                "score": 70,
+                "level": "Medium",
+                "reasons": [
+                    "The simulated loss distribution is very wide relative to its average.",
+                    "The active calibration is provisional: its values are heuristics and have not been externally validated."
+                ],
+                "basis": "heuristic-input-quality",
+                "isStatisticalConfidence": false,
+                "displayLabel": "Input confidence",
+                "levelCapApplied": false,
+                "maximumLevelWhenProvisional": "Medium"
+            },
+            "drivers": [
+                {
+                    "code": "threatEventFrequency",
+                    "label": "Expected scenario event rate",
+                    "value": 0.11985726947750022,
+                    "unit": "events/year",
+                    "detail": "Posterior mean annual scenario event rate after questionnaire evidence."
+                },
+                {
+                    "code": "susceptibility",
+                    "label": "Material-loss probability",
+                    "value": 0.49486817535601324,
+                    "unit": "probability",
+                    "detail": "Probability that an identified event carries a material financial cost."
+                },
+                {
+                    "code": "lossEventFrequency",
+                    "label": "Expected material loss events per year",
+                    "value": 0.05929133981372174,
+                    "unit": "events/year",
+                    "detail": "Posterior mean Poisson rate used to draw each simulated year."
+                },
+                {
+                    "code": "primaryLossMagnitude",
+                    "label": "Expected primary loss per event",
+                    "value": 2591.4623196068364,
+                    "unit": "currency",
+                    "detail": "Allocated direct-loss share of simulated material event severity."
+                },
+                {
+                    "code": "secondaryLossProbability",
+                    "label": "Years with secondary loss",
+                    "value": 0.057,
+                    "unit": "probability",
+                    "detail": "Share of simulated years containing a secondary-loss component."
+                },
+                {
+                    "code": "secondaryLossMagnitude",
+                    "label": "Expected secondary loss per event",
+                    "value": 1345.5361954170066,
+                    "unit": "currency",
+                    "detail": "Allocated consequential share; the allocation is an elicitation assumption."
+                },
+                {
+                    "code": "secondaryLossShare",
+                    "label": "Share of expected annual loss from secondary loss",
+                    "value": 0.34176700607895916,
+                    "unit": "probability",
+                    "detail": "Modelled secondary share of annual total loss."
+                }
+            ],
+            "driverIndex": {
+                "frequency": 100,
+                "magnitude": 100,
+                "secondary": 0
+            },
+            "interpretation": {
+                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac233 for Vulnerability exploitation.",
+                "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
+                "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
+                "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
+                "unknownStatement": "",
+                "doesNotMean": "This is not a vulnerability scan, a penetration test or an assessment of any specific patch level.",
+                "investigationPromptNote": "Evidence-informed estimates are not organisation-specific validation."
+            },
+            "investigationPrompts": [
+                "Confirm you can inventory every internet-facing system, appliance and service, including shadow and legacy exposure.",
+                "Review patch and mitigation latency for externally reachable components.",
+                "Check whether exposed management interfaces are restricted, and whether remote access is hardened.",
+                "Review detection coverage for exploitation attempts and post-exploitation activity."
+            ]
+        },
+        {
+            "code": "S4",
+            "order": 4,
+            "name": "Third-party / supplier compromise",
+            "shortLabel": "Third-party compromise",
+            "shortDescription": "A supplier, provider or partner incident propagating into your organisation.",
+            "statement": "A cyber incident affecting a supplier, managed service, cloud provider, software provider, business partner or other third party propagates into the organisation and causes a security or availability loss.",
+            "answers": [
+                {
+                    "questionCode": "S4A",
+                    "questionText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a material incident attempted through or originating from a third party or supplier in a typical 12-month period? Answer before considering whether your supplier controls would prevent it from propagating.",
+                    "optionCode": "POSSIBLE",
+                    "label": "Possible",
+                    "unknown": false
+                },
+                {
+                    "questionCode": "S4B",
+                    "questionText": "If a critical supplier or service provider were compromised, what level of financial and business impact would you expect in your organisation?",
+                    "optionCode": "SIGNIFICANT",
+                    "label": "Significant",
+                    "unknown": false
+                }
+            ],
+            "inputs": {
+                "threatEventFrequency": {
+                    "kind": "posterior",
+                    "parameter": "scenarioEventRate",
+                    "min": 3.5263451958103935e-5,
+                    "mode": 0.061877408956816676,
+                    "max": 0.4550955056466042,
+                    "components": [],
+                    "mean": 0.08676878726025002,
+                    "standardDeviation": 0.07996653195294373,
+                    "q025": 0.0015523368010219457,
+                    "q500": 0.061877408956816676,
+                    "q975": 0.29449717699893335,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "susceptibility": {
+                    "kind": "posterior",
+                    "parameter": "materialLossProbability",
+                    "min": 0.1960846937487804,
+                    "mode": 0.5007519471138518,
+                    "max": 0.7713930404691934,
+                    "components": [],
+                    "mean": 0.5006486385951404,
+                    "standardDeviation": 0.09354464141511153,
+                    "q025": 0.31977774428965006,
+                    "q500": 0.5007519471138518,
+                    "q975": 0.6705945917737034,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "lossMagnitudeAnchor": {
+                    "kind": "posterior",
+                    "parameter": "positiveEventSeverity",
+                    "min": 0,
+                    "mode": 0,
+                    "max": 276723.3273274179,
+                    "components": [],
+                    "mean": 323.6844948253448,
+                    "standardDeviation": 8764.29664737974,
+                    "q025": 0,
+                    "q500": 0,
+                    "q975": 3.5016875242650496,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                }
+            },
+            "appliedModifiers": [],
+            "lossAnchorSource": "elicitation-adjusted-reference-severity",
+            "statistics": {
+                "minimum": 0,
+                "p10": 0,
+                "p25": 0,
+                "p50": 0,
+                "p75": 0,
+                "p90": 0,
+                "maximum": 276723.3273274179,
+                "expectedAnnualLoss": 325.32489923405535,
+                "standardDeviation": 8764.696450263884,
+                "coefficientOfVariation": 26.941363759427812,
+                "meanStandardError": 277.16403782826575,
+                "expectedThreatEventFrequency": 0.08676878726025002,
+                "meanSusceptibility": 0.5006486385951404,
+                "expectedLossEventFrequency": 0.04337639575960206,
+                "expectedLossMagnitude": 7500.04451815339,
+                "expectedPrimaryLossMagnitude": 6971.755737055515,
+                "expectedSecondaryLossMagnitude": 528.2887810978772,
+                "secondaryLossShare": 0.07043808604324776,
+                "secondaryLossOccurrenceRate": 0.026,
+                "iterations": 1000,
+                "thresholdProbabilities": {
+                    "100000": 0.001,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdExceedanceCounts": {
+                    "100000": 1,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdIntervals": {
+                    "100000": {
+                        "lower": 0.00017654637062607817,
+                        "upper": 0.0056425585979579355,
+                        "estimate": 0.001,
+                        "successes": 1,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "500000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "1000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "5000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "10000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    }
+                }
+            },
+            "distribution": {
+                "binEdges": [
+                    0,
+                    21.14,
+                    42.28,
+                    63.42,
+                    84.57,
+                    105.71,
+                    126.85,
+                    147.99,
+                    169.13,
+                    190.27,
+                    211.41,
+                    232.56,
+                    253.7,
+                    274.84,
+                    295.98,
+                    317.12,
+                    338.26,
+                    359.41,
+                    380.55,
+                    401.69,
+                    422.83,
+                    443.97,
+                    465.11,
+                    486.25,
+                    507.4,
+                    528.54,
+                    549.68,
+                    570.82,
+                    591.96,
+                    613.1,
+                    634.24,
+                    655.39,
+                    676.53,
+                    697.67,
+                    718.81,
+                    739.95,
+                    761.09,
+                    782.24,
+                    803.38,
+                    824.52,
+                    845.66
+                ],
+                "counts": [
+                    977,
+                    1,
+                    2,
+                    1,
+                    1,
+                    0,
+                    0,
+                    1,
+                    2,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    1
+                ],
+                "overflowFrom": 845.66,
+                "overflowCount": 10,
+                "binWidth": 21.14
+            },
+            "confidence": {
+                "score": 70,
+                "level": "Medium",
+                "reasons": [
+                    "The simulated loss distribution is very wide relative to its average.",
+                    "The active calibration is provisional: its values are heuristics and have not been externally validated."
+                ],
+                "basis": "heuristic-input-quality",
+                "isStatisticalConfidence": false,
+                "displayLabel": "Input confidence",
+                "levelCapApplied": false,
+                "maximumLevelWhenProvisional": "Medium"
+            },
+            "drivers": [
+                {
+                    "code": "threatEventFrequency",
+                    "label": "Expected scenario event rate",
+                    "value": 0.08676878726025002,
+                    "unit": "events/year",
+                    "detail": "Posterior mean annual scenario event rate after questionnaire evidence."
+                },
+                {
+                    "code": "susceptibility",
+                    "label": "Material-loss probability",
+                    "value": 0.5006486385951404,
+                    "unit": "probability",
+                    "detail": "Probability that an identified event carries a material financial cost."
+                },
+                {
+                    "code": "lossEventFrequency",
+                    "label": "Expected material loss events per year",
+                    "value": 0.04337639575960206,
+                    "unit": "events/year",
+                    "detail": "Posterior mean Poisson rate used to draw each simulated year."
+                },
+                {
+                    "code": "primaryLossMagnitude",
+                    "label": "Expected primary loss per event",
+                    "value": 6971.755737055515,
+                    "unit": "currency",
+                    "detail": "Allocated direct-loss share of simulated material event severity."
+                },
+                {
+                    "code": "secondaryLossProbability",
+                    "label": "Years with secondary loss",
+                    "value": 0.026,
+                    "unit": "probability",
+                    "detail": "Share of simulated years containing a secondary-loss component."
+                },
+                {
+                    "code": "secondaryLossMagnitude",
+                    "label": "Expected secondary loss per event",
+                    "value": 528.2887810978772,
+                    "unit": "currency",
+                    "detail": "Allocated consequential share; the allocation is an elicitation assumption."
+                },
+                {
+                    "code": "secondaryLossShare",
+                    "label": "Share of expected annual loss from secondary loss",
+                    "value": 0.07043808604324776,
+                    "unit": "probability",
+                    "detail": "Modelled secondary share of annual total loss."
+                }
+            ],
+            "driverIndex": {
+                "frequency": 100,
+                "magnitude": 100,
+                "secondary": 0
+            },
+            "interpretation": {
+                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac325 for Third-party compromise.",
+                "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
+                "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
+                "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
+                "unknownStatement": "",
+                "doesNotMean": "This is not an assessment of any specific supplier's security posture, nor a supply-chain audit.",
+                "investigationPromptNote": "Evidence-informed estimates are not organisation-specific validation."
+            },
+            "investigationPrompts": [
+                "Identify which third parties are genuinely critical to service delivery and which hold or can reach sensitive data.",
+                "Review contractual security and notification obligations, and your ability to substitute critical providers.",
+                "Check third-party access paths, including remote administrative access and integration credentials.",
+                "Confirm contingency and exit plans for critical providers."
+            ]
+        },
+        {
+            "code": "S5",
+            "order": 5,
+            "name": "DDoS / service disruption",
+            "shortLabel": "DDoS / disruption",
+            "shortDescription": "Externally driven denial-of-service or service disruption.",
+            "statement": "An external actor overwhelms or otherwise disrupts internet-facing services, causing material service degradation or unavailability and associated operational, commercial or reputational consequences.",
+            "answers": [
+                {
+                    "questionCode": "S5A",
+                    "questionText": "Based on your organisation's exposure and the level of threat activity directed at your sector, how often is a denial-of-service or service-disruption attempt directed at your internet-facing services in a typical 12-month period? Answer before considering whether your mitigation would prevent disruption.",
+                    "optionCode": "POSSIBLE",
+                    "label": "Possible",
+                    "unknown": false
+                },
+                {
+                    "questionCode": "S5B",
+                    "questionText": "If critical internet-facing services became unavailable, what level of financial and business impact would you expect?",
+                    "optionCode": "SIGNIFICANT",
+                    "label": "Significant",
+                    "unknown": false
+                }
+            ],
+            "inputs": {
+                "threatEventFrequency": {
+                    "kind": "posterior",
+                    "parameter": "scenarioEventRate",
+                    "min": 0.0005309845572239817,
+                    "mode": 0.08811221951057185,
+                    "max": 0.6834628906511023,
+                    "components": [],
+                    "mean": 0.11697267925583689,
+                    "standardDeviation": 0.10511954728382591,
+                    "q025": 0.0038152682816051543,
+                    "q500": 0.08811221951057185,
+                    "q975": 0.3871307904194811,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "susceptibility": {
+                    "kind": "posterior",
+                    "parameter": "materialLossProbability",
+                    "min": 0.19161594584598882,
+                    "mode": 0.49818158327555184,
+                    "max": 0.7769821004702566,
+                    "components": [],
+                    "mean": 0.4947507168401673,
+                    "standardDeviation": 0.09112513447688572,
+                    "q025": 0.31824832043871554,
+                    "q500": 0.49818158327555184,
+                    "q975": 0.6678393972907393,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                },
+                "lossMagnitudeAnchor": {
+                    "kind": "posterior",
+                    "parameter": "positiveEventSeverity",
+                    "min": 0,
+                    "mode": 0,
+                    "max": 8546.363489308309,
+                    "components": [],
+                    "mean": 46.88474516802912,
+                    "standardDeviation": 462.0877891102095,
+                    "q025": 0,
+                    "q500": 0,
+                    "q975": 88.62989511867562,
+                    "draws": 1000,
+                    "evidenceIds": [
+                        "dsit-csbs-2025-2026",
+                        "ibm-cost-of-a-data-breach-2025",
+                        "verizon-dbir-2026",
+                        "ecb-annual-reference-rates-2025",
+                        "dsit-csbs-2024-2025-holdout",
+                        "quickrisk-treatment-priors"
+                    ]
+                }
+            },
+            "appliedModifiers": [],
+            "lossAnchorSource": "elicitation-adjusted-reference-severity",
+            "statistics": {
+                "minimum": 0,
+                "p10": 0,
+                "p25": 0,
+                "p50": 0,
+                "p75": 0,
+                "p90": 0,
+                "maximum": 8546.363489308309,
+                "expectedAnnualLoss": 46.88474516802912,
+                "standardDeviation": 462.0877891102095,
+                "coefficientOfVariation": 9.855823838951114,
+                "meanStandardError": 14.612498925398128,
+                "expectedThreatEventFrequency": 0.11697267925583689,
+                "meanSusceptibility": 0.4947507168401673,
+                "expectedLossEventFrequency": 0.058240695799546265,
+                "expectedLossMagnitude": 805.0169134207765,
+                "expectedPrimaryLossMagnitude": 610.6703283791007,
+                "expectedSecondaryLossMagnitude": 194.34658504167587,
+                "secondaryLossShare": 0.24141925691453428,
+                "secondaryLossOccurrenceRate": 0.043,
+                "iterations": 1000,
+                "thresholdProbabilities": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdExceedanceCounts": {
+                    "100000": 0,
+                    "500000": 0,
+                    "1000000": 0,
+                    "5000000": 0,
+                    "10000000": 0
+                },
+                "thresholdIntervals": {
+                    "100000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "500000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "1000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "5000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    },
+                    "10000000": {
+                        "lower": 2.1601063852437764e-19,
+                        "upper": 0.003826758485555124,
+                        "estimate": 0,
+                        "successes": 0,
+                        "trials": 1000,
+                        "sufficientCount": false,
+                        "note": "Fewer than ten exceeding trials: the estimated probability is imprecise."
+                    }
+                }
+            },
+            "distribution": {
+                "binEdges": [
+                    0,
+                    22.41,
+                    44.81,
+                    67.22,
+                    89.62,
+                    112.03,
+                    134.43,
+                    156.84,
+                    179.24,
+                    201.65,
+                    224.05,
+                    246.46,
+                    268.86,
+                    291.27,
+                    313.67,
+                    336.08,
+                    358.48,
+                    380.89,
+                    403.29,
+                    425.7,
+                    448.1,
+                    470.51,
+                    492.92,
+                    515.32,
+                    537.73,
+                    560.13,
+                    582.54,
+                    604.94,
+                    627.35,
+                    649.75,
+                    672.16,
+                    694.56,
+                    716.97,
+                    739.37,
+                    761.78,
+                    784.18,
+                    806.59,
+                    828.99,
+                    851.4,
+                    873.8,
+                    896.21
+                ],
+                "counts": [
+                    965,
+                    1,
+                    4,
+                    6,
+                    1,
+                    2,
+                    0,
+                    1,
+                    1,
+                    2,
+                    0,
+                    1,
+                    0,
+                    2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    0,
+                    1
+                ],
+                "overflowFrom": 896.21,
+                "overflowCount": 10,
+                "binWidth": 22.41
+            },
+            "confidence": {
+                "score": 70,
+                "level": "Medium",
+                "reasons": [
+                    "The simulated loss distribution is very wide relative to its average.",
+                    "The active calibration is provisional: its values are heuristics and have not been externally validated."
+                ],
+                "basis": "heuristic-input-quality",
+                "isStatisticalConfidence": false,
+                "displayLabel": "Input confidence",
+                "levelCapApplied": false,
+                "maximumLevelWhenProvisional": "Medium"
+            },
+            "drivers": [
+                {
+                    "code": "threatEventFrequency",
+                    "label": "Expected scenario event rate",
+                    "value": 0.11697267925583689,
+                    "unit": "events/year",
+                    "detail": "Posterior mean annual scenario event rate after questionnaire evidence."
+                },
+                {
+                    "code": "susceptibility",
+                    "label": "Material-loss probability",
+                    "value": 0.4947507168401673,
+                    "unit": "probability",
+                    "detail": "Probability that an identified event carries a material financial cost."
+                },
+                {
+                    "code": "lossEventFrequency",
+                    "label": "Expected material loss events per year",
+                    "value": 0.058240695799546265,
+                    "unit": "events/year",
+                    "detail": "Posterior mean Poisson rate used to draw each simulated year."
+                },
+                {
+                    "code": "primaryLossMagnitude",
+                    "label": "Expected primary loss per event",
+                    "value": 610.6703283791007,
+                    "unit": "currency",
+                    "detail": "Allocated direct-loss share of simulated material event severity."
+                },
+                {
+                    "code": "secondaryLossProbability",
+                    "label": "Years with secondary loss",
+                    "value": 0.043,
+                    "unit": "probability",
+                    "detail": "Share of simulated years containing a secondary-loss component."
+                },
+                {
+                    "code": "secondaryLossMagnitude",
+                    "label": "Expected secondary loss per event",
+                    "value": 194.34658504167587,
+                    "unit": "currency",
+                    "detail": "Allocated consequential share; the allocation is an elicitation assumption."
+                },
+                {
+                    "code": "secondaryLossShare",
+                    "label": "Share of expected annual loss from secondary loss",
+                    "value": 0.24141925691453428,
+                    "unit": "probability",
+                    "detail": "Modelled secondary share of annual total loss."
+                }
+            ],
+            "driverIndex": {
+                "frequency": 100,
+                "magnitude": 100,
+                "secondary": 0
+            },
+            "interpretation": {
+                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac47 for DDoS / disruption.",
+                "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
+                "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
+                "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
+                "unknownStatement": "",
+                "doesNotMean": "This is not a capacity test or a measurement of your mitigation provider's effectiveness.",
+                "investigationPromptNote": "Evidence-informed estimates are not organisation-specific validation."
+            },
+            "investigationPrompts": [
+                "Confirm mitigation capacity and provider coverage relative to your current traffic profile.",
+                "Review whether critical services can degrade gracefully rather than failing entirely.",
+                "Check dependency chains: upstream DNS, CDN, hosting and network providers.",
+                "Confirm customer and regulator communication plans for sustained unavailability."
+            ]
+        }
+    ]
+}

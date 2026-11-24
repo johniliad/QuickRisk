@@ -13,9 +13,9 @@ import type { CalculationResponse, ConfidenceLevel } from '@/domain/results';
 import { formatMoney } from '@/lib/format';
 
 // ---------------------------------------------------------------------------
-// Percentiles, in business words. These are per-scenario figures only: the model
-// deliberately exposes no joint portfolio percentile, so "typical/bad year" must
-// never be said about the portfolio total.
+// Percentiles, in business words. Scenario percentiles come from scenario annual
+// totals; portfolio percentiles come from jointly simulated annual totals and
+// depend on the documented shared-posterior dependence model.
 // ---------------------------------------------------------------------------
 export type PercentileKey = 'p10' | 'p50' | 'p90';
 
@@ -82,33 +82,39 @@ export interface DisclosureRow {
 export const CORE_DISCLOSURE: readonly DisclosureRow[] = [
   {
     business: 'Expected annual loss — €X / year',
-    model: 'Portfolio mean exposure',
+    model: 'Posterior-predictive mean annual total loss',
     formula:
-      'The five scenarios added together, where each scenario is the mean of (loss-event frequency × loss magnitude) over 5,000 simulated years.',
-    source: 'portfolio.expectedAnnualLoss — FAIR engine (server/includes/fair_engine.php)',
+      'For each simulated year, draw a Poisson material-event count and per-event severities, sum the event losses, then average across years. The portfolio mean is the sum of scenario means.',
+    source: 'portfolio.expectedAnnualLoss — QkPosteriorEngine / server/includes/posterior_engine.php',
   },
   {
     business: 'Typical year — €X',
-    model: 'Median exposure for one scenario (P50)',
-    formula: 'The middle simulated year: 50% of that scenario’s simulated years are below it, 50% above.',
-    source: 'scenario.statistics.p50 — 50th percentile of the Monte Carlo trials',
+    model: 'Median annual total for one scenario (P50)',
+    formula: 'The middle simulated year: 50% of that scenario’s simulated annual totals are below it, 50% above.',
+    source: 'scenario.statistics.p50 — 50th percentile of simulated annual totals',
   },
   {
     business: 'Bad year (1 in 10) — €X',
-    model: '90th percentile for one scenario (P90)',
+    model: '90th percentile annual total for one scenario (P90)',
     formula: '10% of that scenario’s simulated years are worse than this.',
-    source: 'scenario.statistics.p90 — 90th percentile of the Monte Carlo trials',
+    source: 'scenario.statistics.p90 — 90th percentile of simulated annual totals',
   },
   {
     business: 'Worst scenario’s bad-year figure — €X',
     model: 'Largest single-scenario P90',
     formula: 'The highest of the five per-scenario P90 values.',
-    source: 'portfolio.highestP90.p90 — no joint portfolio percentile exists, so this is used instead',
+    source: 'portfolio.highestP90.p90 — largest scenario P90; portfolio.p90 is the separate joint P90',
+  },
+  {
+    business: 'Portfolio bad year (1 in 10) — €X',
+    model: 'Joint portfolio P90',
+    formula: '10% of jointly simulated portfolio annual totals are worse than this under the documented dependence model.',
+    source: 'portfolio.p90 — joint annual totals from shared posterior draws',
   },
   {
     business: 'Chance a single year exceeds €1M',
     model: 'Threshold exceedance probability',
-    formula: 'Number of simulated years above the threshold ÷ number of simulated years.',
+    formula: 'Number of simulated years above the threshold ÷ number of simulated years, with Wilson uncertainty diagnostics.',
     source: 'scenario.statistics.thresholdProbabilities[threshold] / thresholdExceedanceCounts',
   },
   {
@@ -120,10 +126,10 @@ export const CORE_DISCLOSURE: readonly DisclosureRow[] = [
   },
   {
     business: 'How likely · How ready · How costly',
-    model: 'Threat-event frequency × susceptibility × loss magnitude',
+    model: 'Posterior scenario rate × materiality × event severity',
     formula:
-      'How often an attempt occurs × how often it succeeds × (primary loss + a possible knock-on loss).',
-    source: 'FAIR engine chain: TEF × susceptibility = loss-event frequency; × loss magnitude = exposure',
+      'Shared posterior draws supply attack frequency, material-loss probability and severity. Annual material-event counts are Poisson; each event severity is sampled from the positive severity distribution.',
+    source: 'QkPosteriorEngine: scenario event rate × materiality × per-event severity',
   },
 ];
 
@@ -172,13 +178,13 @@ export const DECISION_DISCLOSURE: readonly DisclosureRow[] = [
     business: 'Reduces how often an attempt succeeds by X–Y%',
     model: 'Frequency treatment effect',
     formula:
-      'Scales the susceptibility input up or down each simulated year, then reruns the same FAIR chain (common random numbers).',
+      'Scales the material-event rate and redraws the Poisson count from the same uniform (common random numbers).',
     source: 'treatment.causalEffects.frequency',
   },
   {
     business: 'Reduces the size of a loss by X–Y%',
     model: 'Magnitude treatment effect',
-    formula: 'Scales the loss-magnitude anchor.',
+    formula: 'Scales each sampled event severity in the paired annual total.',
     source: 'treatment.causalEffects.magnitude',
   },
   {

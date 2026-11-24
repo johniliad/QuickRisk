@@ -7,7 +7,7 @@ import { publicModel } from '@/model';
  * Methodology view.
  *
  * Explains why the five scenarios were chosen, what is borrowed from FAIR, what is
- * simplified, how answers become ranges, how the simulation works, what the percentiles
+ * simplified, how answers become posterior evidence, how the simulation works, what the percentiles
  * mean, why uncertainty matters, how the model is versioned and what is out of scope.
  * The disclaimer is repeated here, as required.
  */
@@ -36,7 +36,7 @@ export function MethodologyView() {
       <div className="mt-8 grid gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>How answers become ranges</CardTitle>
+            <CardTitle>How answers become posterior evidence</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2 text-small text-muted">
             <p className="m-0">
@@ -46,15 +46,16 @@ export function MethodologyView() {
               same control is never counted twice.
             </p>
             <p className="m-0">
-              Likelihood and impact answers map to distributions stored in the versioned model files. The model runs{' '}
-              {version.defaultIterations.toLocaleString('en-GB')} simulated trials per scenario on the server, samples
-              frequency, susceptibility and loss magnitude in each trial, and summarises the resulting annualised
-              exposure approximation.
+              Likelihood and impact answers apply declared, uncertain multipliers to a Bayesian reference-class
+              posterior. The server simulates {version.defaultIterations.toLocaleString('en-GB')} years per scenario:
+              each year draws a Poisson count of material-loss events and a severity for every event, and summarises
+              the resulting annual total losses.
             </p>
             <p className="m-0">
-              Organisation-profile answers act as modifiers on those distributions. An Unknown answer is modelled as
-              an equal-weight mixture of the available answers: it widens the range and lowers the input-confidence
-              rating, while keeping the central estimate inside the range of the answers you could have chosen.
+              Organisation-profile answers act as uncertain modifiers on frequency, materiality or severity. An
+              Unknown scenario answer retains the reference posterior rather than inventing a synthetic mixture; it
+              lowers the input-confidence rating without shifting the central assumption. An optional material-loss
+              event count can update the shared posterior through a Poisson likelihood.
             </p>
           </CardContent>
         </Card>

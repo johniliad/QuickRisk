@@ -303,9 +303,10 @@ export function ResultsDashboard({
           </ul>
         </div>
         <p className="m-0 text-small text-muted">
-          The interface deliberately avoids phrases such as “95% confidence that your loss is €X”. The model estimates
-          an indicative P10–P90 range of an annualised exposure approximation from the assumptions provided, and the
-          input-confidence indicator describes the completeness of those assumptions rather than the probability that
+          The interface deliberately avoids phrases such as “95% confidence that your loss is €X”. The model reports
+          posterior-predictive P10–P90 annual total losses under the evidence and assumptions provided. Because
+          counts are zero-inflated and severity is heavy-tailed, P50 can be zero and the mean can exceed P90. The
+          input-confidence indicator describes answer completeness and distribution width, not the probability that
           the estimate is correct.
         </p>
       </section>

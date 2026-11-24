@@ -42,9 +42,9 @@ certification, an assurance opinion, or a substitute for a full FAIR analysis.
 ## Methodology
 
 Everything described here is implemented in this repository and pinned by tests. The
-authoritative technical record is `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md`; the calibration
-values live in `fairquickmodel/parameters.json` (server-only) and each is classified as
-externally evidenced, internally derived, heuristic or placeholder.
+authoritative technical record is `docs/MODEL_DOCUMENTATION_FAIR-QK-2.0.md`; runtime calibration
+metadata lives in `fairquickmodel/parameters.json` (server-only), and the fitted posterior package
+lives in `fairquickmodel/inference/` with source, assumption, validation and integrity records.
 
 ### 1. What is asked
 
@@ -67,30 +67,30 @@ vulnerability, **S4** third-party / supplier compromise, **S5** DDoS or external
 service disruption. They are a practical rapid-assessment set chosen from current public
 threat evidence, not a mathematical ranking of the five most frequent cyber risks.
 
-Any answer may be **Unknown**. An Unknown answer is not a punishment value: it is an
-equal-weight mixture over the answers that could have been chosen (weight 0.2 each), which
-widens the range, keeps the central estimate inside the range of the possible answers, and
-lowers the input-confidence score. Width added by an Unknown answer is capped so that it cannot
+Any answer may be **Unknown**. In the active posterior engine an Unknown scenario answer leaves the
+relevant reference posterior unchanged: it does not insert a synthetic mixture, a favourable shift or
+an adverse extreme, and it lowers the input-confidence score. The legacy fallback also caps added width so it cannot
 inflate the mean (mean-shift cap 1.5×).
 
 
 ### 2. The model chain
 
-For each scenario, per simulated trial:
+For each scenario, per simulated year:
 
 ```text
-TEF (attempts/year, before controls)  ×  Susceptibility  =  LEF (loss events/year)
-Primary loss  +  Secondary loss (Bernoulli draw)  =  Loss magnitude
-Annualised exposure  =  LEF  ×  Loss magnitude        (one magnitude per trial)
+Joint posterior draw  ->  scenario material-event rates
+Poisson event count   ->  per-event lognormal severity  ->  annual scenario total
+Joint portfolio total =  year-by-year sum of scenario totals
 ```
 
-TEF and susceptibility are both sampled on every trial, so uncertainty in *how often* and in
-*how likely it is to succeed* is preserved separately. The product is an **annualised exposure
-approximation**, not the sum of the losses actually incurred in a year: the model does not draw
-an event count and then sum per-event severities. Every response says so
-(`meta.annualisationMethod = frequency-times-severity-annualised-exposure`,
-`meta.realisedAnnualTotalsModelled = false`), and the model loader rejects a model that claims
-otherwise.
+The active 2.0 engine samples a count of material-loss events for each simulated year, samples a
+positive severity for every event, and sums them. Scenario totals use the same posterior draw in a
+year, so portfolio percentiles are computed from joint annual totals rather than by adding
+independent scenario percentiles. Every response declares
+`meta.annualisationMethod = posterior-predictive-compound-poisson-annual-total` and
+`meta.realisedAnnualTotalsModelled = true`. If no validated posterior package is available, the
+legacy engine falls back explicitly to `frequency-times-severity-annualised-exposure` and declares
+that it does not model realised annual totals.
 
 FAIR's core separation is borrowed deliberately: *how often* is kept apart from *how costly*,
 ranges replace single numbers, and primary loss is kept apart from secondary (knock-on) loss.
@@ -98,18 +98,40 @@ What is simplified is stated in §13.
 
 ### 3. Distributions and bounds
 
+| Setting | Active posterior engine | Why |
+|---|---|---|
+| Attack probability | Beta reference-class posterior | Survey prevalence with capped effective sample size for transportability |
+| Material-loss probability | Beta posterior | Published non-zero-cost bases |
+| Scenario weights | Weak Dirichlet prior | No public source supplies all five annual rates |
+| Annual event count | Poisson | Gives zero-loss years and count uncertainty |
+| Positive severity | Lognormal fitted to published quantiles | Heavy-tailed positive losses; IBM sensitivity for `GT1B` |
+| Primary/secondary split | Beta allocation | Avoids double-counting separate severity models |
+| Dependence | Shared posterior draw | Joint annual totals without claiming an estimated correlation matrix |
+| Randomness | Seeded object-local MT19937, one stream per scenario | Reproducible, no global RNG state, no persisted seed |
+| Confidence | Heuristic input-quality indicator | Explicitly not statistical confidence |
+
+The active engine does not impose the legacy €500m component cap on per-event severity; the
+posterior distribution and its fitted tails determine the range, and the response reports the
+simulated maximum. The 1.3 fallback retains the following bounds.
+
+#### Legacy fallback only
+
 | Setting | Value | Why |
 |---|---|---|
-| Sampling distribution | Triangular | The questionnaire only supports min / most-likely / max reasoning, and a triangular draw is easy to explain, inspect and reproduce |
-| Widening mean-shift cap | 1.5× | Widening a right-skewed range raises its mean; the cap stops an Unknown answer from inflating the central estimate instead of only widening it |
-| TEF | 0.001 – 100 events/year | Prevents degenerate extremes; never binds in realistic answers |
-| Susceptibility | 0.005 – 0.99 | It is a probability, so it must not reach 0 or 1 |
-| Impact multiplier | 0.05 – 60 | Bounds the interval arithmetic of anchor × multiplier |
-| Loss magnitude | €1,000 – €500,000,000 per component | The cap applies independently to each sampled primary and secondary magnitude, so a modifier chain cannot move either component outside the published bound |
+| Sampling distribution | Triangular | The questionnaire supports min / most-likely / max reasoning |
+| Widening mean-shift cap | 1.5× | Stops an Unknown answer from inflating only the central estimate |
+| TEF | 0.001 – 100 events/year | Prevents degenerate extremes |
+| Susceptibility | 0.005 – 0.99 | It is a probability |
+| Impact multiplier | 0.05 – 60 | Bounds the interval arithmetic |
+| Loss magnitude | €1,000 – €500,000,000 per component | Legacy component clamp |
 | Secondary-loss probability | 0.01 – 0.99 | Keeps the Bernoulli draw meaningful |
-| Randomness | Seeded PRNG, one stream per scenario | The same request shape gives the same distribution; the seed is never stored |
 
-### 4. Frequency — threat event frequency
+### 4. Frequency — legacy fallback calibration
+
+> The active 2.0 engine does not sample these bands. It derives scenario material-event rates
+> from the reference posterior and applies the elicitation multipliers in
+> `fairquickmodel/inference/reference-classes.json`. The tables in §§4–7 document the retained
+> 1.3 fallback, which is used only when no validated posterior package is active.
 
 Base bands (`internally-derived`, from the requirements' illustrative mapping), events per year:
 
@@ -129,9 +151,10 @@ The likelihood question asks for **attempts or contact**, before controls. Contr
 once, as susceptibility — they are never counted twice. This was corrected after an
 independent audit found that the earlier wording double-counted control effectiveness.
 
-### 5. Susceptibility and controls
+### 5. Susceptibility and controls (legacy fallback)
 
-Probability that a threat event becomes a loss event (`heuristic`), per scenario:
+Probability that a threat event becomes a loss event (`heuristic`), per scenario. In the active
+engine, QP7 changes the material-loss odds and the scenario posterior supplies the base rate:
 
 | Scenario | Min | Most likely | Max | Rationale |
 |---|---:|---:|---:|---|
@@ -146,10 +169,11 @@ Control maturity (QP7) is the one organisation-level modifier: Very limited ×1.
 clamped to 0.005 – 0.99.
 
 
-### 6. Loss magnitude
+### 6. Loss magnitude (legacy fallback)
 
-**Anchor — daily disruption cost (QP8, `heuristic`).** The single most influential input. The
-answer is a range of euros per day of disruption:
+**Anchor — daily disruption cost (QP8, `heuristic`).** The active engine uses QP8 as a weak
+severity elasticity against reference-class severity, not as a direct daily-cost anchor. The
+legacy fallback uses the following range of euros per day of disruption:
 
 | Answer | Min (€/day) | Most likely | Max |
 |---|---:|---:|---:|
@@ -204,18 +228,18 @@ liabilities are not calculated or predicted.**
 | Setting | Value |
 |---|---|
 | Iterations per scenario | 5,000 by default (allowed: 1,000 / 5,000 / 10,000 / 25,000 / 50,000; hard maximum 50,000) |
-| Reported percentiles | P10, P25, P50, P75, P90 of the annualised exposure distribution |
-| Expected annual loss | Arithmetic mean of the simulated values for the scenario |
-| Portfolio total | Sum of the five scenario expected annual losses — exact for expectations, and deliberately *not* presented as a portfolio percentile |
+| Reported percentiles | P10, P25, P50, P75, P90 of simulated annual total losses |
+| Expected annual loss | Arithmetic mean of simulated annual totals, including zero-loss years |
+| Portfolio total | Year-by-year sum of scenario totals under shared posterior draws; joint percentiles are reported |
 | Loss thresholds | €100k, €500k, €1m, €5m, €10m |
-| Threshold probability | Share of simulated trials above the threshold, with the integer count returned as well |
+| Threshold probability | Share of simulated years above the threshold, with integer counts and Wilson intervals |
 | Histogram | 40 bins, the last one an overflow bin above the 99th percentile |
-| Sensitivity | One-at-a-time analytic re-run per driver, reported against the expected value |
+| Sensitivity | Expected loss re-computed across the same posterior draws for each answer option |
 
-The reported words matter: **expected annual loss** is the long-run average of the modelled
-approximation (not a forecast for next year); **typical year** is P50; **bad year (1 in 10)** is
-P90; **best case (1 in 10)** is P10. A wide typical-to-bad range is a statement about input and
-model uncertainty, not a confidence interval around a known true value.
+The reported words matter: **expected annual loss** is the posterior-predictive mean under the
+model assumptions (not a forecast); **typical year** is P50; **bad year (1 in 10)** is P90;
+**best case (1 in 10)** is P10. Percentiles are predictive intervals, not confidence intervals.
+The mean standard error and low-exceedance warnings are returned with the statistics.
 
 
 ### 9. Input confidence
@@ -311,16 +335,18 @@ scaling an approximation, and that limitation is stated in the Decision Lab and 
 - A full FAIR analysis decomposes frequency and magnitude into many factors; this uses a small,
   fixed factor set.
 - Only five scenarios are assessed; other material scenarios are out of scope.
-- Scenario dependencies and correlations are not modelled, so no joint portfolio percentile is
-  reported and the total is not a portfolio P90. Decision Lab likewise does not use joint P90 or
-  exceedance probability to select a treatment portfolio.
-- One magnitude is sampled per trial, so figures are an annualised exposure approximation and not
-  realised annual loss totals; a year with no loss event is not a zero-loss outcome.
-- Secondary loss is one occurrence probability and one magnitude distribution per scenario.
+- Dependence is represented by shared posterior draws, not by an empirically estimated correlation
+  matrix. Portfolio percentiles are model-dependent, and Decision Lab still selects portfolios on
+  expected annual loss rather than joint P90.
+- The active engine simulates annual counts and event-level severities. The legacy fallback uses
+  one annualised-exposure magnitude per trial and is clearly labelled.
+- Secondary loss is an uncertain allocation of total event severity, not a separately estimated
+  occurrence and severity model.
 - Control effectiveness is one organisation-level answer, not a per-scenario control assessment.
 - Statutory fines, regulatory penalties and specific legal liabilities are excluded.
-- The model does not capture uncertainty about its own structure, distribution shapes,
-  calibration or scenario correlation.
+- The model does not capture all uncertainty about its own structure, distribution shapes,
+  calibration or organisation-specific scenario dependence. Shared posterior draws are a
+  documented structural approximation, not an estimated correlation matrix.
 - Results are estimates, not facts; they depend on the quality of the answers and on the
   documented assumptions, and must not be the sole basis for a material business decision.
 
@@ -334,9 +360,9 @@ php tools/benchmark.php               # timing at 5,000 and 50,000 iterations
 php tools/dump-model.php              # the effective model after loading and overrides
 ```
 
-Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md` (calibration review and classification),
-`requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md` (what the independent audit found and what changed), and
-`/methodology.html` (the same explanation, in plain language, for users).
+Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-2.0.md` (evidence roles, posterior model and known
+validation gap), `calibration/` (offline fitting and validation), and `/methodology.html` (the same
+explanation, in plain language, for users).
 
 ---
 
@@ -374,8 +400,8 @@ Reference: `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md` (calibration review and cla
 QuickRisk estimates baseline cyber-loss exposure. QuickRisk Live demonstrates how current SOC
 observations and response actions could change the operational risk state. Its Live risk engine is
 a pure TypeScript module (the only Live numerical implementation); for Live, PHP and MySQL only
-validate, store and return what that engine calculated. Methodology v1.0, coefficients and the four
-mandatory test vectors are documented in `requirements/QUICKRISK_LIVE.md`. **The SOC data is synthetic: no
+validate, store and return what that engine calculated. QuickRisk Live methodology v1.0, coefficients
+and the four mandatory test vectors are documented in `requirements/QUICKRISK_LIVE.md`. **The SOC data is synthetic: no
 production SIEM, EDR, SOAR or SOC feed is connected.**
 
 ## Three retention models, deliberately
@@ -558,15 +584,17 @@ you actually use for calculations must be the one served by the PHP server above
 
 ## Model versioning
 
-- Model: `FAIR-QK-1.3` · model version `1.3.0` · schema `1.3.0` · calibration `CAL-1.3`.
+- Application release: `1.3.5`.
+- Model: `FAIR-QK-2.0` · model version `2.0.0` · schema `2.0.0` · calibration `CAL-2.0` ·
+  methodology `METH-2.0` · disclaimer `DISC-2.0`.
 - Calibration changes require a new calibration version and a new version record; the
   meaning of an existing version is never edited in place.
-- Calibration values are application assumptions/heuristics, documented and classified in
-  `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md`. They are not universally authoritative FAIR
-  constants.
-- Version 1.2.0 corrected defects found by an independent quantitative audit; 1.3.0 carries
-  those corrections unchanged. The findings and the corrections made for each one are recorded in
-  `requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md`.
+- Public evidence, weak elicitation assumptions and the posterior package are documented in
+  `docs/MODEL_DOCUMENTATION_FAIR-QK-2.0.md`. National evidence is not organisation-specific
+  validation, and questionnaire multipliers remain explicit assumptions.
+- Version 1.2.0 corrected defects found by an independent quantitative audit; 1.3.0 preserved
+  those corrections. Version 2.0 changes the active inference and annual-total simulation.
+  Historical 1.x calculations retain their original model and methodology identifiers.
 - Because no assessment is retained, a calibration change cannot alter any past result.
 
 ## Origin access (Cloudflare only)

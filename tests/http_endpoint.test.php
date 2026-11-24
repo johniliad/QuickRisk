@@ -39,18 +39,20 @@ return [
         assertSame(200, $result['status'], 'A valid request must succeed');
         assertSame('ok', $result['payload']['status'], 'The response must report success');
         assertSame('zero-retention', $result['payload']['meta']['retentionMode'], 'The retention mode must be declared');
-        assertFalse($result['payload']['meta']['seedDisclosed'], 'The seed must not be disclosed');
+        assertTrue($result['payload']['meta']['seedDisclosed'], 'The actual run seed must be disclosed');
         assertFalse($result['payload']['meta']['seedPersisted'], 'The seed must not be persisted');
         assertSame(5, $result['payload']['meta']['scenarioCount'], 'Five scenarios must be returned');
     },
 
-    'endpoint: the response never contains the seed or an assessment identifier' => function (): void {
+    'endpoint: the response carries no persisted seed or assessment identifier' => function (): void {
         $result = qk_dispatch_calculation(qk_config(), qk_test_server(), qk_test_body(), 1000);
         $encoded = (string) json_encode($result['payload']);
 
-        foreach (['"seed":', 'assessmentId', 'assessmentToken', 'sessionId', 'cookie'] as $needle) {
+        foreach (['assessmentId', 'assessmentToken', 'sessionId', 'cookie'] as $needle) {
             assertNotContains($needle, $encoded, 'The response must not contain ' . $needle);
         }
+        assertContains('simulationSeed', $encoded, 'The disposable run seed must be disclosed');
+        assertNotContains('"seed":', $encoded, 'No persisted seed field may be returned');
     },
 
     'endpoint: only POST is accepted' => function (): void {

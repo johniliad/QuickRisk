@@ -75,7 +75,7 @@ export function ExecutiveSummary({
           emphasis
           label={portfolio.label}
           value={formatMoney(portfolio.expectedAnnualLoss, symbol)}
-          detail="Mean of the modelled annualised exposure across the five scenarios, summed. Percentiles describe an annualised exposure approximation, not realised annual loss totals, and dependencies between scenarios are not modelled, so no joint portfolio percentile is presented."
+          detail="Posterior-predictive mean of jointly simulated annual total losses. Scenario and portfolio percentiles describe annual totals under the documented evidence and dependence model; they are not forecasts or organisation-specific validation."
         />
         <MetricCard
           label="Worst scenario — bad year (1 in 10)"
@@ -96,7 +96,7 @@ export function ExecutiveSummary({
           detail={
             portfolio.highestProbabilityAboveThreshold === null
               ? undefined
-              : `${portfolio.highestProbabilityAboveThreshold.shortLabel} — share of simulated trials above the threshold.`
+              : `${portfolio.highestProbabilityAboveThreshold.shortLabel} — share of simulated years above the threshold.`
           }
         />
         <MetricCard
@@ -154,9 +154,36 @@ export function ExecutiveSummary({
                 {meta.modelId} (model {meta.modelVersion}, schema {meta.schemaVersion})
               </DefinitionItem>
               <DefinitionItem term="Calibration">{meta.calibrationVersion}</DefinitionItem>
+              {meta.inference === undefined ? null : (
+                <>
+                  <DefinitionItem term="Inference">
+                    {meta.inference.mode === 'posterior-reference-class'
+                      ? `Bayesian reference posterior (${meta.inference.packageVersion})`
+                      : 'Legacy heuristic fallback'}
+                  </DefinitionItem>
+                  <DefinitionItem term="Evidence package">
+                    {meta.inference.evidencePackageVersion || 'Not recorded'}
+                  </DefinitionItem>
+                  <DefinitionItem term="Validation">
+                    {meta.inference.status}
+                  </DefinitionItem>
+                  {meta.inference.evidenceUpdate?.evidenceUsed === true ? (
+                    <DefinitionItem term="Organisation evidence">
+                      {meta.inference.evidenceUpdate.materialLossEventCount} material loss event(s) in the last
+                      12 months; effective sample size{' '}
+                      {meta.inference.evidenceUpdate.effectiveSampleSize.toFixed(0)}
+                    </DefinitionItem>
+                  ) : null}
+                </>
+              )}
               <DefinitionItem term="Simulation">
                 {formatIterations(meta.iterations)} iterations per scenario × {meta.scenarioCount} scenarios
               </DefinitionItem>
+              {meta.simulationSeed === undefined ? null : (
+                <DefinitionItem term="Run seed">
+                  {meta.simulationSeed} (in memory only; retained nowhere)
+                </DefinitionItem>
+              )}
               <DefinitionItem term="Calculated (UTC)">
                 <span className="inline-flex items-center gap-1">
                   <Clock aria-hidden="true" className="size-3.5" />

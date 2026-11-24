@@ -5,6 +5,10 @@
  * exercise the actual React screens without a database or PHP host. No production code imports it.
  */
 
+/**
+ * Frozen legacy-shape response used to exercise fallback rendering.
+ * The current posterior response fixture lives in `frontend/tests/fixtures/posterior-response.json`.
+ */
 export const assessmentResults = {
   status: 'ok',
   meta: {

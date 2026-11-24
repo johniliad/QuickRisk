@@ -198,7 +198,7 @@ return [
         [$comparison] = qk_decision_save_test_fixtures($config);
         $payload = qk_decision_save_test_payload($comparison);
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -241,7 +241,7 @@ return [
             $appetite
         );
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -270,7 +270,7 @@ return [
             'recommended-portfolio'
         );
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -296,7 +296,7 @@ return [
         ]);
         $base = qk_decision_save_test_payload($comparison);
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -395,7 +395,7 @@ return [
         ]);
         $base = qk_decision_save_test_payload($comparison);
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -495,7 +495,7 @@ return [
             'recommended-portfolio'
         );
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -558,7 +558,7 @@ return [
 
     'decision share: a saved analysis can still be shared' => function (): void {
         $config = qk_decision_save_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -582,7 +582,7 @@ return [
 
     'decision share: an archived analysis cannot be shared' => function (): void {
         $config = qk_decision_save_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -625,7 +625,7 @@ return [
 
     'decision share: an archived analysis is no longer readable through its old link' => function (): void {
         $config = qk_decision_save_test_config();
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $server = qk_decision_save_test_server();
 
         $publicId = 'SAVEDDECISION00000000000';
@@ -652,7 +652,7 @@ return [
         $payload = qk_decision_save_test_payload($comparison, $search);
         $payload['selection']['sensitivity'] = $sensitivity['sensitivity'];
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);
@@ -680,7 +680,7 @@ return [
         $payload = qk_decision_save_test_payload($comparison);
         unset($payload['appetite']);
 
-        $decisionRepository = new QkDecisionArrayRepository(['1.0']);
+        $decisionRepository = new QkDecisionArrayRepository(['2.0', '1.0']);
         $liveRepository = new QkLiveArrayRepository([]);
         $server = qk_decision_save_test_server();
         $session = qk_decision_save_test_session($liveRepository, $config, $server);

@@ -16,7 +16,7 @@ export interface LossRange {
   readonly max: number;
 }
 
-export type InputKind = 'triangular' | 'mixture';
+export type InputKind = 'triangular' | 'mixture' | 'posterior';
 
 /** One component of an Unknown-answer mixture, for example LIKELY at 20%. */
 export interface MixtureComponent {
@@ -33,9 +33,53 @@ export interface MixtureComponent {
  * `components` lists them. For a mixture, `mode` is the weighted average of the component
  * modes — a representative central value rather than a true mode.
  */
-export interface InputRange extends LossRange {
+export interface PosteriorInputMetadata {
+  readonly parameter?: string;
+  readonly mean?: number;
+  readonly standardDeviation?: number;
+  readonly q025?: number;
+  readonly q500?: number;
+  readonly q975?: number;
+  readonly draws?: number;
+  readonly evidenceIds?: readonly string[];
+}
+
+export interface InputRange extends LossRange, PosteriorInputMetadata {
   readonly kind: InputKind;
   readonly components: readonly MixtureComponent[];
+}
+
+export interface ThresholdInterval {
+  readonly lower: number;
+  readonly upper: number;
+  readonly estimate: number;
+  readonly successes: number;
+  readonly trials: number;
+  readonly sufficientCount: boolean;
+  readonly note: string;
+}
+
+export interface InferenceProvenance {
+  readonly mode: 'posterior-reference-class' | 'legacy-heuristic';
+  readonly active: boolean;
+  readonly packageVersion: string;
+  readonly evidencePackageVersion: string;
+  readonly status: string;
+  readonly drawCount: number;
+  readonly referencePackageHash: string;
+  readonly validationScope: readonly string[];
+  readonly knownValidationGap: string;
+  readonly evidenceSources: readonly {
+    readonly id: string;
+    readonly role: string;
+    readonly classification: string;
+  }[];
+  readonly evidenceUpdate?: {
+    readonly evidenceUsed: boolean;
+    readonly materialLossEventCount: number | null;
+    readonly effectiveSampleSize: number;
+    readonly lowEffectiveSampleSize?: boolean;
+  };
 }
 
 export interface ConfidenceResult {
@@ -71,8 +115,10 @@ export interface ScenarioStatistics {
   readonly secondaryLossOccurrenceRate: number;
   readonly iterations: number;
   readonly thresholdProbabilities: Readonly<Record<string, number>>;
-  /** Number of simulated trials that exceeded each threshold. */
+  /** Number of simulated years that exceeded each threshold. */
   readonly thresholdExceedanceCounts: Readonly<Record<string, number>>;
+  readonly meanStandardError?: number;
+  readonly thresholdIntervals?: Readonly<Record<string, ThresholdInterval>>;
 }
 
 export interface LossDistribution {
@@ -112,9 +158,9 @@ export interface ScenarioInterpretation {
   readonly summary: string;
   readonly rangeStatement: string;
   readonly thresholdStatement: string;
-  /** States that percentiles describe an annualised exposure approximation. */
+  /** States how percentiles and annual totals should be interpreted. */
   readonly annualisationStatement: string;
-  /** Present when an Unknown answer was modelled as a mixture. */
+  /** Present when an Unknown answer retained the reference posterior or legacy mixture. */
   readonly unknownStatement: string;
   readonly doesNotMean: string;
   readonly investigationPromptNote: string;
@@ -126,7 +172,11 @@ export interface ScenarioDriverIndex {
   readonly secondary: number;
 }
 
-export type LossAnchorSource = 'reported-daily-disruption-cost' | 'derived-from-profile';
+export type LossAnchorSource =
+  | 'reported-daily-disruption-cost'
+  | 'derived-from-profile'
+  | 'elicitation-adjusted-reference-severity'
+  | 'reference-class-severity';
 
 export interface ScenarioResult {
   readonly code: string;
@@ -166,13 +216,15 @@ export interface ResponseMeta {
   readonly calculatedAt: string;
   readonly seedPersisted: boolean;
   readonly seedDisclosed: boolean;
+  readonly simulationSeed?: number;
   readonly jointPercentilesAvailable: boolean;
-  /** Always 'frequency-times-severity-annualised-exposure' in this model version. */
-  readonly annualisationMethod: string;
-  /** Always false: the model reports an annualised exposure approximation, not realised totals. */
+  readonly annualisationMethod:
+    | 'frequency-times-severity-annualised-exposure'
+    | 'posterior-predictive-compound-poisson-annual-total';
   readonly realisedAnnualTotalsModelled: boolean;
   readonly annualisationLimitation: string;
   readonly calibrationStatus: string;
+  readonly inference?: InferenceProvenance;
 }
 
 export interface RankedScenario {
@@ -202,7 +254,7 @@ export interface HighestThresholdProbability {
 export type SensitivityFactorKind = 'profile' | 'scenario';
 
 /**
- * One factor in the one-at-a-time sensitivity analysis of the expected annualised exposure.
+ * One factor in the one-at-a-time sensitivity analysis of posterior expected annual loss.
  * The model is re-evaluated for every answer option of the factor with all other answers
  * held fixed; `spreadRatio` is the ratio of the highest to the lowest resulting exposure.
  */
@@ -233,8 +285,21 @@ export interface SensitivityAnalysis {
 export interface PortfolioSummary {
   readonly label: string;
   readonly expectedAnnualLoss: number;
-  /** States that the percentiles are an annualised exposure approximation. */
+  /** States whether percentiles are annual totals or a legacy annualised approximation. */
   readonly annualisationNote: string;
+  readonly p10?: number;
+  readonly p25?: number;
+  readonly p50?: number;
+  readonly p75?: number;
+  readonly p90?: number;
+  readonly minimum?: number;
+  readonly maximum?: number;
+  readonly standardDeviation?: number;
+  readonly meanStandardError?: number;
+  readonly thresholdProbabilities?: Readonly<Record<string, number>>;
+  readonly thresholdExceedanceCounts?: Readonly<Record<string, number>>;
+  readonly thresholdIntervals?: Readonly<Record<string, ThresholdInterval>>;
+  readonly inference?: InferenceProvenance;
   readonly topScenarios: readonly RankedScenario[];
   readonly highestP90: HighestP90 | null;
   readonly highestProbabilityAboveThreshold: HighestThresholdProbability | null;
@@ -259,7 +324,7 @@ export function thresholdProbability(
 }
 
 /**
- * Number of simulated trials that exceeded a threshold.
+ * Number of simulated years that exceeded a threshold.
  *
  * Reported alongside the probability so that a zero reads as "no simulated trial exceeded
  * this level in this run" rather than as an impossibility.
@@ -289,5 +354,8 @@ export function inputFor(scenario: ScenarioResult, code: string): InputRange | u
 
 /** True when an Unknown answer was modelled as a mixture for this scenario. */
 export function usesUnknownMixture(scenario: ScenarioResult): boolean {
-  return Object.values(scenario.inputs).some((input) => input.kind === 'mixture');
+  return (
+    (scenario.answers?.some((answer) => answer.unknown) ?? false) ||
+    Object.values(scenario.inputs).some((input) => input.kind === 'mixture')
+  );
 }

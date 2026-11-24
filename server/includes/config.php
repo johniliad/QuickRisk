@@ -29,6 +29,12 @@ $qkDefaults = [
     //   ~/public_html/quickrisk/includes/config.php  ->  ~/fairquickmodel
     'modelPath' => dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'fairquickmodel',
 
+    // Validated posterior package directory. It remains outside the public web root and is
+    // activated only when its manifest and calibration gates validate.
+    'inferenceEnabled' => true,
+    // Null resolves relative to the effective modelPath after deployment overrides.
+    'inferencePath' => null,
+
     // Optional per-request model cache file. Never contains assessment data.
     'modelCacheEnabled' => false,
 

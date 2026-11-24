@@ -6,11 +6,11 @@ import { formatCount, formatMoney, formatPercent } from '@/lib/format';
 /**
  * Threshold exceedance probabilities.
  *
- * Each cell is the share of simulated trials in which that scenario's annualised exposure
- * approximation exceeded the threshold. A zero is reported as an explicit count of simulated
- * trials ("0 of 5,000") rather than as a bare zero, so that it reads as "no simulated trial
- * exceeded this level in this run" and not as an impossibility. The values are read from the
- * server response; the browser never recomputes them.
+ * Each cell is the share of simulated annual totals in which that scenario exceeded the
+ * threshold. A zero is reported as an explicit count of simulated years ("0 of 5,000") rather
+ * than as a bare zero, so that it reads as "no simulated year exceeded this level in this run"
+ * and not as an impossibility. Wilson uncertainty diagnostics are read from the server; the
+ * browser never recomputes them.
  */
 export function ThresholdTable({
   scenarios,
@@ -52,13 +52,13 @@ export function ThresholdTable({
                   <TableCell key={`${scenario.code}-${threshold}`}>
                     {count === 0 ? (
                       <span className="text-muted">
-                        0 of {formatCount(scenarioIterations)} simulated trials
+                        0 of {formatCount(scenarioIterations)} simulated years
                       </span>
                     ) : (
                       <>
                         <span className="font-semibold">{formatPercent(probability)}</span>
                         <span className="block text-micro text-muted">
-                          {formatCount(count)} of {formatCount(scenarioIterations)} simulated trials
+                          {formatCount(count)} of {formatCount(scenarioIterations)} simulated years
                         </span>
                       </>
                     )}

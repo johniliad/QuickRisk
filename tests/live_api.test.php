@@ -65,7 +65,7 @@ function qk_live_test_payload(array $overrides = []): array
         'scenarioId' => 'S1',
         'scenarioName' => 'Ransomware',
         'baselineEal' => 125000.0,
-        'baselineSource' => ['modelId' => 'FAIR-QK-1.3', 'modelVersion' => '1.3.0'],
+        'baselineSource' => ['modelId' => 'FAIR-QK-2.0', 'modelVersion' => '2.0.0'],
         'inputState' => $state,
         'riskResult' => $result,
         'timeline' => [
@@ -228,7 +228,7 @@ return [
         assertSame('Critical', $detail['riskBand'], 'The stored band must be returned unchanged');
         assertSame(500000.0, $detail['realTimeEal'], 'The stored real-time EAL must be returned unchanged');
         assertSame(1, count($detail['timeline']), 'The timeline must be persisted');
-        assertSame('FAIR-QK-1.3', $detail['baselineModelId'], 'The baseline model must be recorded');
+        assertSame('FAIR-QK-2.0', $detail['baselineModelId'], 'The baseline model must be recorded');
 
         $list = qk_live_handle_list_assessments($server, $config, $repository, $session['cookies']);
         assertSame(1, count($list['payload']['data']), 'The assessment must appear in the history');

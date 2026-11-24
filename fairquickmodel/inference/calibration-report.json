@@ -1,0 +1,278 @@
+{
+  "status": "reference-posterior-validated",
+  "synthetic": false,
+  "validationScope": [
+    "lognormal positive-severity quantile calibration",
+    "temporal holdout of organisation-size attack prevalence",
+    "source-role and prohibited-use enforcement",
+    "joint-draw structural validation at load time"
+  ],
+  "knownValidationGap": "No independent organisation-level prospective loss dataset is available; national aggregate evidence cannot validate individual organisations.",
+  "gates": {
+    "posteriorPredictive": true,
+    "prevalenceHoldout": true,
+    "nonSynthetic": true,
+    "activationRequested": true
+  },
+  "priorPredictive": {
+    "classes": {
+      "micro": {
+        "attackProbability": 0.41019480473768555,
+        "materialProbability": 0.4791233316234188,
+        "materialLossRate": 0.2529593791363259,
+        "severityMedianEUR": 253.8545043845667,
+        "severity95thEUR": 10148.329553342975,
+        "sourceEstimate": 0.42,
+        "sourceBase": 1154
+      },
+      "small": {
+        "attackProbability": 0.5237915842365258,
+        "materialProbability": 0.39754830943952285,
+        "materialLossRate": 0.29494096051079155,
+        "severityMedianEUR": 253.8545043845667,
+        "severity95thEUR": 10148.329553342975,
+        "sourceEstimate": 0.46,
+        "sourceBase": 507
+      },
+      "medium": {
+        "attackProbability": 0.5718859157324527,
+        "materialProbability": 0.6317917751639288,
+        "materialLossRate": 0.5359903874946752,
+        "severityMedianEUR": 449.39264498012693,
+        "severity95thEUR": 23972.238972774463,
+        "sourceEstimate": 0.65,
+        "sourceBase": 296
+      },
+      "large": {
+        "attackProbability": 0.6321153642317958,
+        "materialProbability": 0.5433455765531623,
+        "materialLossRate": 0.5433379043624125,
+        "severityMedianEUR": 740.9232126749265,
+        "severity95thEUR": 39523.54030071985,
+        "sourceEstimate": 0.69,
+        "sourceBase": 155
+      },
+      "large_enterprise": {
+        "attackProbability": 0.6885832722221212,
+        "materialProbability": 0.46891672808675944,
+        "materialLossRate": 0.5470491821752747,
+        "severityMedianEUR": 1798947.4519392007,
+        "severity95thEUR": 14059084.614890125,
+        "sourceEstimate": 0.69,
+        "sourceBase": 155
+      },
+      "unknown": {
+        "attackProbability": 0.37931822885432165,
+        "materialProbability": 0.5321911417608126,
+        "materialLossRate": 0.2538215264166967,
+        "severityMedianEUR": 258.2186001345317,
+        "severity95thEUR": 11857.5852050226,
+        "sourceEstimate": 0.43,
+        "sourceBase": 2112
+      }
+    }
+  },
+  "posteriorPredictive": {
+    "status": "passed",
+    "classes": {
+      "micro": {
+        "status": "calibrated",
+        "meanAbsoluteLogQuantileError": 0.15455996272204392,
+        "meanAbsoluteCalibrationError": 0.018953700250906834,
+        "source": "externally-evidenced quantiles; fitted lognormal",
+        "passed": true
+      },
+      "small": {
+        "status": "calibrated",
+        "meanAbsoluteLogQuantileError": 0.15455996272204392,
+        "meanAbsoluteCalibrationError": 0.018953700250906834,
+        "source": "externally-evidenced quantiles; fitted lognormal",
+        "passed": true
+      },
+      "medium": {
+        "status": "calibrated",
+        "meanAbsoluteLogQuantileError": 0.2707237060503619,
+        "meanAbsoluteCalibrationError": 0.032483280070533395,
+        "source": "externally-evidenced quantiles; fitted lognormal",
+        "passed": true
+      },
+      "large": {
+        "status": "calibrated",
+        "meanAbsoluteLogQuantileError": 0.2707237060503619,
+        "meanAbsoluteCalibrationError": 0.032483280070533395,
+        "source": "externally-evidenced quantiles; fitted lognormal",
+        "passed": true
+      },
+      "large_enterprise": {
+        "status": "not-applicable",
+        "meanAbsoluteLogQuantileError": null,
+        "meanAbsoluteCalibrationError": null,
+        "source": "externally-evidenced mean; weak-prior shape",
+        "passed": true,
+        "note": "The source publishes a mean but no quantiles, so quantile calibration is not applicable."
+      },
+      "unknown": {
+        "status": "calibrated",
+        "meanAbsoluteLogQuantileError": 0.1545599627220436,
+        "meanAbsoluteCalibrationError": 0.019274486970788728,
+        "source": "externally-evidenced quantiles; fitted lognormal",
+        "passed": true
+      }
+    },
+    "observationsSupplied": false
+  },
+  "prevalenceHoldout": {
+    "status": "passed",
+    "holdouts": [
+      {
+        "sizeClass": "micro",
+        "observed": 0.35,
+        "source": "dsit-csbs-2024-2025-holdout",
+        "coverage": {
+          "0.8": {
+            "lower": 0.3492600707659105,
+            "upper": 0.4918731992532666,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          },
+          "0.95": {
+            "lower": 0.31528616984662705,
+            "upper": 0.5317386599438639,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          }
+        },
+        "passed": true
+      },
+      {
+        "sizeClass": "small",
+        "observed": 0.42,
+        "source": "dsit-csbs-2024-2025-holdout",
+        "coverage": {
+          "0.8": {
+            "lower": 0.39235052461062736,
+            "upper": 0.5323101184460116,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          },
+          "0.95": {
+            "lower": 0.35889902425018483,
+            "upper": 0.5709658709721747,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          }
+        },
+        "passed": true
+      },
+      {
+        "sizeClass": "medium",
+        "observed": 0.67,
+        "source": "dsit-csbs-2024-2025-holdout",
+        "coverage": {
+          "0.8": {
+            "lower": 0.5772565495172831,
+            "upper": 0.7178477870395974,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          },
+          "0.95": {
+            "lower": 0.541432236019755,
+            "upper": 0.7539020814796479,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          }
+        },
+        "passed": true
+      },
+      {
+        "sizeClass": "large",
+        "observed": 0.74,
+        "source": "dsit-csbs-2024-2025-holdout",
+        "coverage": {
+          "0.8": {
+            "lower": 0.5895859262754897,
+            "upper": 0.7776973965360015,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          },
+          "0.95": {
+            "lower": 0.5382157427796885,
+            "upper": 0.8161573384723898,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          }
+        },
+        "passed": true
+      },
+      {
+        "sizeClass": "unknown",
+        "observed": 0.43,
+        "source": "dsit-csbs-2024-2025-holdout",
+        "coverage": {
+          "0.8": {
+            "lower": 0.3577271302401039,
+            "upper": 0.5041060110375568,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          },
+          "0.95": {
+            "lower": 0.32047827737689194,
+            "upper": 0.5437347861271713,
+            "covered": 1,
+            "total": 1,
+            "coverage": 1.0
+          }
+        },
+        "passed": true
+      }
+    ]
+  },
+  "evidenceSources": [
+    {
+      "id": "dsit-csbs-2025-2026",
+      "file": "dsit-2025-2026.json",
+      "role": "frequency, materiality and ordinary-severity reference",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "ibm-cost-of-a-data-breach-2025",
+      "file": "ibm-2025.json",
+      "role": "large-enterprise severity sensitivity",
+      "classification": "externally-evidenced mean; weak-prior distribution shape"
+    },
+    {
+      "id": "verizon-dbir-2026",
+      "file": "dbir-2026.json",
+      "role": "scenario-composition sensitivity only; no activated frequency parameters",
+      "classification": "contextual and sensitivity-only"
+    },
+    {
+      "id": "ecb-annual-reference-rates-2025",
+      "file": "fx-2025.json",
+      "role": "currency conversion provenance",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "dsit-csbs-2024-2025-holdout",
+      "file": "dsit-2024-2025-holdout.json",
+      "role": "prior-wave prevalence holdout only",
+      "classification": "externally-evidenced"
+    },
+    {
+      "id": "quickrisk-treatment-priors",
+      "file": "treatment-priors.json",
+      "role": "curated treatment effect priors",
+      "classification": "elicitation-assumption-only"
+    }
+  ],
+  "reviewedAt": "2026-11-24T00:00:00Z"
+}

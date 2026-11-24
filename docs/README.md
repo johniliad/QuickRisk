@@ -3,7 +3,8 @@
 | Document | Purpose |
 |---|---|
 | [`DEPLOYMENT_QUICKRISK_LIVE.md`](DEPLOYMENT_QUICKRISK_LIVE.md) | **First-time runbook for the whole application**, including MySQL, the Live/Decision Lab configuration file and the Live/Decision Lab acceptance checks. |
-| [`MODEL_DOCUMENTATION_FAIR-QK-1.3.md`](MODEL_DOCUMENTATION_FAIR-QK-1.3.md) | **Active model.** Every parameter with its distribution, range, source, rationale, classification, confidence and potential bias; includes the 1.2.0 audit corrections carried into 1.3.0. |
+| [`MODEL_DOCUMENTATION_FAIR-QK-2.0.md`](MODEL_DOCUMENTATION_FAIR-QK-2.0.md) | **Active model.** Evidence roles, Bayesian reference-class posterior, annual event simulation, optional evidence, dependence, diagnostics, validation gates and known gaps. |
+| [`MODEL_DOCUMENTATION_FAIR-QK-1.3.md`](MODEL_DOCUMENTATION_FAIR-QK-1.3.md) | Historical model documentation for the superseded 1.3 release and its legacy fallback semantics. |
 | [`SECURITY_AND_PRIVACY.md`](SECURITY_AND_PRIVACY.md) | Threat model, implemented controls, defence in depth, test coverage, residual risks. |
 
 Every document in this directory except this index is listed above, and every entry links to a
@@ -35,9 +36,10 @@ repository `README.md` are the maintained descriptions of how the application wo
 ## Reading order for a new contributor
 
 1. `README.md` at the repository root, for the methodology and the build and verification commands.
-2. `docs/MODEL_DOCUMENTATION_FAIR-QK-1.3.md`, to understand what the numbers mean.
-3. `requirements/AUDIT_RESPONSE_FAIR-QK-1.1.md`, to understand which model behaviours are deliberate
-   corrections and which are still open review items.
+2. `docs/MODEL_DOCUMENTATION_FAIR-QK-2.0.md`, to understand what the numbers mean, which sources
+   inform them and what remains an elicitation assumption.
+3. `calibration/evidence/manifest.json` and `fairquickmodel/inference/calibration-report.json`, for
+   source provenance and validation scope.
 4. `requirements/ZERO_RETENTION_PROOF.md`, before changing anything that touches request handling.
 
 ## Commands referenced by the documentation
@@ -53,6 +55,9 @@ php tools/live-smoke.php                # QuickRisk Live request flow
 php tools/decision-smoke.php            # Decision Lab compute path
 php tools/benchmark.php                 # performance and memory
 php tools/generate-baseline.php         # regenerate the regression baseline (deliberate)
+
+# Offline posterior calibration (Python standard library only)
+python calibration/run.py --evidence calibration/evidence --output fairquickmodel/inference --allow-activation
 
 # Run the questionnaire and calculation API locally (see the local-runner limits below)
 node tools/serve-local.mjs              # then open http://127.0.0.1:8000/
