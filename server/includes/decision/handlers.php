@@ -168,7 +168,7 @@ function qk_decision_compute(array $server, array $appConfig, string $rawBody): 
         throw new QkLiveHttpError(
             422,
             'VALIDATION_ERROR',
-            'Portfolio evaluation requires an annual loss limit. High-end and exceedance criteria '
+            'Portfolio evaluation requires an exposure limit. High-end and exceedance criteria '
                 . 'are not used to select portfolios because they depend on a joint distribution.'
         );
     }

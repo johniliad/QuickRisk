@@ -81,7 +81,7 @@ export interface DisclosureRow {
 
 export const CORE_DISCLOSURE: readonly DisclosureRow[] = [
   {
-    business: 'Expected annual loss — €X / year',
+    business: 'Indicative annual exposure — €X / year',
     model: 'Posterior-predictive mean annual total loss',
     formula:
       'For each simulated year, draw a Poisson material-event count and per-event severities, sum the event losses, then average across years. The portfolio mean is the sum of scenario means.',
@@ -191,14 +191,14 @@ export const DECISION_DISCLOSURE: readonly DisclosureRow[] = [
     business: 'Within / above appetite',
     model: 'Appetite verdict against the modelled distribution',
     formula:
-      'Annual loss limit vs expected annual loss; high-end limit vs P90; exceedance probability vs the threshold probability.',
+      'Exposure limit vs indicative annual exposure; high-end limit vs P90; exceedance probability vs the threshold probability.',
     source: 'AppetiteEvaluation.status',
   },
   {
     business: 'Value for money (RRE)',
     model: 'Risk Reduction Efficiency',
     formula:
-      '(baseline expected annual loss − treated expected annual loss) ÷ annualised treatment cost. Not a financial return.',
+      '(baseline indicative annual exposure − treated indicative annual exposure) ÷ annualised treatment cost. Not a financial return.',
     source: 'riskReductionEfficiency',
   },
 ];

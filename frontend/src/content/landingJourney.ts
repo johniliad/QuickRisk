@@ -203,7 +203,7 @@ export const LANDING_HERO_HEADLINE = 'Quantify annual cyber-loss exposure';
 
 /** One line under the headline, stating what the visitor actually does. */
 export const LANDING_HERO_LEAD =
-  'Answer a short questionnaire, get an indicative annual loss for five scenarios, then explore what makes the number worse or better.';
+  'Answer a short questionnaire, get an indicative annual exposure estimate for five scenarios, then explore what makes the number worse or better.';
 
 export type LandingEntryKey = 'sample' | 'quick' | 'full';
 

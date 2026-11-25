@@ -31,7 +31,8 @@ final class QkModifiers
         array $profileAnswers,
         string $scenarioCode,
         string $target,
-        string $unknownCode
+        string $unknownCode,
+        ?QkDistributions $rng = null
     ): array {
         $multiplier = 1.0;
         $widen = 1.0;
@@ -53,7 +54,26 @@ final class QkModifiers
             $answerCode = $profileAnswers[$questionCode] ?? $unknownCode;
 
             $value = $values[$answerCode] ?? null;
-            $answerMultiplier = is_numeric($value) ? (float) $value : 1.0;
+
+            $relativeDistribution = null;
+            if (is_array($value) && isset($value['min'], $value['mode'], $value['max'])) {
+                // Distribution-valued modifier: the central estimate uses the mode, and the
+                // uncertainty is sampled per iteration (or left at the mode when no RNG is given).
+                $min = (float) $value['min'];
+                $mode = (float) $value['mode'];
+                $max = (float) $value['max'];
+                $answerMultiplier = ($rng !== null)
+                    ? $rng->sampleTriangular($min, $mode, $max)
+                    : $mode;
+                $modeSafe = $mode > 0.0 ? $mode : 1.0;
+                $relativeDistribution = [
+                    'min' => $min / $modeSafe,
+                    'mode' => 1.0,
+                    'max' => $max / $modeSafe,
+                ];
+            } else {
+                $answerMultiplier = is_numeric($value) ? (float) $value : 1.0;
+            }
 
             $unknownWiden = (float) ($modifier['unknownWiden'] ?? 1.0);
             $answerWiden = ($answerCode === $unknownCode) ? max(1.0, $unknownWiden) : 1.0;
@@ -61,7 +81,7 @@ final class QkModifiers
             $multiplier *= $answerMultiplier;
             $widen *= $answerWiden;
 
-            $applied[] = [
+            $entry = [
                 'modifier' => (string) ($modifier['code'] ?? ''),
                 'questionCode' => $questionCode,
                 'answerCode' => $answerCode,
@@ -69,6 +89,10 @@ final class QkModifiers
                 'widen' => $answerWiden,
                 'unknown' => $answerCode === $unknownCode,
             ];
+            if ($relativeDistribution !== null) {
+                $entry['relativeDistribution'] = $relativeDistribution;
+            }
+            $applied[] = $entry;
         }
 
         return [

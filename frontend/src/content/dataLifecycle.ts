@@ -139,7 +139,7 @@ export function resultsPortfolioEalProvenance(meta: {
 }): EalProvenance {
   const years = formatIterations(meta.iterations);
   return {
-    label: 'Portfolio expected annual loss',
+    label: 'Portfolio indicative annual exposure',
     source: `Joint annual totals from ${meta.scenarioCount} scenarios, all produced by one server run of ${meta.modelId} model ${meta.modelVersion}.`,
     method: `Each simulated year draws Poisson material-event counts and per-event severities for every scenario, then sums the annual totals. Shared posterior draws create the documented joint dependence model.`,
     independentOf: [
@@ -150,7 +150,7 @@ export function resultsPortfolioEalProvenance(meta: {
   };
 }
 
-/** Copy for a single scenario's expected annual loss on the results page. */
+/** Copy for a single scenario's indicative annual exposure on the results page. */
 export function resultsScenarioEalProvenance(meta: {
   readonly iterations: number;
   readonly modelId: string;
@@ -158,10 +158,10 @@ export function resultsScenarioEalProvenance(meta: {
 }): EalProvenance {
   const years = formatIterations(meta.iterations);
   return {
-    label: 'Scenario expected annual loss',
+    label: 'Scenario indicative annual exposure',
     source: `The mean of ${years} simulated years for that one scenario, produced by ${meta.modelId} model ${meta.modelVersion} on the server.`,
     method:
-      'Each simulated year multiplies a sampled event frequency by a sampled event magnitude. The mean of those years is the expected annual loss for that scenario alone.',
+      'Each simulated year multiplies a sampled event frequency by a sampled event magnitude. The mean of those years is the indicative annual exposure for that scenario alone.',
     independentOf: [
       'It is not a portfolio total: the five scenario figures are only added up in the portfolio card.',
       'QuickRisk Live copies one of these figures verbatim. It never recomputes it.',

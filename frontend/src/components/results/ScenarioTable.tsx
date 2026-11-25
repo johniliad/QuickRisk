@@ -7,7 +7,7 @@ import { thresholdExceedanceCount, thresholdProbability } from '@/domain/results
 import { formatCount, formatMoney, formatPercent } from '@/lib/format';
 
 /**
- * Scenario results table: rank, expected annual loss, P10/P50/P90, the probability of
+ * Scenario results table: rank, indicative annual exposure, P10/P50/P90, the probability of
  * exceeding €1 million (reported with the number of simulated years) and the input-confidence
  * indicator for each scenario.
  */
@@ -30,14 +30,14 @@ export function ScenarioTable({
     <TableWrap>
       <Table>
         <caption className="mb-2 text-left text-small text-muted">
-          Ordered by expected annual loss. “Typical year” is the median (P50); “bad year” is the 1-in-10 figure (P90).
+          Ordered by indicative annual exposure. “Typical year” is the median (P50); “bad year” is the 1-in-10 figure (P90).
           Values are model estimates, not forecasts.
         </caption>
         <TableHead>
           <TableRow>
             <TableHeaderCell>Rank</TableHeaderCell>
             <TableHeaderCell>Scenario</TableHeaderCell>
-            <TableHeaderCell>Expected annual loss</TableHeaderCell>
+            <TableHeaderCell>Indicative annual exposure</TableHeaderCell>
             <TableHeaderCell>
               Best case
               <span className="block text-micro font-normal text-muted">P10 · 1 in 10</span>

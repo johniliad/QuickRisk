@@ -15,6 +15,9 @@ The material modelling changes are:
 4. One optional organisation-specific observation can update the shared posterior: `organisationEvidence.materialLossEventCount`.
 5. Treatment effects are drawn across simulation iterations rather than once per analysis.
 6. The actual in-memory simulation seed is disclosed so Decision Lab can replay the assessment; it is never persisted.
+7. Legacy-fallback loss magnitudes are sampled from lognormal distributions moment-matched to the triangular ranges, giving heavier right tails; the posterior engine uses a lognormal severity directly.
+8. Organisation-profile modifiers are triangular uncertainty ranges sampled per simulated year in the legacy fallback, so calibration uncertainty is propagated into the output.
+9. Legacy-fallback frequency bands and scenario susceptibility bases are anchored to DSIT 2025/2026 prevalence and material-cost probability rather than illustrative mappings.
 
 ## 2. Evidence base
 
@@ -75,6 +78,8 @@ The update assumes that the previous 12 months are exchangeable with the modelle
 ## 5. Questionnaire multipliers
 
 Frequency and impact option multipliers, profile factors and the daily-cost elasticity are elicitation assumptions. They are versioned in `reference-classes.json` and labelled `elicitation-assumption`. They are not estimated causal effects. Scenario weights are a weak Dirichlet prior because no public source supplies all five annual rates.
+
+Organisation-profile modifiers are stored as triangular uncertainty ranges (min, mode, max). The central estimate uses the mode and the deviation is sampled per simulated year in the legacy fallback, so the output distribution reflects calibration uncertainty as well as input uncertainty. The active posterior engine applies the questionnaire multiplier means from the validated inference package. The legacy frequency bands are derived by `tools/calibrate-frequency-bands.php` from DSIT prevalence and material-cost probability, and the scenario susceptibility bases are anchored to the same evidence.
 
 ## 6. Annual totals and dependence
 

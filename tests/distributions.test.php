@@ -177,4 +177,56 @@ return [
             'A non-finite range must be rejected'
         );
     },
+
+    'distributions: lognormal sampler is always positive and finite' => function (): void {
+        $rng = new QkDistributions(54321);
+        for ($i = 0; $i < 100000; $i++) {
+            $value = $rng->sampleLognormal(10.0, 0.8);
+            if (!is_finite($value) || $value <= 0.0) {
+                qk_fail('A lognormal sample was not positive and finite: ' . var_export($value, true));
+            }
+        }
+    },
+
+    'distributions: lognormal mean approaches the theoretical expectation' => function (): void {
+        $rng = new QkDistributions(11111);
+        $mu = 10.0;
+        $sigma = 0.8;
+        $draws = 200000;
+        $total = 0.0;
+
+        for ($i = 0; $i < $draws; $i++) {
+            $total += $rng->sampleLognormal($mu, $sigma);
+        }
+
+        $empiricalMean = $total / $draws;
+        $theoreticalMean = QkDistributions::lognormalMean($mu, $sigma);
+
+        assertRelativeClose($theoreticalMean, $empiricalMean, 0.03, 'Empirical lognormal mean should approach the theoretical mean within 3%');
+    },
+
+    'distributions: triangularToLognormalParameters preserves mean and variance' => function (): void {
+        $params = QkDistributions::triangularToLognormalParameters(100.0, 200.0, 500.0);
+        $triMean = QkDistributions::triangularMean(100.0, 200.0, 500.0);
+        $triVariance = QkDistributions::triangularVariance(100.0, 200.0, 500.0);
+
+        assertRelativeClose($triMean, QkDistributions::lognormalMean($params['mu'], $params['sigma']), 0.01, 'Lognormal mean should match the triangular mean');
+        assertRelativeClose($triVariance, QkDistributions::lognormalVariance($params['mu'], $params['sigma']), 0.01, 'Lognormal variance should match the triangular variance');
+    },
+
+    'distributions: lognormal quantile is monotonic and positive' => function (): void {
+        $mu = 10.0;
+        $sigma = 0.5;
+        $previous = 0.0;
+        for ($p = 0.01; $p <= 0.99; $p += 0.01) {
+            $value = QkDistributions::lognormalQuantile($mu, $sigma, $p);
+            if (!is_finite($value) || $value <= 0.0) {
+                qk_fail('A lognormal quantile was not positive and finite at p=' . $p);
+            }
+            if ($value < $previous) {
+                qk_fail('A lognormal quantile was not monotonic at p=' . $p);
+            }
+            $previous = $value;
+        }
+    },
 ];

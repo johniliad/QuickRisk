@@ -93,7 +93,9 @@
           "Each material event draws one total positive severity, split between primary and secondary loss by an uncertain allocation. The split is an elicitation assumption rather than two separately estimated severity models.",
           "The model does not calculate statutory fines, regulatory penalties or specific legal liabilities. Where regulatory or reputational exposure influences severity, it is a generic financial-loss assumption only.",
           "Scenario-specific control effectiveness is not assessed in detail; organisation-level answers act as broad, uncertain modifiers.",
-          "Event counts are drawn from Poisson distributions. This captures count uncertainty but does not model clustering, contagion or event dependence within a year."
+          "Event counts are drawn from Poisson distributions. This captures count uncertainty but does not model clustering, contagion or event dependence within a year.",
+          "Loss magnitudes are sampled from lognormal distributions (moment-matched to the range implied by your answers) rather than triangular distributions, reflecting the heavy-tailed nature of cyber-loss costs.",
+          "Organisation-profile modifiers are triangular uncertainty ranges sampled per simulated year, so the output reflects calibration uncertainty as well as input uncertainty."
         ]
       },
       {
@@ -124,7 +126,9 @@
           "Each simulated year draws a material-loss event count and sums independently sampled positive severities for those events. The reported percentiles therefore describe simulated annual total losses, including zero-loss years.",
           "Scenarios are simulated jointly using a shared posterior parameter draw. This produces a model-dependent joint distribution; it does not estimate empirical correlation or assert independence for a particular organisation.",
           "The model is evidence-informed at the reference-class level. It is not validated for an individual organisation, and it does not include insurance recoveries, indemnities, statutory fines or all cyber scenarios.",
-          "The expected annual loss figure is the mean of the simulated annual totals. It is a model output conditional on public evidence, your evidence and the documented elicitation assumptions, not an audited budget requirement or guarantee."
+          "The indicative annual exposure figure is the mean of the simulated annual totals. It is a model output conditional on public evidence, your evidence and the documented elicitation assumptions, not an audited budget requirement or guarantee.",
+          "Loss magnitudes follow lognormal distributions whose parameters are moment-matched to the triangular ranges implied by your answers. This gives heavier right tails than triangular sampling, so high-end percentiles and threshold probabilities reflect a realistic tail rather than a hard ceiling.",
+          "Organisation-profile modifiers (security maturity, internet-facing exposure, critical-service dependency, recovery capability, sensitive-information exposure and third-party dependency) are sampled per year from triangular uncertainty ranges. The width of each range reflects confidence in that calibration value."
         ]
       },
       {

@@ -184,7 +184,7 @@ export const testPortfolioSearch = (input: {
   paretoIds: input.portfolios.map((entry) => entry.id),
   noneSatisfies: input.noneSatisfies ?? false,
   noneSatisfiesMessage: input.noneSatisfies
-    ? 'No evaluated portfolio meets the expected annual-loss criterion within the stated constraints.'
+    ? 'No evaluated portfolio meets the indicative-exposure criterion within the stated constraints.'
     : '',
   evaluated: input.portfolios.length,
   truncated: false,

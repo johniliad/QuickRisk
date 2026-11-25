@@ -76,6 +76,28 @@ final class QkDistributions
     }
 
     /**
+     * Sample from a lognormal distribution whose underlying normal has mean
+     * $mu and standard deviation $sigma. The result is always positive and
+     * finite. Used for heavy-tailed loss magnitudes.
+     */
+    public function sampleLognormal(float $mu, float $sigma): float
+    {
+        if (!is_finite($mu)) {
+            $mu = 0.0;
+        }
+        if (!is_finite($sigma) || $sigma <= 0.0) {
+            return exp(max(-50.0, min(50.0, $mu)));
+        }
+
+        $u1 = max(1.0e-12, $this->uniform());
+        $u2 = $this->uniform();
+        $z = sqrt(-2.0 * log($u1)) * cos(2.0 * M_PI * $u2);
+        $value = exp($mu + $sigma * $z);
+
+        return is_finite($value) ? max(1.0e-12, $value) : exp(max(-50.0, min(50.0, $mu)));
+    }
+
+    /**
      * Modified-PERT (beta-PERT) sample. Provided for later calibration
      * revisions; not used by the v1 default model.
      */
@@ -352,5 +374,61 @@ final class QkDistributions
         [$a, $m, $b] = self::normaliseRange($min, $mode, $max);
 
         return (($a * $a) + ($m * $m) + ($b * $b) - ($a * $m) - ($a * $b) - ($m * $b)) / 18.0;
+    }
+
+    /**
+     * Theoretical mean of a lognormal distribution.
+     */
+    public static function lognormalMean(float $mu, float $sigma): float
+    {
+        return exp($mu + 0.5 * $sigma * $sigma);
+    }
+
+    /**
+     * Theoretical variance of a lognormal distribution.
+     */
+    public static function lognormalVariance(float $mu, float $sigma): float
+    {
+        return (exp($sigma * $sigma) - 1.0) * exp(2.0 * $mu + $sigma * $sigma);
+    }
+
+    /**
+     * Moment-matches a triangular (min, mode, max) to lognormal (mu, sigma).
+     *
+     * The resulting lognormal shares the triangular's mean and variance but has
+     * heavier right tails, reflecting the empirically heavy-tailed nature of
+     * cyber-loss costs.
+     *
+     * @return array{mu:float,sigma:float}
+     */
+    public static function triangularToLognormalParameters(float $min, float $mode, float $max): array
+    {
+        [$a, $m, $b] = self::normaliseRange($min, $mode, $max);
+        $mean = ($a + $m + $b) / 3.0;
+        $variance = (($a * $a) + ($m * $m) + ($b * $b) - ($a * $m) - ($a * $b) - ($m * $b)) / 18.0;
+
+        if ($mean <= 0.0 || !is_finite($mean)) {
+            return ['mu' => log(1.0e-12), 'sigma' => 0.0];
+        }
+        if ($variance <= 0.0 || !is_finite($variance)) {
+            return ['mu' => log($mean), 'sigma' => 0.0];
+        }
+
+        $sigmaSquared = log(1.0 + $variance / ($mean * $mean));
+        $sigma = sqrt(max(0.0, $sigmaSquared));
+        $mu = log($mean) - 0.5 * $sigmaSquared;
+
+        return ['mu' => $mu, 'sigma' => $sigma];
+    }
+
+    /**
+     * Quantile function of a lognormal distribution.
+     */
+    public static function lognormalQuantile(float $mu, float $sigma, float $probability): float
+    {
+        $p = self::clamp($probability, 1.0e-12, 1.0 - 1.0e-12);
+        $value = exp($mu + $sigma * self::standardNormal($p));
+
+        return is_finite($value) ? max(1.0e-12, $value) : exp($mu);
     }
 }

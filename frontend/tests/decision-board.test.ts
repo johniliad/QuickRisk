@@ -186,8 +186,8 @@ describe('Board Risk Pack model', () => {
     const report = buildBoardReport(input({ recommended: null, recommendationState: 'none-satisfies' }));
 
     expect(report.recommendation).toBeNull();
-    expect(report.pages[3].narrative).toContain('No evaluated portfolio meets the expected annual-loss criterion');
-    expect(report.decisionRequested).toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.pages[3].narrative).toContain('No evaluated portfolio meets the indicative-exposure criterion');
+    expect(report.decisionRequested).toContain('No evaluated portfolio meets the indicative-exposure criterion');
   });
 
   it('does not claim a portfolio search happened when none was run', () => {
@@ -195,9 +195,9 @@ describe('Board Risk Pack model', () => {
 
     expect(report.recommendation).toBeNull();
     expect(report.pages[3].narrative).toContain('No portfolio search has been performed');
-    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the indicative-exposure criterion');
     expect(report.decisionRequested).toContain('Run a portfolio search');
-    expect(report.decisionRequested).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.decisionRequested).not.toContain('No evaluated portfolio meets the indicative-exposure criterion');
   });
 
   it('says a different combination was recommended when the report describes the selected set', () => {
@@ -205,7 +205,7 @@ describe('Board Risk Pack model', () => {
 
     expect(report.recommendation).toBeNull();
     expect(report.pages[3].narrative).toContain('different combination was recommended');
-    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(report.pages[3].narrative).not.toContain('No evaluated portfolio meets the indicative-exposure criterion');
     expect(report.decisionRequested).toContain('no portfolio recommendation is made');
   });
 

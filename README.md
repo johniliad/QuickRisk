@@ -31,7 +31,7 @@ ratings that cannot be set against the money being requested, so "how exposed ar
 
 | Role | What QuickRisk gives them |
 |---|---|
-| Executive, board, CFO | An expected annual loss and a "bad year (1 in 10)" figure per scenario, in euros, that can be set against budget, insurance cover and a stated risk appetite — not an ordinal rating |
+| Executive, board, CFO | An indicative annual exposure and a "bad year (1 in 10)" figure per scenario, in euros, that can be set against budget, insurance cover and a stated risk appetite — not an ordinal rating |
 | CISO / risk manager | A transparent, reproducible chain from two answers per scenario to a distribution, so the number can be defended, challenged and re-run rather than asserted |
 | Security team | A sensitivity analysis per result, so the conversation moves to the assumption that actually moves the number |
 | Risk committee / audit | Versioned model and calibration identifiers on every result, zero retention of assessment content, and deterministic test vectors in the test suite |
@@ -229,14 +229,14 @@ liabilities are not calculated or predicted.**
 |---|---|
 | Iterations per scenario | 5,000 by default (allowed: 1,000 / 5,000 / 10,000 / 25,000 / 50,000; hard maximum 50,000) |
 | Reported percentiles | P10, P25, P50, P75, P90 of simulated annual total losses |
-| Expected annual loss | Arithmetic mean of simulated annual totals, including zero-loss years |
+| Indicative annual exposure | Arithmetic mean of simulated annual totals, including zero-loss years |
 | Portfolio total | Year-by-year sum of scenario totals under shared posterior draws; joint percentiles are reported |
 | Loss thresholds | €100k, €500k, €1m, €5m, €10m |
 | Threshold probability | Share of simulated years above the threshold, with integer counts and Wilson intervals |
 | Histogram | 40 bins, the last one an overflow bin above the 99th percentile |
 | Sensitivity | Expected loss re-computed across the same posterior draws for each answer option |
 
-The reported words matter: **expected annual loss** is the posterior-predictive mean under the
+The reported words matter: **indicative annual exposure** is the posterior-predictive mean under the
 model assumptions (not a forecast); **typical year** is P50; **bad year (1 in 10)** is P90;
 **best case (1 in 10)** is P10. Percentiles are predictive intervals, not confidence intervals.
 The mean standard error and low-exceedance warnings are returned with the statistics.
@@ -278,7 +278,7 @@ externally validated. A complete set of answers therefore shows "Medium", never 
 
 QuickRisk Live is a separate, deterministic layer that shows how current SOC observations and
 response actions could change the *operational* risk state. It never re-does the risk
-mathematics: the baseline expected annual loss comes from the model above (or from a saved
+mathematics: the baseline indicative annual exposure comes from the model above (or from a saved
 assessment that recorded it).
 
 ```text
@@ -310,7 +310,7 @@ factor `k`, which allows:
 - overlap handled by independent coverage (later treatments in the same mechanism group deliver
   only 0.65 by default), never by adding percentages;
 - deterministic decision rules: the exact comparison may test EAL, P90 and exceedance probability,
-  but **portfolio selection uses expected annual loss only** and requires an annual-loss limit.
+  but **portfolio selection uses indicative annual exposure only** and requires an exposure limit.
   High-end loss and exceedance criteria depend on a joint scenario-dependence model, so they are
   displayed and evaluated for the exact comparison but excluded from portfolio ranking and
   recommendation;
@@ -337,7 +337,7 @@ scaling an approximation, and that limitation is stated in the Decision Lab and 
 - Only five scenarios are assessed; other material scenarios are out of scope.
 - Dependence is represented by shared posterior draws, not by an empirically estimated correlation
   matrix. Portfolio percentiles are model-dependent, and Decision Lab still selects portfolios on
-  expected annual loss rather than joint P90.
+  indicative annual exposure rather than joint P90.
 - The active engine simulates annual counts and event-level severities. The legacy fallback uses
   one annualised-exposure magnitude per trial and is clearly labelled.
 - Secondary loss is an uncertain allocation of total event severity, not a separately estimated
@@ -370,7 +370,7 @@ explanation, in plain language, for users).
 
 - Five predefined scenarios, two questions each, plus eight organisation-profile questions.
 - A server-side Monte Carlo simulation (5,000 iterations per scenario by default) in PHP.
-- Results expressed as expected annual loss, P10/P50/P90 ranges and threshold exceedance
+- Results expressed as indicative annual exposure, P10/P50/P90 ranges and threshold exceedance
   probabilities, with an explicit confidence indicator.
 - **QuickRisk Live** (optional add-on): a deterministic SOC overlay that turns synthetic
   telemetry into a Real-Time Risk Index, a bounded SOC Threat Multiplier and an illustrative

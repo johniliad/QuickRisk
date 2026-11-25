@@ -194,7 +194,7 @@ export function ScenarioDetailPanel({
           </CardHeader>
           <CardContent className="grid gap-3">
             <DefinitionList>
-              <DefinitionItem term="Expected annual loss">
+              <DefinitionItem term="Indicative annual exposure">
                 <span className="font-semibold text-accent-strong">
                   {formatMoney(scenario.statistics.expectedAnnualLoss, symbol)}
                 </span>
@@ -263,8 +263,8 @@ export function ScenarioDetailPanel({
           <CardContent className="grid gap-3">
             <RiskDriverList scenario={scenario} symbol={symbol} />
             <p className="m-0 text-micro text-muted">
-              These are the components of the modelled expected annual loss, not a sensitivity analysis. The
-              sensitivity of the expected annual loss to each input is reported on the dashboard.
+              These are the components of the modelled indicative annual exposure, not a sensitivity analysis. The
+              sensitivity of the indicative annual exposure to each input is reported on the dashboard.
             </p>
           </CardContent>
         </Card>

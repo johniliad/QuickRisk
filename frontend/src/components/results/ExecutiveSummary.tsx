@@ -58,7 +58,7 @@ export function ExecutiveSummary({
       </div>
 
       <p className="m-0 max-w-[46rem] text-[1.02rem] leading-relaxed text-ink">
-        Based on your answers, expected annual loss across the five scenarios is{' '}
+        Based on your answers, the indicative annual exposure across the five scenarios is{' '}
         <strong>{summary.expectedAnnualLoss}</strong> a year.
         {summary.worstScenarioLabel === null ? null : (
           <>
@@ -75,7 +75,7 @@ export function ExecutiveSummary({
           emphasis
           label={portfolio.label}
           value={formatMoney(portfolio.expectedAnnualLoss, symbol)}
-          detail="Posterior-predictive mean of jointly simulated annual total losses. Scenario and portfolio percentiles describe annual totals under the documented evidence and dependence model; they are not forecasts or organisation-specific validation."
+          detail="Posterior-predictive mean of jointly simulated annual exposure estimates. Scenario and portfolio percentiles describe annual totals under the documented evidence and dependence model; they are not forecasts or organisation-specific validation."
         />
         <MetricCard
           label="Worst scenario — bad year (1 in 10)"
@@ -120,7 +120,7 @@ export function ExecutiveSummary({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Top scenarios by expected annual loss</CardTitle>
+            <CardTitle>Top scenarios by indicative annual exposure</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
             <ol className="m-0 grid gap-2 pl-5">

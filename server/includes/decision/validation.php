@@ -79,7 +79,7 @@ function qk_decision_appetite($appetite): ?array
 
     $validated = [];
     if (isset($appetite['annualLossLimit'])) {
-        $validated['annualLossLimit'] = qk_decision_number($appetite['annualLossLimit'], 'The annual loss limit', 1.0, 1.0e12);
+        $validated['annualLossLimit'] = qk_decision_number($appetite['annualLossLimit'], 'The exposure limit', 1.0, 1.0e12);
     }
     if (isset($appetite['highEndLimit'])) {
         $validated['highEndLimit'] = qk_decision_number($appetite['highEndLimit'], 'The high-end loss limit', 1.0, 1.0e12);
@@ -91,7 +91,7 @@ function qk_decision_appetite($appetite): ?array
             throw new QkLiveHttpError(
                 422,
                 'VALIDATION_ERROR',
-                'The probability criterion needs a loss threshold. Enter an annual loss limit or an exceedance threshold.'
+                'The probability criterion needs a loss threshold. Enter an exposure limit or an exceedance threshold.'
             );
         }
         $probability = qk_decision_number(
@@ -1188,7 +1188,7 @@ function qk_decision_validate_saved_result(array $payload, array $appConfig): ar
         $savedAppetite = qk_decision_appetite($payload['appetite'] ?? null);
         $portfolioCriteria = qk_decision_portfolio_appetite_criteria($savedAppetite);
         if ($portfolioCriteria === []) {
-            throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'A recommended portfolio requires an annual loss limit.');
+            throw new QkLiveHttpError(422, 'VALIDATION_ERROR', 'A recommended portfolio requires an exposure limit.');
         }
         qk_decision_validate_appetite_evaluation(
             $recommended['appetite'] ?? null,

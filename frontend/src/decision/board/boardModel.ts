@@ -159,12 +159,12 @@ const pageFourNarrative = (
         ? 'It also satisfies every configured appetite criterion in the exact comparison.'
         : 'The exact comparison remains above the full configured appetite on at least one joint-distribution criterion; those criteria do not determine the portfolio recommendation.';
     return (
-      `The recommended portfolio is the lowest-cost evaluated combination that meets the expected ` +
-      `annual-loss criterion and the stated constraints. ${qualification}`
+      `The recommended portfolio is the lowest-cost evaluated combination that meets the indicative ` +
+      `exposure criterion and the stated constraints. ${qualification}`
     );
   }
   if (state === 'none-satisfies') {
-    return 'No evaluated portfolio meets the expected annual-loss criterion within the stated constraints.';
+    return 'No evaluated portfolio meets the indicative-exposure criterion within the stated constraints.';
   }
   if (state === 'evaluated-other') {
     return (
@@ -205,7 +205,7 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     status: AppetiteEvaluation['status'],
   ): BoardMetric => ({
     label: METRIC_LABELS.expectedAnnualLoss,
-    technicalLabel: 'Expected Annual Loss (EAL)',
+    technicalLabel: 'Indicative Annual Exposure (EAL)',
     value,
     previousValue: previous,
     appetite: annualLimit,
@@ -231,7 +231,7 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     question: 'What decision is requested?',
     narrative:
       `Current modeled exposure is ${statusSentence(input.appetiteBaseline.status)}. Under the selected ` +
-      `treatment assumptions the modeled annual loss exposure falls by ${percent(input.reductionShare)}, and ` +
+      `treatment assumptions the modeled annual exposure estimate falls by ${percent(input.reductionShare)}, and ` +
       `the residual position is ${statusSentence(input.appetiteTreated.status)}.`,
     acronyms: ['EAL', 'P90'],
     metrics: [
@@ -268,7 +268,7 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
       ),
       exceedance === null
         ? 'No probability limit was configured for this analysis.'
-        : `Modeled likelihood of exceeding the annual loss limit: ${percent(exceedance.actual)} ` +
+        : `Modeled likelihood of exceeding the exposure limit: ${percent(exceedance.actual)} ` +
           `(limit ${percent(exceedance.limit)}).`,
     ],
   };
@@ -311,8 +311,8 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
       input.riskReductionEfficiency === null
         ? 'Risk Reduction Efficiency (RRE) is not available because no annualised cost was configured.'
         : `Risk Reduction Efficiency (RRE): ${input.riskReductionEfficiency.toFixed(2)} of modeled annual ` +
-          'loss reduction per unit of annualised cost. This is not a financial return.',
-      'Portfolio selection uses expected annual loss only. High-end loss and exceedance criteria ' +
+          'exposure reduction per unit of annualised cost. This is not a financial return.',
+      'Portfolio selection uses indicative annual exposure only. High-end loss and exceedance criteria ' +
         'are evaluated for the exact treatment comparison, not used to rank portfolios.',
     ],
   };
@@ -361,14 +361,14 @@ export function buildBoardReport(input: BoardModelInput): BoardReportModel {
     decisionRequested: hasRecommendation
       ? input.treatments.length === 0
         ? 'For consideration: no additional treatment. The evaluated baseline already meets the ' +
-          'expected annual-loss criterion and constraints in this model; validate that conclusion before deciding.'
+          'indicative-exposure criterion and constraints in this model; validate that conclusion before deciding.'
         : `For consideration: an initial investment of ${input.initialInvestment.toFixed(0)} ${input.currencySymbol} ` +
           `and ${input.annualOperatingCost.toFixed(0)} ${input.currencySymbol} of annual operating cost, which the ` +
-          'model projects will bring expected annual loss within the expected annual-loss criterion and constraints. ' +
+          'model projects will bring indicative annual exposure within the indicative-exposure criterion and constraints. ' +
           'High-end and exceedance criteria do not determine the portfolio recommendation. ' +
           'Validate the implementation and treatment-effect assumptions before committing.'
       : input.recommendationState === 'none-satisfies'
-        ? 'No evaluated portfolio meets the expected annual-loss criterion and budget. Consider a different limit, ' +
+        ? 'No evaluated portfolio meets the indicative-exposure criterion and budget. Consider a different limit, ' +
           'budget or candidate set before deciding.'
         : input.recommendationState === 'evaluated-other'
           ? 'For consideration: the selected treatment set described on pages 1–3. A portfolio search recommended ' +

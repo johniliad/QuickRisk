@@ -538,7 +538,7 @@ final class QkPosteriorEngine
             'drivers' => self::drivers($expected, $scenario, $expectedSecondary),
             'driverIndex' => ['frequency' => 100, 'magnitude' => 100, 'secondary' => 0],
             'interpretation' => [
-                'summary' => 'The posterior-predictive model estimates an expected annual loss of '
+                'summary' => 'The posterior-predictive model estimates an indicative annual exposure of '
                     . QkFormatting::money($expected) . ' for ' . (string) $scenario['shortLabel'] . '.',
                 'rangeStatement' => 'The P10 to P90 interval describes simulated annual total losses.',
                 'thresholdStatement' => 'Threshold probabilities are posterior-predictive shares of simulated years.',

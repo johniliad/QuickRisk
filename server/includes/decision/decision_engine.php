@@ -172,7 +172,7 @@ function qk_decision_appetite_criteria(?array $appetite): array
         ];
     }
     if (is_numeric($maxProbability) && (float) $maxProbability > 0 && (float) $maxProbability <= 1) {
-        // The threshold for the probability criterion is the annual loss limit when one is
+        // The threshold for the probability criterion is the exposure limit when one is
         // configured; otherwise an explicit threshold must be supplied. It is never invented.
         $threshold = null;
         if (is_numeric($annualLimit) && (float) $annualLimit > 0) {
@@ -183,7 +183,7 @@ function qk_decision_appetite_criteria(?array $appetite): array
         if ($threshold !== null) {
             $criteria[] = [
                 'id' => 'exceedanceProbability',
-                'label' => 'Probability of exceeding the annual loss limit',
+                'label' => 'Probability of exceeding the exposure limit',
                 'limit' => (float) $maxProbability,
                 'unit' => 'probability',
                 'threshold' => $threshold,
@@ -694,13 +694,13 @@ function qk_decision_label_portfolios(
             $reason = implode(' ', $portfolio['constraintViolations']);
         } elseif ($portfolio['id'] === $recommendedId) {
             $label = 'recommended';
-            $reason = 'Lowest-cost evaluated portfolio that meets the expected annual-loss criterion and constraints.';
+            $reason = 'Lowest-cost evaluated portfolio that meets the indicative-exposure criterion and constraints.';
         } elseif ($portfolio['withinAppetite'] === true) {
             $label = 'viable';
-            $reason = 'Also meets the expected annual-loss criterion, at a different cost or trade-off.';
+            $reason = 'Also meets the indicative-exposure criterion, at a different cost or trade-off.';
         } elseif (in_array($portfolio['id'], $paretoIds, true)) {
             $label = 'high_value';
-            $reason = 'Best available cost and residual-EAL trade-off, but still above the expected annual-loss criterion.';
+            $reason = 'Best available cost and residual-EAL trade-off, but still above the indicative-exposure criterion.';
         } else {
             $label = 'dominated';
             $reason = 'Another evaluated portfolio is no more expensive and no riskier.';
@@ -725,7 +725,7 @@ function qk_decision_label_portfolios(
         'paretoIds' => $paretoIds,
         'noneSatisfies' => $portfolioAppetiteDefined && $recommendedId === null,
         'noneSatisfiesMessage' => $portfolioAppetiteDefined && $recommendedId === null
-            ? 'No evaluated portfolio meets the expected annual-loss criterion within the stated constraints.'
+            ? 'No evaluated portfolio meets the indicative-exposure criterion within the stated constraints.'
             : '',
     ];
 }

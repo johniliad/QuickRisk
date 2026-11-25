@@ -36,7 +36,7 @@ export const assessmentResults = {
     calibrationStatus: 'calibrated',
   },
   portfolio: {
-    label: 'Sum of scenario expected annual loss exposure',
+    label: 'Sum of scenario indicative annual exposure estimates',
     expectedAnnualLoss: 1365484.7,
     annualisationNote: 'Annualised exposure approximation.',
     topScenarios: [],
@@ -199,7 +199,7 @@ export const portfolioSearch = {
       clampWarning: false,
       label: 'recommended',
       labelText: 'Recommended',
-      labelReason: 'Lowest-cost evaluated portfolio that meets the expected annual-loss criterion and constraints.',
+      labelReason: 'Lowest-cost evaluated portfolio that meets the indicative-exposure criterion and constraints.',
     },
   ],
   recommendedId: 'portfolio-edr',

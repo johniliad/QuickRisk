@@ -115,7 +115,7 @@ describe('stored Decision Lab report projection', () => {
     );
 
     expect(none?.recommendation).toBeNull();
-    expect(none?.pages[3].narrative).toContain('No evaluated portfolio meets the expected annual-loss criterion');
+    expect(none?.pages[3].narrative).toContain('No evaluated portfolio meets the indicative-exposure criterion');
     expect(other?.pages[3].narrative).toContain('different combination was recommended');
     expect(notEvaluated?.pages[3].narrative).toContain('No portfolio search has been performed');
   });

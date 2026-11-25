@@ -105,9 +105,9 @@ const QK_DECISION_DEFAULTS = [
  * Risk-appetite criteria identifiers, in evaluation order.
  */
 const QK_DECISION_APPETITE_CRITERIA = [
-    'annualLoss' => 'Expected annual loss',
+    'annualLoss' => 'Indicative annual exposure',
     'highEndLoss' => 'High-end modeled loss',
-    'exceedanceProbability' => 'Probability of exceeding the annual loss limit',
+    'exceedanceProbability' => 'Probability of exceeding the exposure limit',
 ];
 
 /**

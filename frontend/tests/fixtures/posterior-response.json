@@ -777,7 +777,7 @@
                 "secondary": 0
             },
             "interpretation": {
-                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac133 for Ransomware.",
+                "summary": "The posterior-predictive model estimates an indicative annual exposure of \u20ac133 for Ransomware.",
                 "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
                 "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
                 "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
@@ -1128,7 +1128,7 @@
                 "secondary": 0
             },
             "interpretation": {
-                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac352 for Identity compromise.",
+                "summary": "The posterior-predictive model estimates an indicative annual exposure of \u20ac352 for Identity compromise.",
                 "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
                 "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
                 "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
@@ -1479,7 +1479,7 @@
                 "secondary": 0
             },
             "interpretation": {
-                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac233 for Vulnerability exploitation.",
+                "summary": "The posterior-predictive model estimates an indicative annual exposure of \u20ac233 for Vulnerability exploitation.",
                 "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
                 "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
                 "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
@@ -1830,7 +1830,7 @@
                 "secondary": 0
             },
             "interpretation": {
-                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac325 for Third-party compromise.",
+                "summary": "The posterior-predictive model estimates an indicative annual exposure of \u20ac325 for Third-party compromise.",
                 "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
                 "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
                 "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",
@@ -2181,7 +2181,7 @@
                 "secondary": 0
             },
             "interpretation": {
-                "summary": "The posterior-predictive model estimates an expected annual loss of \u20ac47 for DDoS / disruption.",
+                "summary": "The posterior-predictive model estimates an indicative annual exposure of \u20ac47 for DDoS / disruption.",
                 "rangeStatement": "The P10 to P90 interval describes simulated annual total losses.",
                 "thresholdStatement": "Threshold probabilities are posterior-predictive shares of simulated years.",
                 "annualisationStatement": "Percentiles describe realised annual loss totals simulated from annual event counts and per-event severities.",

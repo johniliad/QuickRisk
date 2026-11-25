@@ -360,7 +360,7 @@ return [
         assertSame(true, $search['noneSatisfies'], 'An impossible appetite must not produce a recommendation');
         assertSame(null, $search['recommendedId'], 'No portfolio may be recommended');
         assertContains(
-            'No evaluated portfolio meets the expected annual-loss criterion',
+            'No evaluated portfolio meets the indicative-exposure criterion',
             (string) $search['noneSatisfiesMessage'],
             'The message must state that no portfolio meets the portfolio-level criterion'
         );
@@ -677,7 +677,7 @@ return [
             qk_fail('Portfolio evaluation without an annual-loss limit must be rejected');
         } catch (QkLiveHttpError $error) {
             assertSame(422, $error->status, 'The missing portfolio criterion must be a validation error');
-            assertContains('annual loss limit', $error->getMessage(), 'The error must name the required criterion');
+            assertContains('exposure limit', $error->getMessage(), 'The error must name the required criterion');
         }
     },
 

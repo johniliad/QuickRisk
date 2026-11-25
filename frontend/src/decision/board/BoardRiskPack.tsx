@@ -244,7 +244,7 @@ export function BoardRiskPack({ report, readOnly = false }: { report: BoardRepor
             <>
               <span>Highest value under your stated constraints: {report.recommendation.names.join(' + ')}.</span>
               <span>
-                Under the stated assumptions the modeled annual loss exposure falls from{' '}
+                Under the stated assumptions the modeled annual exposure estimate falls from{' '}
                 {formatBoardMoney(report.recommendation.baselineEal, report.currencySymbol)} to{' '}
                 {formatBoardMoney(report.recommendation.treatedEal, report.currencySymbol)}.
               </span>

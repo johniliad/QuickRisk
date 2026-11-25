@@ -273,7 +273,7 @@ export interface TreatmentCatalogue {
 
 /** Business labels for the technical distribution statistics. */
 export const METRIC_LABELS = {
-  expectedAnnualLoss: 'Expected Annual Loss',
+  expectedAnnualLoss: 'Indicative Annual Exposure',
   p90: 'High-End Modeled Loss',
   p50: 'Midpoint Modeled Loss',
   p10: 'Lower-End Modeled Loss',
@@ -282,15 +282,15 @@ export const METRIC_LABELS = {
 /** Acronym definitions, shown once per page at first use (requirements 4, 8 and 42). */
 export const ACRONYMS: Readonly<Record<string, { term: string; short: string }>> = {
   EAL: {
-    term: 'Expected Annual Loss',
-    short: "The model's estimate of the average annual financial loss for the assessed scenarios.",
+    term: 'Indicative Annual Exposure',
+    short: "The model's estimate of the average annual financial exposure for the assessed scenarios.",
   },
   P10: { term: '10th percentile', short: 'A lower modeled loss level; about 10% of modeled years fall below it.' },
   P50: { term: '50th percentile', short: 'The midpoint of the modeled loss distribution.' },
   P90: { term: '90th percentile', short: 'A high-end modeled loss level; about 10% of modeled years exceed it.' },
   RRE: {
     term: 'Risk Reduction Efficiency',
-    short: 'Modeled annual loss reduction per unit of annualised treatment cost. Not a financial return.',
+    short: 'Modeled annual exposure reduction per unit of annualised treatment cost. Not a financial return.',
   },
 };
 

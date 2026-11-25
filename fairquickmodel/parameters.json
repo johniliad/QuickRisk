@@ -12,6 +12,10 @@
     "distribution": "triangular",
     "pertLambda": 4.0,
     "triangularRationale": "Triangular distributions are used for v1 because they are easy to explain, inspect and reproduce, and because the questionnaire only supports min/most-likely/max reasoning.",
+    "lossMagnitudeDistribution": "lognormal",
+    "lossMagnitudeDistributionRationale": "Loss magnitudes are sampled from lognormal distributions whose parameters are moment-matched to the triangular (min, mode, max) ranges. This produces heavier right tails than triangular sampling, reflecting the observed heavy-tailed nature of cyber-loss costs; moment-matching preserves the mean and variance of the original triangular ranges.",
+    "modifierUncertainty": "per-iteration-triangular",
+    "modifierUncertaintyRationale": "Each organisation-profile modifier is a triangular uncertainty range. The central estimate uses the mode and the deviation is sampled per Monte Carlo iteration, so calibration uncertainty is propagated into the output distribution.",
     "wideningMeanShiftCap": 1.5,
     "wideningMeanShiftCapRationale": "Widening a right-skewed range raises its arithmetic mean because the upper tail is expanded while the most-likely value is held. Left unbounded, an Unknown answer would inflate the central estimate instead of merely widening the distribution. Widening is therefore reduced until the mean of the range is at most 1.5x the un-widened mean. The cap is applied by QkModifiers::applyRange to every widened input, and it is what keeps an all-Unknown assessment's central estimate within a stated multiple of the all-known assessment.",
     "clamps": {
@@ -29,15 +33,15 @@
   "frequency": {
     "optionSet": "frequency5",
     "units": "threat events per year (attempts or contact, before control effectiveness)",
-    "classification": "internally-derived",
-    "source": "FAIR QuickRisk requirements v2 section 12 illustrative frequency mapping; retained unchanged as the v1 calibration basis.",
+    "classification": "externally-evidenced",
+    "source": "DSIT Cyber Security Breaches Survey 2025/2026 prevalence and material-cost probability, decomposed into scenario-level Poisson rates via DBIR 2026 action/type composition. Derived by tools/calibrate-frequency-bands.php; applies to the legacy fallback engine, while the active posterior engine uses reference-class posterior draws.",
     "answerInterpretation": "The likelihood answer is interpreted as threat event frequency: how often the scenario is attempted or contacted in a typical 12-month period, before considering whether controls would prevent success. Control effectiveness is applied separately and only once, as susceptibility. The question wording and help text were corrected in CAL-1.2 to match this interpretation; CAL-1.0 wording asked for scenario plausibility given existing controls, which risked counting controls twice.",
     "bands": {
-      "VERY_UNLIKELY": { "min": 0.01, "mode": 0.03, "max": 0.10 },
-      "UNLIKELY": { "min": 0.05, "mode": 0.15, "max": 0.30 },
-      "POSSIBLE": { "min": 0.20, "mode": 0.50, "max": 1.00 },
-      "LIKELY": { "min": 0.50, "mode": 1.50, "max": 3.00 },
-      "VERY_LIKELY": { "min": 1.50, "mode": 4.00, "max": 10.00 }
+      "VERY_UNLIKELY": { "min": 0.0038, "mode": 0.0127, "max": 0.0316 },
+      "UNLIKELY": { "min": 0.0114, "mode": 0.0380, "max": 0.0949 },
+      "POSSIBLE": { "min": 0.0380, "mode": 0.1266, "max": 0.3165 },
+      "LIKELY": { "min": 0.0949, "mode": 0.3165, "max": 0.7912 },
+      "VERY_LIKELY": { "min": 0.2279, "mode": 0.7596, "max": 1.8989 }
     },
     "unknownPolicy": {
       "type": "mixture",
@@ -104,9 +108,9 @@
   },
   "susceptibility": {
     "units": "probability that a threat event becomes a loss event",
-    "classification": "heuristic",
-    "source": "Internal heuristic per scenario. Represents the combined effect of preventive, detective and response controls in a single organisation-level factor.",
-    "basis": "Scenario base ranges are scaled by the security-maturity modifier and clamped. Scenario bases differ because disruption and intrusion scenarios have structurally different success probabilities."
+    "classification": "externally-evidenced",
+    "source": "Anchored to DSIT Cyber Security Breaches Survey 2025/2026 P(material cost | breach) for medium/large organisations (0.603), decomposed into per-scenario susceptibility using DBIR 2026 action/type composition and the evidence-anchored frequency bands. The security-maturity modifier is informed by IBM/Ponemon Cost of a Data Breach 2025 control-effectiveness differentials. Applies to the legacy fallback engine.",
+    "basis": "Scenario base ranges are anchored to DSIT/IBM evidence and scaled by the security-maturity modifier. The overall susceptibility level is calibrated so that TEF x susceptibility reproduces the DSIT-observed material-loss rate for a medium-sized organisation."
   },
   "modifiers": [
     {
@@ -118,12 +122,12 @@
       "unknownWiden": 1.40,
       "classification": "heuristic",
       "values": {
-        "LIMITED": 0.70,
-        "MODERATE": 0.90,
-        "SIGNIFICANT": 1.00,
-        "EXTENSIVE": 1.25,
-        "VERY_EXTENSIVE": 1.50,
-        "UNKNOWN": 1.00
+        "LIMITED": { "min": 0.50, "mode": 0.70, "max": 0.90 },
+        "MODERATE": { "min": 0.70, "mode": 0.90, "max": 1.10 },
+        "SIGNIFICANT": { "min": 0.85, "mode": 1.00, "max": 1.15 },
+        "EXTENSIVE": { "min": 1.00, "mode": 1.25, "max": 1.55 },
+        "VERY_EXTENSIVE": { "min": 1.15, "mode": 1.50, "max": 2.00 },
+        "UNKNOWN": { "min": 0.85, "mode": 1.00, "max": 1.15 }
       }
     },
     {
@@ -134,12 +138,12 @@
       "unknownWiden": 1.50,
       "classification": "heuristic",
       "values": {
-        "VERY_LIMITED": 1.80,
-        "LIMITED": 1.40,
-        "MODERATE": 1.00,
-        "STRONG": 0.70,
-        "VERY_STRONG": 0.50,
-        "UNKNOWN": 1.00
+        "VERY_LIMITED": { "min": 1.40, "mode": 2.00, "max": 2.80 },
+        "LIMITED": { "min": 1.10, "mode": 1.50, "max": 2.10 },
+        "MODERATE": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "STRONG": { "min": 0.45, "mode": 0.60, "max": 0.80 },
+        "VERY_STRONG": { "min": 0.25, "mode": 0.40, "max": 0.60 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -150,12 +154,12 @@
       "unknownWiden": 1.40,
       "classification": "heuristic",
       "values": {
-        "LOW": 0.60,
-        "MODERATE": 0.80,
-        "HIGH": 1.00,
-        "VERY_HIGH": 1.30,
-        "EXTREME": 1.60,
-        "UNKNOWN": 1.00
+        "LOW": { "min": 0.40, "mode": 0.60, "max": 0.80 },
+        "MODERATE": { "min": 0.60, "mode": 0.80, "max": 1.00 },
+        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "VERY_HIGH": { "min": 1.00, "mode": 1.30, "max": 1.65 },
+        "EXTREME": { "min": 1.20, "mode": 1.60, "max": 2.20 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -166,12 +170,12 @@
       "unknownWiden": 1.40,
       "classification": "heuristic",
       "values": {
-        "VERY_LOW": 1.50,
-        "LOW": 1.25,
-        "MODERATE": 1.00,
-        "HIGH": 0.80,
-        "VERY_HIGH": 0.65,
-        "UNKNOWN": 1.00
+        "VERY_LOW": { "min": 1.15, "mode": 1.50, "max": 2.00 },
+        "LOW": { "min": 0.95, "mode": 1.25, "max": 1.65 },
+        "MODERATE": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "HIGH": { "min": 0.60, "mode": 0.80, "max": 1.00 },
+        "VERY_HIGH": { "min": 0.45, "mode": 0.65, "max": 0.85 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -182,12 +186,12 @@
       "unknownWiden": 1.50,
       "classification": "heuristic",
       "values": {
-        "LIMITED": 0.50,
-        "MODERATE": 0.75,
-        "SIGNIFICANT": 1.00,
-        "VERY_SIGNIFICANT": 1.35,
-        "CRITICAL": 1.70,
-        "UNKNOWN": 1.00
+        "LIMITED": { "min": 0.30, "mode": 0.50, "max": 0.70 },
+        "MODERATE": { "min": 0.55, "mode": 0.75, "max": 1.00 },
+        "SIGNIFICANT": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "VERY_SIGNIFICANT": { "min": 1.00, "mode": 1.35, "max": 1.75 },
+        "CRITICAL": { "min": 1.25, "mode": 1.70, "max": 2.30 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -198,12 +202,12 @@
       "unknownWiden": 1.40,
       "classification": "heuristic",
       "values": {
-        "LOW": 0.50,
-        "MODERATE": 0.75,
-        "HIGH": 1.00,
-        "VERY_HIGH": 1.35,
-        "EXTREME": 1.70,
-        "UNKNOWN": 1.00
+        "LOW": { "min": 0.30, "mode": 0.50, "max": 0.70 },
+        "MODERATE": { "min": 0.55, "mode": 0.75, "max": 1.00 },
+        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "VERY_HIGH": { "min": 1.00, "mode": 1.35, "max": 1.75 },
+        "EXTREME": { "min": 1.25, "mode": 1.70, "max": 2.30 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -214,12 +218,12 @@
       "unknownWiden": 1.40,
       "classification": "heuristic",
       "values": {
-        "LOW": 0.60,
-        "MODERATE": 0.80,
-        "HIGH": 1.00,
-        "VERY_HIGH": 1.30,
-        "EXTREME": 1.60,
-        "UNKNOWN": 1.00
+        "LOW": { "min": 0.40, "mode": 0.60, "max": 0.80 },
+        "MODERATE": { "min": 0.60, "mode": 0.80, "max": 1.00 },
+        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
+        "VERY_HIGH": { "min": 1.00, "mode": 1.30, "max": 1.65 },
+        "EXTREME": { "min": 1.20, "mode": 1.60, "max": 2.20 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     },
     {
@@ -232,12 +236,12 @@
       "unknownWiden": 1.80,
       "classification": "heuristic",
       "values": {
-        "LT10M": 0.25,
-        "10_50M": 0.60,
-        "50_250M": 1.20,
-        "250M_1B": 3.00,
-        "GT1B": 8.00,
-        "UNKNOWN": 1.00
+        "LT10M": { "min": 0.15, "mode": 0.25, "max": 0.40 },
+        "10_50M": { "min": 0.40, "mode": 0.60, "max": 0.85 },
+        "50_250M": { "min": 0.85, "mode": 1.20, "max": 1.70 },
+        "250M_1B": { "min": 2.00, "mode": 3.00, "max": 4.50 },
+        "GT1B": { "min": 5.00, "mode": 8.00, "max": 13.00 },
+        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
       }
     }
   ],
@@ -251,35 +255,35 @@
       "S1": {
         "frequencyScale": 1.00,
         "impactScale": 1.20,
-        "susceptibility": { "min": 0.10, "mode": 0.30, "max": 0.60 },
+        "susceptibility": { "min": 0.12, "mode": 0.35, "max": 0.65 },
         "secondaryLossProbability": { "min": 0.25, "mode": 0.45, "max": 0.70 },
         "secondaryLossMultiplier": { "min": 0.50, "mode": 1.20, "max": 2.50 }
       },
       "S2": {
         "frequencyScale": 1.15,
         "impactScale": 0.90,
-        "susceptibility": { "min": 0.15, "mode": 0.35, "max": 0.65 },
+        "susceptibility": { "min": 0.15, "mode": 0.40, "max": 0.70 },
         "secondaryLossProbability": { "min": 0.20, "mode": 0.38, "max": 0.60 },
         "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
       },
       "S3": {
         "frequencyScale": 1.15,
         "impactScale": 1.00,
-        "susceptibility": { "min": 0.08, "mode": 0.25, "max": 0.55 },
+        "susceptibility": { "min": 0.08, "mode": 0.28, "max": 0.58 },
         "secondaryLossProbability": { "min": 0.15, "mode": 0.32, "max": 0.55 },
         "secondaryLossMultiplier": { "min": 0.40, "mode": 1.00, "max": 2.50 }
       },
       "S4": {
         "frequencyScale": 0.85,
         "impactScale": 0.85,
-        "susceptibility": { "min": 0.05, "mode": 0.20, "max": 0.50 },
+        "susceptibility": { "min": 0.05, "mode": 0.22, "max": 0.52 },
         "secondaryLossProbability": { "min": 0.15, "mode": 0.35, "max": 0.60 },
         "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
       },
       "S5": {
         "frequencyScale": 1.50,
         "impactScale": 0.60,
-        "susceptibility": { "min": 0.15, "mode": 0.30, "max": 0.60 },
+        "susceptibility": { "min": 0.18, "mode": 0.38, "max": 0.65 },
         "secondaryLossProbability": { "min": 0.10, "mode": 0.22, "max": 0.45 },
         "secondaryLossMultiplier": { "min": 0.30, "mode": 0.60, "max": 1.50 }
       }

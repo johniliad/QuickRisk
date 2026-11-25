@@ -651,9 +651,15 @@ final class QkModel
             if (!is_array($values) || $values === []) {
                 throw new QkModelException('MODEL_MODIFIER_VALUES_MISSING');
             }
-            foreach (array_keys($values) as $optionCode) {
+            foreach ($values as $optionCode => $optionValue) {
                 if (!$this->hasOption($optionSet, (string) $optionCode)) {
                     throw new QkModelException('MODEL_MODIFIER_UNKNOWN_OPTION');
+                }
+                // Accept both scalar (legacy) and triangular-distribution-valued modifiers.
+                if (is_array($optionValue)) {
+                    self::assertRange($optionValue);
+                } elseif (!is_numeric($optionValue)) {
+                    throw new QkModelException('MODEL_MODIFIER_VALUE_INVALID');
                 }
             }
             foreach ((array) ($modifier['appliesTo'] ?? []) as $scenarioCode) {

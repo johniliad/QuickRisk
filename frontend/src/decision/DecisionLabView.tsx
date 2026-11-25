@@ -522,7 +522,7 @@ export function DecisionLabView() {
       || !Number.isFinite(appetite.annualLossLimit)
       || appetite.annualLossLimit <= 0
     ) {
-      setError('Enter an annual loss limit before evaluating portfolios.');
+      setError('Enter an exposure limit before evaluating portfolios.');
 
       return;
     }
@@ -1092,8 +1092,8 @@ export function DecisionLabView() {
               disabled={busy || !portfolioDecisionAvailable}
               title={
                 portfolioDecisionAvailable
-                  ? 'Evaluate portfolios against the expected annual-loss criterion'
-                  : 'Enter an annual loss limit to enable portfolio evaluation'
+                  ? 'Evaluate portfolios against the indicative-exposure criterion'
+                  : 'Enter an exposure limit to enable portfolio evaluation'
               }
             >
               Evaluate portfolios
@@ -1228,14 +1228,14 @@ export function DecisionLabView() {
             <CardTitle>4. What are the options?</CardTitle>
             <p className="m-0 text-small text-muted">
               {portfolios.evaluated} portfolios evaluated from {portfolios.candidatesConsidered} candidates. The
-              recommendation is the lowest-cost option that meets the expected annual-loss criterion and
+              recommendation is the lowest-cost option that meets the indicative-exposure criterion and
               constraints; it is not a claim that it is the only correct investment. High-end and exceedance
               criteria are not used for portfolio selection.
             </p>
           </CardHeader>
           <CardContent className="grid gap-3">
             {portfolios.noneSatisfies ? (
-              <Alert tone="warning" title="No portfolio meets the annual-loss criterion">
+              <Alert tone="warning" title="No portfolio meets the exposure-limit criterion">
                 <p className="m-0">{portfolios.noneSatisfiesMessage}</p>
               </Alert>
             ) : null}

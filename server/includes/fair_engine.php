@@ -9,7 +9,7 @@ declare(strict_types=1);
  *
  *   TEF (threat event frequency)  x  Susceptibility  =  LEF (loss event frequency)
  *   Primary Loss  +  Secondary Loss (Bernoulli draw)  =  Loss Magnitude
- *   Annual Loss Exposure  =  LEF  x  Loss Magnitude
+ *   Annualised Exposure Estimate  =  LEF  x  Loss Magnitude
  *
  * Both frequency and susceptibility are sampled per iteration, so uncertainty in
  * event frequency and in event success is preserved. The engine is independent of
@@ -225,6 +225,20 @@ final class FairEngine
                 'secondaryLossProbability' => $secondaryProbabilityRange,
                 'secondaryLossMagnitude' => $secondaryLossRange,
                 'secondaryLossMultiplier' => $secondaryMultiplierRange,
+                // Lognormal moment-matched to the triangular products above, so loss
+                // magnitudes are sampled with heavy right tails while the central
+                // estimate (and the analytic expectation) stay unchanged.
+                'primaryLossMagnitudeLognormal' => self::buildLognormalProduct($anchorRange, $impactRange),
+                'secondaryLossMagnitudeLognormal' => self::buildLognormalProduct($anchorRange, $secondaryMultiplierRange),
+                // Per-iteration relative uncertainty for distribution-valued modifiers. The base
+                // ranges above already carry the mode multiplier; these chains add only the
+                // sampled deviation around that mode so the central estimate is preserved.
+                'modifierRelative' => [
+                    'frequency' => self::relativeChain($frequencyModifiers['applied']),
+                    'susceptibility' => self::relativeChain($susceptibilityModifiers['applied']),
+                    'primaryLoss' => self::relativeChain(array_merge($anchorModifiers, $lossMagnitudeModifiers['applied'])),
+                    'secondaryProbability' => self::relativeChain($secondaryProbabilityModifiers['applied']),
+                ],
             ],
             'appliedModifiers' => array_merge(
                 $frequencyModifiers['applied'],
@@ -357,24 +371,54 @@ final class FairEngine
      */
     private static function simulateIteration(QkDistributions $rng, array $ranges, array $lossClamp): array
     {
-        $tef = self::sampleInput($rng, $ranges['threatEventFrequency']);
-        $susceptibility = self::sampleInput($rng, $ranges['susceptibility']);
+        // Sample per-iteration calibration uncertainty for distribution-valued modifiers.
+        $modifierRelative = (array) ($ranges['modifierRelative'] ?? []);
+        $frequencyFactor = self::sampleRelativeChain($rng, (array) ($modifierRelative['frequency'] ?? []));
+        $susceptibilityFactor = self::sampleRelativeChain($rng, (array) ($modifierRelative['susceptibility'] ?? []));
+        $primaryLossFactor = self::sampleRelativeChain($rng, (array) ($modifierRelative['primaryLoss'] ?? []));
+        $secondaryProbabilityFactor = self::sampleRelativeChain($rng, (array) ($modifierRelative['secondaryProbability'] ?? []));
+
+        $tef = self::sampleInput($rng, $ranges['threatEventFrequency']) * $frequencyFactor;
+        $susceptibility = self::sampleInput($rng, $ranges['susceptibility']) * $susceptibilityFactor;
         $lossEventFrequency = $tef * $susceptibility;
 
         $anchor = self::sampleInput($rng, $ranges['lossMagnitudeAnchor']);
         $impactMultiplier = self::sampleInput($rng, $ranges['impactMultiplier']);
         // The documented loss-magnitude clamp applies to each sampled primary and secondary
-        // component. Applying it only to the displayed input ranges would let the simulated
-        // component exceed the published bound.
-        $primaryLoss = self::clampLossComponent($anchor * $impactMultiplier, $lossClamp);
-
-        $secondaryLoss = 0.0;
-        $secondaryProbability = self::sampleInput($rng, $ranges['secondaryLossProbability']);
-        if ($rng->sampleBernoulli($secondaryProbability)) {
-            $secondaryLoss = self::clampLossComponent(
-                $anchor * self::sampleInput($rng, $ranges['secondaryLossMultiplier']),
+        // component. Loss magnitudes are sampled from moment-matched lognormal distributions
+        // (heavy right tails) when available, falling back to the triangular product otherwise.
+        if (isset($ranges['primaryLossMagnitudeLognormal'])) {
+            $primaryLoss = self::clampLossComponent(
+                $rng->sampleLognormal(
+                    (float) $ranges['primaryLossMagnitudeLognormal']['mu'],
+                    (float) $ranges['primaryLossMagnitudeLognormal']['sigma']
+                ),
                 $lossClamp
             );
+        } else {
+            $primaryLoss = self::clampLossComponent($anchor * $impactMultiplier, $lossClamp);
+        }
+        $primaryLoss = self::clampLossComponent($primaryLoss * $primaryLossFactor, $lossClamp);
+
+        $secondaryLoss = 0.0;
+        $secondaryProbability = self::sampleInput($rng, $ranges['secondaryLossProbability']) * $secondaryProbabilityFactor;
+        $secondaryProbability = max(0.0, min(1.0, $secondaryProbability));
+        if ($rng->sampleBernoulli($secondaryProbability)) {
+            if (isset($ranges['secondaryLossMagnitudeLognormal'])) {
+                $secondaryLoss = self::clampLossComponent(
+                    $rng->sampleLognormal(
+                        (float) $ranges['secondaryLossMagnitudeLognormal']['mu'],
+                        (float) $ranges['secondaryLossMagnitudeLognormal']['sigma']
+                    ),
+                    $lossClamp
+                );
+            } else {
+                $secondaryLoss = self::clampLossComponent(
+                    $anchor * self::sampleInput($rng, $ranges['secondaryLossMultiplier']),
+                    $lossClamp
+                );
+            }
+            $secondaryLoss = self::clampLossComponent($secondaryLoss * $primaryLossFactor, $lossClamp);
         }
 
         $lossMagnitude = $primaryLoss + $secondaryLoss;
@@ -401,6 +445,77 @@ final class FairEngine
     private static function clampLossComponent(float $value, array $clamp): float
     {
         return QkDistributions::clamp($value, (float) $clamp['min'], (float) $clamp['max']);
+    }
+
+    /**
+     * Moment-matches the product of two independent triangular ranges to a
+     * lognormal (mu, sigma), so loss magnitudes can be sampled with heavy tails.
+     *
+     * @param array<string,mixed> $left
+     * @param array<string,mixed> $right
+     * @return array{mu:float,sigma:float}
+     */
+    private static function buildLognormalProduct(array $left, array $right): array
+    {
+        $leftLn = QkDistributions::triangularToLognormalParameters(
+            (float) $left['min'],
+            (float) $left['mode'],
+            (float) $left['max']
+        );
+        $rightMode = max(1.0e-9, (float) $right['mode']);
+        $rightVariance = QkDistributions::triangularVariance(
+            (float) $right['min'],
+            (float) $right['mode'],
+            (float) $right['max']
+        );
+        $sigma = sqrt(max(0.0, $leftLn['sigma'] * $leftLn['sigma']
+            + $rightVariance / ($rightMode * $rightMode)));
+        $mu = $leftLn['mu'] + log($rightMode);
+        if (!is_finite($mu)) {
+            $mu = 0.0;
+        }
+        if (!is_finite($sigma) || $sigma <= 0.0) {
+            $sigma = 0.01;
+        }
+
+        return ['mu' => $mu, 'sigma' => min(3.0, $sigma)];
+    }
+
+    /**
+     * Collects the normalised relative distributions from a chain of applied modifiers.
+     *
+     * @param array<int,array<string,mixed>> $applied
+     * @return array<int,array{min:float,mode:float,max:float}>
+     */
+    private static function relativeChain(array $applied): array
+    {
+        $chain = [];
+        foreach ($applied as $entry) {
+            if (isset($entry['relativeDistribution']) && is_array($entry['relativeDistribution'])) {
+                $chain[] = $entry['relativeDistribution'];
+            }
+        }
+
+        return $chain;
+    }
+
+    /**
+     * Samples the product of a chain of relative modifier distributions.
+     *
+     * @param array<int,array{min:float,mode:float,max:float}> $chain
+     */
+    private static function sampleRelativeChain(QkDistributions $rng, array $chain): float
+    {
+        $product = 1.0;
+        foreach ($chain as $distribution) {
+            $product *= $rng->sampleTriangular(
+                (float) $distribution['min'],
+                (float) $distribution['mode'],
+                (float) $distribution['max']
+            );
+        }
+
+        return is_finite($product) && $product > 0.0 ? $product : 1.0;
     }
 
     /**
@@ -867,7 +982,7 @@ final class FairEngine
             'confidence' => $confidence,
             'drivers' => $drivers,
             'interpretation' => [
-                'summary' => 'The model estimates an indicative expected annual loss of '
+                'summary' => 'The model estimates an indicative annual exposure of '
                     . QkFormatting::money($expectedAnnualLoss) . ' for ' . $shortLabel . '.',
                 'rangeStatement' => $spreadStatement,
                 'thresholdStatement' => $thresholdStatement,
@@ -1505,7 +1620,7 @@ final class FairEngine
                 ],
             ],
             'portfolio' => [
-                'label' => 'Sum of scenario expected annual loss exposure',
+                'label' => 'Sum of scenario indicative annual exposure estimates',
                 'expectedAnnualLoss' => $sumExpected,
                 'annualisationNote' => (string) ($templates['annualisation'] ?? ''),
                 'topScenarios' => $topScenarios,
