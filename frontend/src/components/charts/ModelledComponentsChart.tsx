@@ -43,7 +43,7 @@ export function ModelledComponentsChart({ scenarios }: { scenarios: readonly Sce
         <TableWrap>
           <Table>
             <caption className="mb-2 text-left text-micro text-muted">
-              Modelled components, not a sensitivity analysis. The sensitivity of the expected annual loss to each
+              Modelled components, not a sensitivity analysis. The sensitivity of the indicative annual exposure to each
               input is reported separately.
             </caption>
             <TableHead>

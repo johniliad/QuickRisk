@@ -10,7 +10,7 @@
   },
   "sampling": {
     "distribution": "triangular",
-    "pertLambda": 4.0,
+    "pertLambda": 4,
     "triangularRationale": "Triangular distributions are used for v1 because they are easy to explain, inspect and reproduce, and because the questionnaire only supports min/most-likely/max reasoning.",
     "lossMagnitudeDistribution": "lognormal",
     "lossMagnitudeDistributionRationale": "Loss magnitudes are sampled from lognormal distributions whose parameters are moment-matched to the triangular (min, mode, max) ranges. This produces heavier right tails than triangular sampling, reflecting the observed heavy-tailed nature of cyber-loss costs; moment-matching preserves the mean and variance of the original triangular ranges.",
@@ -19,15 +19,27 @@
     "wideningMeanShiftCap": 1.5,
     "wideningMeanShiftCapRationale": "Widening a right-skewed range raises its arithmetic mean because the upper tail is expanded while the most-likely value is held. Left unbounded, an Unknown answer would inflate the central estimate instead of merely widening the distribution. Widening is therefore reduced until the mean of the range is at most 1.5x the un-widened mean. The cap is applied by QkModifiers::applyRange to every widened input, and it is what keeps an all-Unknown assessment's central estimate within a stated multiple of the all-known assessment.",
     "clamps": {
-      "threatEventFrequency": { "min": 0.001, "max": 100.0 },
-      "susceptibility": { "min": 0.005, "max": 0.99 },
-      "impactMultiplier": { "min": 0.05, "max": 60.0 },
+      "threatEventFrequency": {
+        "min": 0.001,
+        "max": 100
+      },
+      "susceptibility": {
+        "min": 0.005,
+        "max": 0.99
+      },
+      "impactMultiplier": {
+        "min": 0.05,
+        "max": 60
+      },
       "lossMagnitude": {
-        "min": 1000.0,
-        "max": 500000000.0,
+        "min": 1000,
+        "max": 500000000,
         "scope": "each primary and secondary loss component independently"
       },
-      "secondaryLossProbability": { "min": 0.01, "max": 0.99 }
+      "secondaryLossProbability": {
+        "min": 0.01,
+        "max": 0.99
+      }
     }
   },
   "frequency": {
@@ -37,11 +49,31 @@
     "source": "DSIT Cyber Security Breaches Survey 2025/2026 prevalence and material-cost probability, decomposed into scenario-level Poisson rates via DBIR 2026 action/type composition. Derived by tools/calibrate-frequency-bands.php; applies to the legacy fallback engine, while the active posterior engine uses reference-class posterior draws.",
     "answerInterpretation": "The likelihood answer is interpreted as threat event frequency: how often the scenario is attempted or contacted in a typical 12-month period, before considering whether controls would prevent success. Control effectiveness is applied separately and only once, as susceptibility. The question wording and help text were corrected in CAL-1.2 to match this interpretation; CAL-1.0 wording asked for scenario plausibility given existing controls, which risked counting controls twice.",
     "bands": {
-      "VERY_UNLIKELY": { "min": 0.0038, "mode": 0.0127, "max": 0.0316 },
-      "UNLIKELY": { "min": 0.0114, "mode": 0.0380, "max": 0.0949 },
-      "POSSIBLE": { "min": 0.0380, "mode": 0.1266, "max": 0.3165 },
-      "LIKELY": { "min": 0.0949, "mode": 0.3165, "max": 0.7912 },
-      "VERY_LIKELY": { "min": 0.2279, "mode": 0.7596, "max": 1.8989 }
+      "VERY_UNLIKELY": {
+        "min": 0.0038,
+        "mode": 0.0127,
+        "max": 0.0316
+      },
+      "UNLIKELY": {
+        "min": 0.0114,
+        "mode": 0.038,
+        "max": 0.0949
+      },
+      "POSSIBLE": {
+        "min": 0.038,
+        "mode": 0.1266,
+        "max": 0.3165
+      },
+      "LIKELY": {
+        "min": 0.0949,
+        "mode": 0.3165,
+        "max": 0.7912
+      },
+      "VERY_LIKELY": {
+        "min": 0.2279,
+        "mode": 0.7596,
+        "max": 1.8989
+      }
     },
     "unknownPolicy": {
       "type": "mixture",
@@ -65,11 +97,31 @@
     "source": "FAIR QuickRisk requirements v2 section 12 illustrative impact multipliers; most-likely values are internal derivations inside the published ranges.",
     "answerInterpretation": "The impact answer is interpreted as the financial and business impact of one successful loss event, expressed as a multiple of the organisation's daily disruption-cost anchor (effectively the equivalent number of days of disruption cost).",
     "bands": {
-      "MINOR": { "min": 0.25, "mode": 0.50, "max": 1.00 },
-      "MODERATE": { "min": 0.50, "mode": 1.00, "max": 2.00 },
-      "SIGNIFICANT": { "min": 1.00, "mode": 2.20, "max": 5.00 },
-      "SEVERE": { "min": 3.00, "mode": 6.00, "max": 15.00 },
-      "CRITICAL": { "min": 8.00, "mode": 16.00, "max": 40.00 }
+      "MINOR": {
+        "min": 0.25,
+        "mode": 0.5,
+        "max": 1
+      },
+      "MODERATE": {
+        "min": 0.5,
+        "mode": 1,
+        "max": 2
+      },
+      "SIGNIFICANT": {
+        "min": 1,
+        "mode": 2.2,
+        "max": 5
+      },
+      "SEVERE": {
+        "min": 3,
+        "mode": 6,
+        "max": 15
+      },
+      "CRITICAL": {
+        "min": 8,
+        "mode": 16,
+        "max": 40
+      }
     },
     "unknownPolicy": {
       "type": "mixture",
@@ -92,12 +144,36 @@
     "classification": "heuristic",
     "source": "Options mirror the questionnaire bands; most-likely values are internal heuristics within each band.",
     "bands": {
-      "LT25K": { "min": 5000, "mode": 12000, "max": 25000 },
-      "25_100K": { "min": 25000, "mode": 45000, "max": 100000 },
-      "100_500K": { "min": 100000, "mode": 200000, "max": 500000 },
-      "500K_2M": { "min": 500000, "mode": 900000, "max": 2000000 },
-      "2_10M": { "min": 2000000, "mode": 3500000, "max": 10000000 },
-      "GT10M": { "min": 10000000, "mode": 14000000, "max": 40000000 }
+      "LT25K": {
+        "min": 5000,
+        "mode": 12000,
+        "max": 25000
+      },
+      "25_100K": {
+        "min": 25000,
+        "mode": 45000,
+        "max": 100000
+      },
+      "100_500K": {
+        "min": 100000,
+        "mode": 200000,
+        "max": 500000
+      },
+      "500K_2M": {
+        "min": 500000,
+        "mode": 900000,
+        "max": 2000000
+      },
+      "2_10M": {
+        "min": 2000000,
+        "mode": 3500000,
+        "max": 10000000
+      },
+      "GT10M": {
+        "min": 10000000,
+        "mode": 14000000,
+        "max": 40000000
+      }
     },
     "fallback": {
       "min": 8000,
@@ -117,131 +193,344 @@
       "code": "publicExposure",
       "questionCode": "QP3",
       "target": "threatEventFrequency",
-      "appliesTo": ["S1", "S2", "S3", "S5"],
+      "appliesTo": [
+        "S1",
+        "S2",
+        "S3",
+        "S5"
+      ],
       "appliesToNote": "Excludes S4 because third-party frequency is driven by the supplier's exposure, not by the assessed organisation's own internet-facing surface.",
-      "unknownWiden": 1.40,
+      "unknownWiden": 1.4,
       "classification": "heuristic",
       "values": {
-        "LIMITED": { "min": 0.50, "mode": 0.70, "max": 0.90 },
-        "MODERATE": { "min": 0.70, "mode": 0.90, "max": 1.10 },
-        "SIGNIFICANT": { "min": 0.85, "mode": 1.00, "max": 1.15 },
-        "EXTENSIVE": { "min": 1.00, "mode": 1.25, "max": 1.55 },
-        "VERY_EXTENSIVE": { "min": 1.15, "mode": 1.50, "max": 2.00 },
-        "UNKNOWN": { "min": 0.85, "mode": 1.00, "max": 1.15 }
+        "LIMITED": {
+          "min": 0.5,
+          "mode": 0.7,
+          "max": 0.9
+        },
+        "MODERATE": {
+          "min": 0.7,
+          "mode": 0.9,
+          "max": 1.1
+        },
+        "SIGNIFICANT": {
+          "min": 0.85,
+          "mode": 1,
+          "max": 1.15
+        },
+        "EXTENSIVE": {
+          "min": 1,
+          "mode": 1.25,
+          "max": 1.55
+        },
+        "VERY_EXTENSIVE": {
+          "min": 1.15,
+          "mode": 1.5,
+          "max": 2
+        },
+        "UNKNOWN": {
+          "min": 0.85,
+          "mode": 1,
+          "max": 1.15
+        }
       }
     },
     {
       "code": "securityMaturity",
       "questionCode": "QP7",
       "target": "susceptibility",
-      "appliesTo": ["ALL"],
-      "unknownWiden": 1.50,
+      "appliesTo": [
+        "ALL"
+      ],
+      "unknownWiden": 1.5,
       "classification": "heuristic",
       "values": {
-        "VERY_LIMITED": { "min": 1.40, "mode": 2.00, "max": 2.80 },
-        "LIMITED": { "min": 1.10, "mode": 1.50, "max": 2.10 },
-        "MODERATE": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "STRONG": { "min": 0.45, "mode": 0.60, "max": 0.80 },
-        "VERY_STRONG": { "min": 0.25, "mode": 0.40, "max": 0.60 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "VERY_LIMITED": {
+          "min": 1.4,
+          "mode": 2,
+          "max": 2.8
+        },
+        "LIMITED": {
+          "min": 1.1,
+          "mode": 1.5,
+          "max": 2.1
+        },
+        "MODERATE": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "STRONG": {
+          "min": 0.45,
+          "mode": 0.6,
+          "max": 0.8
+        },
+        "VERY_STRONG": {
+          "min": 0.25,
+          "mode": 0.4,
+          "max": 0.6
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "criticalServiceDependency",
       "questionCode": "QP2",
       "target": "primaryLossMagnitude",
-      "appliesTo": ["ALL"],
-      "unknownWiden": 1.40,
+      "appliesTo": [
+        "ALL"
+      ],
+      "unknownWiden": 1.4,
       "classification": "heuristic",
       "values": {
-        "LOW": { "min": 0.40, "mode": 0.60, "max": 0.80 },
-        "MODERATE": { "min": 0.60, "mode": 0.80, "max": 1.00 },
-        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "VERY_HIGH": { "min": 1.00, "mode": 1.30, "max": 1.65 },
-        "EXTREME": { "min": 1.20, "mode": 1.60, "max": 2.20 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "LOW": {
+          "min": 0.4,
+          "mode": 0.6,
+          "max": 0.8
+        },
+        "MODERATE": {
+          "min": 0.6,
+          "mode": 0.8,
+          "max": 1
+        },
+        "HIGH": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "VERY_HIGH": {
+          "min": 1,
+          "mode": 1.3,
+          "max": 1.65
+        },
+        "EXTREME": {
+          "min": 1.2,
+          "mode": 1.6,
+          "max": 2.2
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "recoveryCapability",
       "questionCode": "QP6",
       "target": "primaryLossMagnitude",
-      "appliesTo": ["ALL"],
-      "unknownWiden": 1.40,
+      "appliesTo": [
+        "ALL"
+      ],
+      "unknownWiden": 1.4,
       "classification": "heuristic",
       "values": {
-        "VERY_LOW": { "min": 1.15, "mode": 1.50, "max": 2.00 },
-        "LOW": { "min": 0.95, "mode": 1.25, "max": 1.65 },
-        "MODERATE": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "HIGH": { "min": 0.60, "mode": 0.80, "max": 1.00 },
-        "VERY_HIGH": { "min": 0.45, "mode": 0.65, "max": 0.85 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "VERY_LOW": {
+          "min": 1.15,
+          "mode": 1.5,
+          "max": 2
+        },
+        "LOW": {
+          "min": 0.95,
+          "mode": 1.25,
+          "max": 1.65
+        },
+        "MODERATE": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "HIGH": {
+          "min": 0.6,
+          "mode": 0.8,
+          "max": 1
+        },
+        "VERY_HIGH": {
+          "min": 0.45,
+          "mode": 0.65,
+          "max": 0.85
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "sensitiveInformation",
       "questionCode": "QP4",
       "target": "secondaryLossProbability",
-      "appliesTo": ["ALL"],
-      "unknownWiden": 1.50,
+      "appliesTo": [
+        "ALL"
+      ],
+      "unknownWiden": 1.5,
       "classification": "heuristic",
       "values": {
-        "LIMITED": { "min": 0.30, "mode": 0.50, "max": 0.70 },
-        "MODERATE": { "min": 0.55, "mode": 0.75, "max": 1.00 },
-        "SIGNIFICANT": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "VERY_SIGNIFICANT": { "min": 1.00, "mode": 1.35, "max": 1.75 },
-        "CRITICAL": { "min": 1.25, "mode": 1.70, "max": 2.30 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "LIMITED": {
+          "min": 0.3,
+          "mode": 0.5,
+          "max": 0.7
+        },
+        "MODERATE": {
+          "min": 0.55,
+          "mode": 0.75,
+          "max": 1
+        },
+        "SIGNIFICANT": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "VERY_SIGNIFICANT": {
+          "min": 1,
+          "mode": 1.35,
+          "max": 1.75
+        },
+        "CRITICAL": {
+          "min": 1.25,
+          "mode": 1.7,
+          "max": 2.3
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "thirdPartyDependencyFrequency",
       "questionCode": "QP5",
       "target": "threatEventFrequency",
-      "appliesTo": ["S4"],
-      "unknownWiden": 1.40,
+      "appliesTo": [
+        "S4"
+      ],
+      "unknownWiden": 1.4,
       "classification": "heuristic",
       "values": {
-        "LOW": { "min": 0.30, "mode": 0.50, "max": 0.70 },
-        "MODERATE": { "min": 0.55, "mode": 0.75, "max": 1.00 },
-        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "VERY_HIGH": { "min": 1.00, "mode": 1.35, "max": 1.75 },
-        "EXTREME": { "min": 1.25, "mode": 1.70, "max": 2.30 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "LOW": {
+          "min": 0.3,
+          "mode": 0.5,
+          "max": 0.7
+        },
+        "MODERATE": {
+          "min": 0.55,
+          "mode": 0.75,
+          "max": 1
+        },
+        "HIGH": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "VERY_HIGH": {
+          "min": 1,
+          "mode": 1.35,
+          "max": 1.75
+        },
+        "EXTREME": {
+          "min": 1.25,
+          "mode": 1.7,
+          "max": 2.3
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "thirdPartyDependencySecondary",
       "questionCode": "QP5",
       "target": "secondaryLossProbability",
-      "appliesTo": ["S4"],
-      "unknownWiden": 1.40,
+      "appliesTo": [
+        "S4"
+      ],
+      "unknownWiden": 1.4,
       "classification": "heuristic",
       "values": {
-        "LOW": { "min": 0.40, "mode": 0.60, "max": 0.80 },
-        "MODERATE": { "min": 0.60, "mode": 0.80, "max": 1.00 },
-        "HIGH": { "min": 0.80, "mode": 1.00, "max": 1.20 },
-        "VERY_HIGH": { "min": 1.00, "mode": 1.30, "max": 1.65 },
-        "EXTREME": { "min": 1.20, "mode": 1.60, "max": 2.20 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "LOW": {
+          "min": 0.4,
+          "mode": 0.6,
+          "max": 0.8
+        },
+        "MODERATE": {
+          "min": 0.6,
+          "mode": 0.8,
+          "max": 1
+        },
+        "HIGH": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        },
+        "VERY_HIGH": {
+          "min": 1,
+          "mode": 1.3,
+          "max": 1.65
+        },
+        "EXTREME": {
+          "min": 1.2,
+          "mode": 1.6,
+          "max": 2.2
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     },
     {
       "code": "organisationSize",
       "questionCode": "QP1",
       "target": "disruptionCostAnchorFallback",
-      "appliesTo": ["ALL"],
-      "condition": { "questionUnknown": "QP8" },
+      "appliesTo": [
+        "ALL"
+      ],
+      "condition": {
+        "questionUnknown": "QP8"
+      },
       "conditionNote": "Applied only when the disruption-cost anchor question is Unknown or skipped.",
-      "unknownWiden": 1.80,
+      "unknownWiden": 1.8,
       "classification": "heuristic",
       "values": {
-        "LT10M": { "min": 0.15, "mode": 0.25, "max": 0.40 },
-        "10_50M": { "min": 0.40, "mode": 0.60, "max": 0.85 },
-        "50_250M": { "min": 0.85, "mode": 1.20, "max": 1.70 },
-        "250M_1B": { "min": 2.00, "mode": 3.00, "max": 4.50 },
-        "GT1B": { "min": 5.00, "mode": 8.00, "max": 13.00 },
-        "UNKNOWN": { "min": 0.80, "mode": 1.00, "max": 1.20 }
+        "LT10M": {
+          "min": 0.15,
+          "mode": 0.25,
+          "max": 0.4
+        },
+        "10_50M": {
+          "min": 0.4,
+          "mode": 0.6,
+          "max": 0.85
+        },
+        "50_250M": {
+          "min": 0.85,
+          "mode": 1.2,
+          "max": 1.7
+        },
+        "250M_1B": {
+          "min": 2,
+          "mode": 3,
+          "max": 4.5
+        },
+        "GT1B": {
+          "min": 5,
+          "mode": 8,
+          "max": 13
+        },
+        "UNKNOWN": {
+          "min": 0.8,
+          "mode": 1,
+          "max": 1.2
+        }
       }
     }
   ],
@@ -253,39 +542,99 @@
     "rankingIntentNote": "Denial-of-service is deliberately the most frequent scenario and simultaneously one of the lower-ranked scenarios by expected annual loss, which demonstrates that incident volume alone is not treated as financial risk.",
     "scenarios": {
       "S1": {
-        "frequencyScale": 1.00,
-        "impactScale": 1.20,
-        "susceptibility": { "min": 0.12, "mode": 0.35, "max": 0.65 },
-        "secondaryLossProbability": { "min": 0.25, "mode": 0.45, "max": 0.70 },
-        "secondaryLossMultiplier": { "min": 0.50, "mode": 1.20, "max": 2.50 }
+        "frequencyScale": 1,
+        "impactScale": 1.2,
+        "susceptibility": {
+          "min": 0.12,
+          "mode": 0.35,
+          "max": 0.65
+        },
+        "secondaryLossProbability": {
+          "min": 0.25,
+          "mode": 0.45,
+          "max": 0.7
+        },
+        "secondaryLossMultiplier": {
+          "min": 0.5,
+          "mode": 1.2,
+          "max": 2.5
+        }
       },
       "S2": {
         "frequencyScale": 1.15,
-        "impactScale": 0.90,
-        "susceptibility": { "min": 0.15, "mode": 0.40, "max": 0.70 },
-        "secondaryLossProbability": { "min": 0.20, "mode": 0.38, "max": 0.60 },
-        "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
+        "impactScale": 0.9,
+        "susceptibility": {
+          "min": 0.15,
+          "mode": 0.4,
+          "max": 0.7
+        },
+        "secondaryLossProbability": {
+          "min": 0.2,
+          "mode": 0.38,
+          "max": 0.6
+        },
+        "secondaryLossMultiplier": {
+          "min": 0.4,
+          "mode": 0.9,
+          "max": 2
+        }
       },
       "S3": {
         "frequencyScale": 1.15,
-        "impactScale": 1.00,
-        "susceptibility": { "min": 0.08, "mode": 0.28, "max": 0.58 },
-        "secondaryLossProbability": { "min": 0.15, "mode": 0.32, "max": 0.55 },
-        "secondaryLossMultiplier": { "min": 0.40, "mode": 1.00, "max": 2.50 }
+        "impactScale": 1,
+        "susceptibility": {
+          "min": 0.08,
+          "mode": 0.28,
+          "max": 0.58
+        },
+        "secondaryLossProbability": {
+          "min": 0.15,
+          "mode": 0.32,
+          "max": 0.55
+        },
+        "secondaryLossMultiplier": {
+          "min": 0.4,
+          "mode": 1,
+          "max": 2.5
+        }
       },
       "S4": {
         "frequencyScale": 0.85,
         "impactScale": 0.85,
-        "susceptibility": { "min": 0.05, "mode": 0.22, "max": 0.52 },
-        "secondaryLossProbability": { "min": 0.15, "mode": 0.35, "max": 0.60 },
-        "secondaryLossMultiplier": { "min": 0.40, "mode": 0.90, "max": 2.00 }
+        "susceptibility": {
+          "min": 0.05,
+          "mode": 0.22,
+          "max": 0.52
+        },
+        "secondaryLossProbability": {
+          "min": 0.15,
+          "mode": 0.35,
+          "max": 0.6
+        },
+        "secondaryLossMultiplier": {
+          "min": 0.4,
+          "mode": 0.9,
+          "max": 2
+        }
       },
       "S5": {
-        "frequencyScale": 1.50,
-        "impactScale": 0.60,
-        "susceptibility": { "min": 0.18, "mode": 0.38, "max": 0.65 },
-        "secondaryLossProbability": { "min": 0.10, "mode": 0.22, "max": 0.45 },
-        "secondaryLossMultiplier": { "min": 0.30, "mode": 0.60, "max": 1.50 }
+        "frequencyScale": 1.5,
+        "impactScale": 0.6,
+        "susceptibility": {
+          "min": 0.18,
+          "mode": 0.38,
+          "max": 0.65
+        },
+        "secondaryLossProbability": {
+          "min": 0.1,
+          "mode": 0.22,
+          "max": 0.45
+        },
+        "secondaryLossMultiplier": {
+          "min": 0.3,
+          "mode": 0.6,
+          "max": 1.5
+        }
       }
     }
   },
@@ -326,8 +675,8 @@
     "classification": "heuristic",
     "limitNote": "Secondary loss is a generic financial-loss assumption. The model does not calculate or predict statutory fines, regulatory penalties or specific legal liabilities.",
     "drawGranularityNote": "The secondary-loss Bernoulli draw is made once per simulated trial (a year), not once per realised loss event, because the model does not draw event counts. The reported secondary-loss occurrence rate is therefore the share of simulated trials in which a secondary loss was drawn, not an event-level rate.",
-    "probabilityWideningWhenImpactUnknown": 1.30,
-    "probabilityWideningWhenControlMaturityUnknown": 1.20
+    "probabilityWideningWhenImpactUnknown": 1.3,
+    "probabilityWideningWhenControlMaturityUnknown": 1.2
   },
   "confidence": {
     "basis": "heuristic-input-quality",
@@ -343,11 +692,22 @@
       "veryWideDistribution": 15,
       "provisionalCalibrationStatus": 15
     },
-    "thresholds": { "high": 85, "medium": 62 },
+    "thresholds": {
+      "high": 85,
+      "medium": 62
+    },
     "maxLevelWhenProvisional": "Medium",
-    "provisionalCalibrationStatuses": ["initial-release", "provisional-release", "preview", "draft"],
+    "provisionalCalibrationStatuses": [
+      "initial-release",
+      "provisional-release",
+      "preview",
+      "draft"
+    ],
     "distributionWidthMetric": "coefficientOfVariation",
-    "distributionWidthThresholds": { "wide": 1.20, "veryWide": 2.00 },
+    "distributionWidthThresholds": {
+      "wide": 1.2,
+      "veryWide": 2
+    },
     "notes": [
       "Input confidence is a heuristic indicator of answer completeness, answer availability and the width of the resulting distribution.",
       "It is not statistical confidence, not a confidence interval, and not a probability that the result is correct.",
@@ -367,7 +727,7 @@
   "unknownAnswerDisclosure": {
     "classification": "legacy-fallback-only",
     "appliesToEngine": "frequency-times-severity-annualised-exposure",
-    "note": "These measurements describe the legacy heuristic fallback only. The active posterior engine retains the reference posterior for an Unknown scenario answer.",
+    "note": "These figures are asserted by the test suite so that the disclosed central effect cannot drift silently.",
     "measuredOn": "Scenario S1 with the documented fixture profile, seed 20261029 and 20,000 iterations, both scenario questions Unknown compared with POSSIBLE and SIGNIFICANT.",
     "medianRatio": 1.14,
     "meanRatio": 5.99,
@@ -377,8 +737,7 @@
     "allUnknownPortfolioMultipleOfAllKnown": 42.1,
     "qp8UnknownOnlyPortfolioMultipleOfAllKnown": 2.36,
     "interpretation": "An Unknown answer is an equal-weight mixture over the available answers, so its mean is the average of the five answer means by construction and its typical value stays close to the middle answer (median x1.14) while the upper tail widens (P90 x7.83). The mean rises by about x6 because any distribution spanning all five multiplicative answer bands is strongly right-skewed; that is a property of the answer scale, not a punitive adjustment. An all-Unknown assessment - including an Unknown organisation size and disruption cost - is about x42 the all-known baseline, and an Unknown disruption cost alone about x2.4.",
-    "whyNotLower": "The alternative, weighting the mixture so that its mean equals the middle answer, would require arbitrary weights that favour the lowest bands, and would understate the tail that an Unknown answer is meant to express. The weights are configurable in this file, and the measured central effect is asserted by the test suite so that it cannot drift silently.",
-    "note": "These figures are asserted by the test suite so that the disclosed central effect cannot drift silently."
+    "whyNotLower": "The alternative, weighting the mixture so that its mean equals the middle answer, would require arbitrary weights that favour the lowest bands, and would understate the tail that an Unknown answer is meant to express. The weights are configurable in this file, and the measured central effect is asserted by the test suite so that it cannot drift silently."
   },
   "interpretation": {
     "topScenarioCount": 3,

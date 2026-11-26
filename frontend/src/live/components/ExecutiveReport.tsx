@@ -128,7 +128,7 @@ export function ExecutiveReport({
           </p>
           <p className="m-0 text-micro text-muted">
             The overlay is an illustrative application of the SOC multiplier to the stored QuickRisk baseline.
-            It is not the organization's real annual loss.
+            It is not the organization's actual financial loss.
           </p>
         </CardContent>
       </Card>

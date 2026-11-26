@@ -121,7 +121,7 @@ describe('data-lifecycle statements', () => {
 });
 
 /**
- * Results, Live and Decision Lab each show an expected annual loss, and they are three
+ * Results, Live and Decision Lab each show an indicative annual exposure, and they are three
  * different figures. The provenance copy has to say so using the facts the surface holds,
  * otherwise two screens showing different euro amounts look like a contradiction.
  */
@@ -136,7 +136,7 @@ describe('expected-annual-loss provenance', () => {
   it('names the iteration count and joint annual totals for the portfolio figure', () => {
     const provenance = resultsPortfolioEalProvenance(resultsMeta);
 
-    expect(provenance.label).toBe('Portfolio expected annual loss');
+    expect(provenance.label).toBe('Portfolio indicative annual exposure');
     expect(provenance.source).toContain('Joint annual totals from 5 scenarios');
     expect(provenance.source).toContain('FAIR-QK-2.0');
     expect(provenance.method).toContain('Poisson material-event counts');

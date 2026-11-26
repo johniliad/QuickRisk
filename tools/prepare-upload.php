@@ -62,6 +62,30 @@ if (!is_file($qkDist . '/index.html')) {
 if (qk_upload_find($qkDist, '.map') !== []) {
     qk_upload_abort('Source maps were found in the build output and must not be published.');
 }
+
+// Guard against a stale build. A bundle built before a model bump embeds the old model
+// identifier, so the browser submits a now-invalid schemaVersion/modelId that the server
+// rejects with VERSION_MISMATCH ("The request does not match the active model version").
+$qkManifestRaw = @file_get_contents($qkRoot . '/fairquickmodel/manifest.json');
+$qkManifest = $qkManifestRaw === false ? null : json_decode($qkManifestRaw, true);
+$qkActiveModelId = is_array($qkManifest) ? (string) ($qkManifest['modelId'] ?? '') : '';
+if ($qkActiveModelId !== '') {
+    $qkEmbedsModel = false;
+    foreach (qk_upload_find($qkDist, '.js') as $qkJsFile) {
+        $qkJs = file_get_contents($qkJsFile);
+        if ($qkJs !== false && str_contains($qkJs, $qkActiveModelId)) {
+            $qkEmbedsModel = true;
+            break;
+        }
+    }
+    if (!$qkEmbedsModel) {
+        qk_upload_abort(
+            'The frontend build does not embed the active model (' . $qkActiveModelId . '). '
+            . 'It is stale and would fail at calculation time with VERSION_MISMATCH. '
+            . 'Rebuild with:  cd frontend; npm run build'
+        );
+    }
+}
 if (str_starts_with(str_replace('\\', '/', $qkOut) . '/', str_replace('\\', '/', $qkRoot) . '/')) {
     fwrite(STDERR, "Warning: the output folder is inside the repository. The rendered .htaccess\n");
     fwrite(STDERR, "contains the origin secret, and a OneDrive-synced folder would copy it to the cloud.\n");

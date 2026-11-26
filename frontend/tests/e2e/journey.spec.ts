@@ -198,7 +198,7 @@ test('the landing journey map unlocks the later steps once a result exists', asy
 });
 
 /**
- * The three surfaces each show an expected annual loss, and they are three different
+ * The three surfaces each show an indicative annual exposure, and they are three different
  * figures. The journey map draws the fork on every surface, and each figure carries a
  * collapsed provenance disclosure naming its source, method and what it is not connected
  * to. Without these, the three euro amounts read as a contradiction.
@@ -220,15 +220,15 @@ test('every surface draws the same fork and explains where its EAL comes from', 
   await expect(page.getByText('Not connected', { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/Both branches start here/)).toBeVisible();
   await expect(
-    page.getByText('Where this number comes from — Portfolio expected annual loss'),
+    page.getByText('Where this number comes from — Portfolio indicative annual exposure'),
   ).toBeVisible();
   await expect(
-    page.getByText('Where this number comes from — Scenario expected annual loss'),
+    page.getByText('Where this number comes from — Scenario indicative annual exposure'),
   ).toBeVisible();
 
   // Expanding the portfolio disclosure states the sum, the iteration count and the two
   // things the figure is not.
-  await page.getByText('Where this number comes from — Portfolio expected annual loss').click();
+  await page.getByText('Where this number comes from — Portfolio indicative annual exposure').click();
   await expect(page.getByText(/Sum of the 5 scenario mean exposures/)).toBeVisible();
   await expect(page.getByText(/5,000 simulated years/).first()).toBeVisible();
   await expect(page.getByText(/Live uses one scenario, not this sum/)).toBeVisible();
@@ -280,13 +280,13 @@ test('Decision Lab carries the Results baseline and never reads Live', async ({ 
   ).toBeVisible();
 
   const baseline = page.getByText(
-    'Where this number comes from — Decision Lab baseline expected annual loss',
+    'Where this number comes from — Decision Lab baseline indicative annual exposure',
   );
   await expect(baseline).toBeVisible();
   await baseline.click();
   await expect(page.getByText(/Carried from the results page/)).toBeVisible();
   await expect(page.getByText(/does not read QuickRisk Live/)).toBeVisible();
   await expect(
-    page.getByText('Where this number comes from — Decision Lab treated expected annual loss'),
+    page.getByText('Where this number comes from — Decision Lab treated indicative annual exposure'),
   ).toBeVisible();
 });

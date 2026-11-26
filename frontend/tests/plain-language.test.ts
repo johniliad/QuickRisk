@@ -15,7 +15,7 @@ function response(level: ConfidenceLevel, p90: number, shortLabel: string): Calc
     status: 'ok',
     meta: { currencySymbol: '€' },
     portfolio: {
-      label: 'Indicative annual loss',
+      label: 'Indicative annual exposure',
       expectedAnnualLoss: 1_250_000,
       annualisationNote: '',
       topScenarios: [],

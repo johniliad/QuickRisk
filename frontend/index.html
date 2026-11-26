@@ -14,7 +14,15 @@
     <meta name="theme-color" content="#075e65" />
     <link rel="canonical" href="https://quickrisk.iliadis.net/" />
 
-    <!-- Open Graph / social metadata -->
+    <!--
+      Open Graph / social metadata.
+
+      The social card is a purpose-built 1200×627 (1.91:1) derivative of the landing hero,
+      because LinkedIn crops link previews to 1.91:1 and the 3:2 hero would lose its logo
+      lockup and the "Built by" credit line. The declared width/height must always match the
+      bytes served; frontend/tests/public-docs.test.ts reads the JPEG headers to enforce that.
+    -->
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="QuickRisk" />
     <meta property="og:title" content="QuickRisk | Quantitative Cyber Risk &amp; Prioritization" />
@@ -24,11 +32,11 @@
     />
     <meta property="og:url" content="https://quickrisk.iliadis.net/" />
     <meta property="og:locale" content="en_GB" />
-    <meta property="og:image" content="https://quickrisk.iliadis.net/images/quickrisk-hero-2026-11.jpg" />
-    <meta property="og:image:secure_url" content="https://quickrisk.iliadis.net/images/quickrisk-hero-2026-11.jpg" />
+    <meta property="og:image" content="https://quickrisk.iliadis.net/images/quickrisk-social-2026-11.jpg" />
+    <meta property="og:image:secure_url" content="https://quickrisk.iliadis.net/images/quickrisk-social-2026-11.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:width" content="1920" />
-    <meta property="og:image:height" content="1280" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
     <meta
       property="og:image:alt"
       content="QuickRisk dashboard: a laptop showing annual cyber-loss exposure, risk drivers and ransomware scenario results, with the QuickRisk logo and the headline Quantify Cyber Risk."
@@ -39,7 +47,7 @@
       name="twitter:description"
       content="QuickRisk answers &quot;What matters financially &amp; operationally?&quot; — FAIR-inspired quantitative cyber risk that expresses exposure as a range of possible loss, not a single score."
     />
-    <meta name="twitter:image" content="https://quickrisk.iliadis.net/images/quickrisk-hero-2026-11.jpg" />
+    <meta name="twitter:image" content="https://quickrisk.iliadis.net/images/quickrisk-social-2026-11.jpg" />
     <meta
       name="twitter:image:alt"
       content="QuickRisk dashboard: a laptop showing annual cyber-loss exposure, risk drivers and ransomware scenario results, with the QuickRisk logo and the headline Quantify Cyber Risk."

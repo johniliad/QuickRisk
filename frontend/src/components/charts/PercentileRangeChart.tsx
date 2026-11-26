@@ -48,7 +48,7 @@ function RangeTooltip({
         P10 {formatMoney(point.p10, symbol)} · P50 {formatMoney(point.p50, symbol)} · P90{' '}
         {formatMoney(point.p90, symbol)}
       </p>
-      <p className="m-0 text-muted">Expected annual loss {formatMoney(point.mean, symbol)}</p>
+      <p className="m-0 text-muted">Indicative annual exposure {formatMoney(point.mean, symbol)}</p>
     </div>
   );
 }
@@ -56,7 +56,7 @@ function RangeTooltip({
 /**
  * P10–P90 range per scenario with the median and the expected value marked.
  *
- * The bar shows the modelled range; the marker shows the expected annual loss. The
+ * The bar shows the modelled range; the marker shows the indicative annual exposure. The
  * chart is deliberately a range rather than a single value, so that uncertainty is
  * communicated rather than hidden.
  */
@@ -81,15 +81,15 @@ export function PercentileRangeChart({
   const summary = data
     .map(
       (point) =>
-        `${point.label}: P10 ${formatMoney(point.p10, symbol)}, P50 ${formatMoney(point.p50, symbol)}, P90 ${formatMoney(point.p90, symbol)}, expected annual loss ${formatMoney(point.mean, symbol)}.`,
+        `${point.label}: P10 ${formatMoney(point.p10, symbol)}, P50 ${formatMoney(point.p50, symbol)}, P90 ${formatMoney(point.p90, symbol)}, indicative annual exposure ${formatMoney(point.mean, symbol)}.`,
     )
     .join(' ');
 
   return (
     <ChartFrame
       id="percentile-range"
-      title="Modelled annual loss range by scenario (P10–P90)"
-      description="The bar spans the modelled P10–P90 range. The marker shows the expected annual loss. A long bar means the model is genuinely uncertain about that scenario."
+      title="Modelled annual exposure range by scenario (P10–P90)"
+      description="The bar spans the modelled P10–P90 range. The marker shows the indicative annual exposure. A long bar means the model is genuinely uncertain about that scenario."
       summary={summary}
       height={320}
       table={

@@ -102,7 +102,7 @@ export function LandingView({
             <CardTitle>What you will receive</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2 text-small md:grid-cols-2 md:gap-x-6">
-            <p className="m-0">Expected annual loss for each of five scenarios, in euros.</p>
+            <p className="m-0">Indicative annual exposure for each of five scenarios, in euros.</p>
             <p className="m-0">
               A typical-year to bad-year (1 in 10) range that shows how uncertain the estimate is.
             </p>

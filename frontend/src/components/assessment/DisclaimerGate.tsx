@@ -126,7 +126,7 @@ export function DisclaimerGate() {
             </CardHeader>
             <CardContent>
               <ul className="m-0 grid gap-1 pl-5 text-small text-muted">
-                <li>Expected annual loss per scenario</li>
+                <li>Indicative annual exposure per scenario</li>
                 <li>P10 / P50 / P90 loss range</li>
                 <li>Probability of exceeding €100k, €500k, €1m, €5m and €10m</li>
                 <li>Confidence indicator and a printable report</li>

@@ -95,7 +95,7 @@ const RESULTS_ITERATION_FALLBACK = 5_000;
  *
  * The assessment endpoint seeds each calculation randomly, so the Results figure and the
  * Decision Lab replay are two draws from the same model. Measured on the reference profile at
- * 5,000 iterations, the portfolio expected annual loss moves by less than 0.5% between seeds;
+ * 5,000 iterations, the portfolio indicative annual exposure moves by less than 0.5% between seeds;
  * an edited answer changes a scenario's frequency or magnitude band and moves the portfolio by
  * several percent. 2% therefore separates sampling noise from an answer change with margin.
  */
@@ -992,7 +992,7 @@ export function DecisionLabView() {
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <MoneyInput
             id="appetite-eal"
-            label="Annual loss limit"
+            label="Exposure limit"
             help="The maximum modeled annual cyber-loss exposure management is prepared to accept."
             value={appetite.annualLossLimit}
             onChange={(value) => setAppetite((current) => withAnnualLossLimit(current, value))}
@@ -1007,10 +1007,10 @@ export function DecisionLabView() {
           />
           <MoneyInput
             id="appetite-probability"
-            label="Maximum acceptable likelihood of exceeding the annual loss limit"
+            label="Maximum acceptable likelihood of exceeding the exposure limit"
             help={
               probabilityCriterionDisabled(appetite)
-                ? 'This criterion needs a loss threshold. Enter an annual loss limit first.'
+                ? 'This criterion needs a loss threshold. Enter an exposure limit first.'
                 : 'Enter a share between 0 and 1 (for example 0.25 for 25%).'
             }
             value={appetite.maxExceedanceProbability}
@@ -1104,12 +1104,12 @@ export function DecisionLabView() {
             {busy ? <span className="self-center text-small text-muted">Calculating…</span> : null}
           </div>
           <p className="m-0 text-micro text-muted">
-            Portfolio selection uses the expected annual-loss limit only. High-end modeled loss and
+            Portfolio selection uses the indicative-exposure criterion only. High-end modeled loss and
             exceedance probability remain part of the exact treatment comparison but are not used
             to rank portfolios, because they require a joint scenario-dependence model.
             {portfolioDecisionAvailable
               ? ''
-              : ' Enter an annual loss limit to enable portfolio evaluation.'}
+              : ' Enter an exposure limit to enable portfolio evaluation.'}
           </p>
         </CardContent>
       </Card>
@@ -1124,7 +1124,7 @@ export function DecisionLabView() {
                 : 'These figures describe the selected treatment set.'}
             </p>
             <p className="m-0 text-small text-muted">
-              Expected Annual Loss (EAL) is the average annual modeled loss. High-End Modeled Loss is the P90
+              Indicative Annual Exposure (EAL) is the average annual modeled exposure estimate. High-End Modeled Loss is the P90
               (90th percentile): about 10% of modeled years exceed it.{' '}
               {baselineCarriedFromResults === false
                 ? 'The baseline is further from the results page than the replay tolerance explains, so it describes changed answers.'
@@ -1146,7 +1146,7 @@ export function DecisionLabView() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-border p-3">
                 <p className="m-0 text-micro font-semibold uppercase tracking-[0.08em] text-muted">
-                  Expected Annual Loss
+                  Indicative Annual Exposure
                 </p>
                 <p className="m-0 text-[1.4rem] font-semibold text-heading">
                   {formatBoardMoney(comparison.baseline.expectedAnnualLoss, symbol)} →{' '}

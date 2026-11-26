@@ -67,14 +67,14 @@ export function LossDistributionChart({ scenario, symbol }: { scenario: Scenario
 
   const summary =
     `Histogram of ${scenario.statistics.iterations.toLocaleString('en-GB')} simulated annual total losses for ` +
-    `${scenario.shortLabel}. Expected annual loss ${formatMoney(scenario.statistics.expectedAnnualLoss, symbol)}, ` +
+    `${scenario.shortLabel}. Indicative annual exposure ${formatMoney(scenario.statistics.expectedAnnualLoss, symbol)}, ` +
     `P10 ${formatMoney(scenario.statistics.p10, symbol)}, P90 ${formatMoney(scenario.statistics.p90, symbol)}. ` +
     `The final bar is an overflow bin for outcomes above ${formatMoney(scenario.distribution.overflowFrom, symbol)}.`;
 
   return (
     <ChartFrame
       id={`distribution-${scenario.code}`}
-      title={`${scenario.shortLabel}: simulated annual loss distribution`}
+      title={`${scenario.shortLabel}: simulated annual exposure distribution`}
       description="Each bar shows the share of simulated years falling in that loss band. A wide spread means the inputs carry real uncertainty."
       summary={summary}
       table={

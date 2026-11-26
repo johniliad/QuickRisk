@@ -112,13 +112,15 @@ What is simplified is stated in §13.
 
 The active engine does not impose the legacy €500m component cap on per-event severity; the
 posterior distribution and its fitted tails determine the range, and the response reports the
-simulated maximum. The 1.3 fallback retains the following bounds.
+simulated maximum. The legacy fallback (the retained 1.3 behaviour, used only when no validated
+posterior package is active) keeps the bounds below.
 
 #### Legacy fallback only
 
 | Setting | Value | Why |
 |---|---|---|
-| Sampling distribution | Triangular | The questionnaire supports min / most-likely / max reasoning |
+| Sampling distribution | Triangular for frequency, susceptibility and multipliers; moment-matched **lognormal** for primary and secondary loss magnitude | The questionnaire supports min / most-likely / max reasoning, while loss magnitude needs heavy right tails |
+| Modifier uncertainty | Triangular `{min, mode, max}` ranges sampled each iteration (the mode sets the central estimate) | Propagates calibration uncertainty, not only input uncertainty |
 | Widening mean-shift cap | 1.5× | Stops an Unknown answer from inflating only the central estimate |
 | TEF | 0.001 – 100 events/year | Prevents degenerate extremes |
 | Susceptibility | 0.005 – 0.99 | It is a probability |
@@ -133,15 +135,16 @@ simulated maximum. The 1.3 fallback retains the following bounds.
 > `fairquickmodel/inference/reference-classes.json`. The tables in §§4–7 document the retained
 > 1.3 fallback, which is used only when no validated posterior package is active.
 
-Base bands (`internally-derived`, from the requirements' illustrative mapping), events per year:
+Base bands (`externally-evidenced`), events per year, derived from DSIT 2025/2026 prevalence and
+material-cost probability by `tools/calibrate-frequency-bands.php`:
 
 | Answer | Min | Most likely | Max |
 |---|---:|---:|---:|
-| Very unlikely | 0.01 | 0.03 | 0.10 |
-| Unlikely | 0.05 | 0.15 | 0.30 |
-| Possible | 0.20 | 0.50 | 1.00 |
-| Likely | 0.50 | 1.50 | 3.00 |
-| Very likely | 1.50 | 4.00 | 10.00 |
+| Very unlikely | 0.0038 | 0.0127 | 0.0316 |
+| Unlikely | 0.0114 | 0.0380 | 0.0949 |
+| Possible | 0.0380 | 0.1266 | 0.3165 |
+| Likely | 0.0949 | 0.3165 | 0.7912 |
+| Very likely | 0.2279 | 0.7596 | 1.8989 |
 
 Each band is multiplied by a scenario scale (`heuristic`): S1 ×1.00 (reference), S2 ×1.15,
 S3 ×1.15, S4 ×0.85, S5 ×1.50. Incident *volume* is therefore not treated as business risk: a
@@ -153,20 +156,24 @@ independent audit found that the earlier wording double-counted control effectiv
 
 ### 5. Susceptibility and controls (legacy fallback)
 
-Probability that a threat event becomes a loss event (`heuristic`), per scenario. In the active
-engine, QP7 changes the material-loss odds and the scenario posterior supplies the base rate:
+Probability that a threat event becomes a loss event (`externally-evidenced`), per scenario,
+anchored to DSIT P(material cost | breach) and refined with IBM/Ponemon control-effectiveness
+differentials. In the active engine, QP7 changes the material-loss odds and the scenario posterior
+supplies the base rate:
 
 | Scenario | Min | Most likely | Max | Rationale |
 |---|---:|---:|---:|---|
-| S1 Ransomware | 0.10 | 0.30 | 0.60 | Success needs access, privilege, opportunity and a failure of detection or recovery |
-| S2 Identity compromise | 0.15 | 0.35 | 0.65 | Phishing succeeds often enough even with MFA, and account takeover is common |
-| S3 Vulnerability exploitation | 0.08 | 0.25 | 0.55 | Requires a reachable, unpatched or misconfigured component |
-| S4 Third-party compromise | 0.05 | 0.20 | 0.50 | Propagation into our environment is the exception |
-| S5 DDoS / disruption | 0.15 | 0.30 | 0.60 | Mitigation is common, but material disruption still occurs |
+| S1 Ransomware | 0.12 | 0.35 | 0.65 | Success needs access, privilege, opportunity and a failure of detection or recovery |
+| S2 Identity compromise | 0.15 | 0.40 | 0.70 | Phishing succeeds often enough even with MFA, and account takeover is common |
+| S3 Vulnerability exploitation | 0.08 | 0.28 | 0.58 | Requires a reachable, unpatched or misconfigured component |
+| S4 Third-party compromise | 0.05 | 0.22 | 0.52 | Propagation into our environment is the exception |
+| S5 DDoS / disruption | 0.18 | 0.38 | 0.65 | Mitigation is common, but material disruption still occurs |
 
-Control maturity (QP7) is the one organisation-level modifier: Very limited ×1.80, Limited
-×1.40, Moderate ×1.00, Strong ×0.70, Very strong ×0.50, Unknown ×1.00 with ×1.50 widening,
-clamped to 0.005 – 0.99.
+Control maturity (QP7) is an organisation-level modifier expressed as a triangular uncertainty
+range (mode): Very limited ×2.00, Limited ×1.50, Moderate ×1.00, Strong ×0.60, Very strong ×0.40,
+Unknown ×1.00 (with ×1.50 widening), sampled per iteration and clamped to 0.005 – 0.99. The other
+profile modifiers are likewise ranges — for example internet-facing exposure Limited 0.50–0.90,
+Very extensive 1.15–2.00.
 
 
 ### 6. Loss magnitude (legacy fallback)
@@ -201,8 +208,13 @@ When QP8 is Unknown the fallback band is scaled by organisation size (QP1): <€
 
 That product is then multiplied by a scenario scale (`heuristic`): S1 ×1.20, S2 ×0.90, S3
 ×1.00, S4 ×0.85, S5 ×0.60. Two profile answers modify primary loss (`heuristic`):
-critical-service dependency (QP2) ×0.60 – ×1.60, and recovery capability (QP6) ×1.50 – ×0.65.
-Both act on the shared anchor, so their effect propagates into secondary loss as well.
+critical-service dependency (QP2) ×0.60 – ×1.60, and recovery capability (QP6) ×1.50 – ×0.65,
+each sampled per iteration from a triangular uncertainty range. Both act on the shared anchor, so
+their effect propagates into secondary loss as well.
+
+The primary and secondary loss magnitudes are sampled from **lognormal** distributions whose
+parameters are moment-matched to the triangular anchor × multiplier product, so the upper tail is
+heavy rather than capped. Reported quantiles therefore describe a tail rather than a hard ceiling.
 
 ### 7. Secondary loss
 
@@ -450,7 +462,7 @@ fairquickmodel/                        authoritative model -> deployed to ~/fair
   answer-options.json                  answer option sets
   scenarios.json                       scenario presentation and wording
   parameters.json                      CALIBRATION - server only, never sent to the browser
-  versions/1.3.0.json                  active model version record (1.0.0 is superseded)
+  versions/2.0.0.json                  active model version record (1.0.0 and 1.3.0 are superseded)
 server/                                PHP -> deployed to ~/public_html/quickrisk/
   api/calculate.php                    the questionnaire endpoint (POST, JSON, no-store)
   includes/                            config, model loader, engine, validation, hardening
@@ -509,6 +521,13 @@ php tools/decision-smoke.php
 # On the host: check the deployed configuration, database and web-root .htaccess
 php tools/preflight.php --web-root="$HOME/public_html/quickrisk" --origin=https://quickrisk.iliadis.net
 ```
+
+**Build gate (required for every change).** No change is complete until the frontend build passes
+without errors: `cd frontend && npm run build` runs the type-check, the boundary/storage/licence
+guards, the unit tests and `vite build`. `frontend/dist` is a build artefact (not version
+controlled) and must be regenerated after any model or frontend change — a stale bundle embeds the
+previous model identifiers and the server rejects its calculations with a version mismatch. The
+packaging and deploy tools refuse to ship a bundle that does not embed the active model.
 
 Deployment is documented in `requirements/DEPLOYMENT_FIRST_TIME.md` and
 `docs/DEPLOYMENT_QUICKRISK_LIVE.md`; the runbook includes MySQL, the Live and Decision Lab

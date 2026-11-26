@@ -2,7 +2,7 @@
  * Decision Lab — appetite helpers.
  *
  * A probability-of-exceedance criterion has no meaning without a loss threshold. The UI requires
- * an annual loss limit and clears the probability when that limit is removed; the server enforces
+ * an exposure limit and clears the probability when that limit is removed; the server enforces
  * the same rule independently.
  */
 

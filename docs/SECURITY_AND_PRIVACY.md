@@ -144,7 +144,7 @@ arithmetic between baseline, residual, delta and reduction share; cost sums and 
 against the server-resolved treatments; appetite criteria and pass flags; treatment identity and
 definitions; portfolio and recommendation membership; provenance, seed, iteration budget, model,
 Board Pack and methodology versions; and the report basis. Portfolio rows are validated against the
-expected-annual-loss criterion only; joint P90 and exceedance criteria are recorded as excluded
+indicative-exposure criterion only; joint P90 and exceedance criteria are recorded as excluded
 from portfolio selection. A mismatch returns `422` and nothing is stored. This is documented in
 `requirements/QUICKRISK_DECISION_LAB.md` §6.1.
 

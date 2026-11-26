@@ -254,7 +254,7 @@ export interface HighestThresholdProbability {
 export type SensitivityFactorKind = 'profile' | 'scenario';
 
 /**
- * One factor in the one-at-a-time sensitivity analysis of posterior expected annual loss.
+ * One factor in the one-at-a-time sensitivity analysis of posterior indicative annual exposure.
  * The model is re-evaluated for every answer option of the factor with all other answers
  * held fixed; `spreadRatio` is the ratio of the highest to the lowest resulting exposure.
  */

@@ -84,7 +84,7 @@ test('Decision Lab notices when the baseline no longer matches the results page'
 
   // Nothing has moved yet, so the baseline reproduces the portfolio figure Results showed.
   const baseline = page.getByText(
-    'Where this number comes from — Decision Lab baseline expected annual loss',
+    'Where this number comes from — Decision Lab baseline indicative annual exposure',
   );
   await baseline.click();
   await expect(page.getByText(/Carried from the results page/)).toHaveCount(1);
@@ -139,7 +139,7 @@ test('Decision Lab notices when the baseline no longer matches the results page'
   await expect(page.getByText(/while the results page/)).toBeVisible();
 
   await page
-    .getByText('Where this number comes from — Decision Lab baseline expected annual loss')
+    .getByText('Where this number comes from — Decision Lab baseline indicative annual exposure')
     .click();
   await expect(page.getByText(/further from the results figure/)).toBeVisible();
 });

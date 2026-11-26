@@ -70,6 +70,16 @@ if [ "$DEPLOY_APP" -eq 1 ]; then
     exit 1
   fi
 
+  # Guard against a stale build: a bundle built before a model bump embeds the old model
+  # identifier, so the browser submits an invalid schemaVersion/modelId and the server
+  # rejects the calculation with VERSION_MISMATCH ("The request does not match the active
+  # model version"). Refuse to publish such a build.
+  ACTIVE_MODEL_ID="$(sed -n 's/.*"modelId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPOSITORY_ROOT/fairquickmodel/manifest.json" | head -n 1)"
+  if [ -n "$ACTIVE_MODEL_ID" ] && ! grep -rqF "$ACTIVE_MODEL_ID" "$REPOSITORY_ROOT/frontend/dist" --include='*.js'; then
+    echo "The frontend build does not embed the active model ($ACTIVE_MODEL_ID). It is stale; run: cd frontend && npm run build" >&2
+    exit 1
+  fi
+
   echo "[3/5] Publishing the compiled application to $WEB_DIR"
   mkdir -p "$WEB_DIR"
   # The temporary holding notice, the manual backup of the entry point and the

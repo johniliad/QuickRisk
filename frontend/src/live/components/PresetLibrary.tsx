@@ -8,7 +8,7 @@ import type { LiveScenarioPreset } from '@/live/api/liveClient';
  * The definitions come from MySQL through the PHP API. Applying one loads its deterministic
  * SOC state and timeline steps into the simulator; the risk engine recalculates the score, so
  * a stored preset can never carry a stale result. A preset is not a quantitative scenario: it
- * never changes the baseline expected annual loss copied from a QuickRisk result.
+ * never changes the baseline indicative annual exposure copied from a QuickRisk result.
  */
 export function PresetLibrary({
   presets,

@@ -93,7 +93,7 @@ export function ResultsDashboard({
                 change.
               </p>
               <p className="m-0 text-micro text-muted">
-                Carries across: one scenario's expected annual loss — not the portfolio total — plus the scenario
+                Carries across: one scenario's indicative annual exposure — not the portfolio total — plus the scenario
                 you select. Uses: a browser-side SOC overlay on that one number. Does not carry: the other
                 scenarios, your answers, or anything Decision Lab does. Nothing is stored until you save a
                 snapshot.

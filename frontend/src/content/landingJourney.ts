@@ -42,7 +42,7 @@ export const LANDING_STEPS: readonly LandingStep[] = [
     summary:
       'An indicative annual exposure for each scenario, with charts, threshold probabilities and a printable report.',
     points: [
-      'Expected annual loss per scenario, in euros',
+      'Indicative annual exposure per scenario, in euros',
       'Typical-year to bad-year range (P10 to P90)',
       'Probability of exceeding each financial threshold',
       'Input-quality indicator and scenario detail',
@@ -89,7 +89,7 @@ export const LANDING_BRANCHES: readonly LandingBranch[] = [
     label: 'Branch A',
     title: 'QuickRisk Live',
     summary: 'Overlay synthetic SOC evidence and simulated response actions on one scenario.',
-    receives: "one scenario's expected annual loss",
+    receives: "one scenario's indicative annual exposure",
     produces: 'that baseline multiplied by a browser-side SOC overlay',
   },
   {

@@ -32,7 +32,7 @@ const appetite = (status: AppetiteEvaluation['status']): AppetiteEvaluation => (
   criteria: [
     {
       id: 'annualLoss',
-      label: 'Expected annual loss',
+      label: 'Indicative annual exposure',
       limit: 250000,
       actual: 765000,
       unit: 'currency',
@@ -247,9 +247,9 @@ describe('Board Risk Pack model', () => {
     }
   });
 
-  it('states that portfolio selection uses expected annual loss only', () => {
+  it('states that portfolio selection uses indicative annual exposure only', () => {
     const report = buildBoardReport(input());
-    expect(report.pages[3].notes.join(' ')).toContain('Portfolio selection uses expected annual loss only');
+    expect(report.pages[3].notes.join(' ')).toContain('Portfolio selection uses indicative annual exposure only');
   });
 
   it('discloses when a sampled loss cap makes treatment scaling approximate', () => {

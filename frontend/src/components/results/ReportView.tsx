@@ -90,7 +90,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
                 <TableRow>
                   <TableHeaderCell>Rank</TableHeaderCell>
                   <TableHeaderCell>Scenario</TableHeaderCell>
-                  <TableHeaderCell>Expected annual loss</TableHeaderCell>
+                  <TableHeaderCell>Indicative annual exposure</TableHeaderCell>
                   <TableHeaderCell>
                     Best case
                     <span className="block text-micro font-normal text-muted">P10 · 1 in 10</span>
@@ -135,7 +135,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
 
         <section className="qk-print-block grid gap-3" aria-labelledby="report-sensitivity">
           <h2 id="report-sensitivity" className="m-0 text-section font-semibold text-heading">
-            Sensitivity of the expected annual loss
+            Sensitivity of the indicative annual exposure
           </h2>
           <p className="m-0 text-small text-muted">{response.portfolio.sensitivity.method}</p>
           <TableWrap>
@@ -178,7 +178,7 @@ export function ReportView({ response, onBack }: { response: CalculationResponse
                 {scenario.answers.map((answer) => `${answer.questionCode}: ${answer.label}`).join(' · ')}
               </p>
               <p className="m-0 text-small">
-                <strong>Modelled:</strong> expected annual loss{' '}
+                <strong>Modelled:</strong> indicative annual exposure{' '}
                 {formatMoney(scenario.statistics.expectedAnnualLoss, symbol)}; best case{' '}
                 {formatMoney(scenario.statistics.p10, symbol)}; typical year {formatMoney(scenario.statistics.p50, symbol)};
                 bad year {formatMoney(scenario.statistics.p90, symbol)}; P(&gt;

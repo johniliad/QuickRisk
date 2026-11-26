@@ -135,7 +135,7 @@ export function LiveSimulatorView() {
         <GuidedOnboarding
           eyebrow="QuickRisk Live"
           title="Live overlays a SOC simulation on a QuickRisk baseline"
-          description="Live does not invent a baseline. It takes the expected annual loss and the selected scenario from a completed QuickRisk assessment, then applies synthetic SOC observations and simulated response actions on top of them."
+          description="Live does not invent a baseline. It takes the indicative annual exposure and the selected scenario from a completed QuickRisk assessment, then applies synthetic SOC observations and simulated response actions on top of them."
           steps={[
             'Answer the assessment in this tab — 18 questions, about 10 minutes.',
             'Review the indicative exposure and note the scenario you want to simulate.',

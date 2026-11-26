@@ -5,7 +5,7 @@ import type { ScenarioResult } from '@/domain/results';
 import { formatMoney } from '@/lib/format';
 
 /**
- * Ranked scenario comparison by expected annual loss.
+ * Ranked scenario comparison by indicative annual exposure.
  *
  * The most exposed scenario is highlighted, but the rank is also stated in text and in
  * the accompanying table so the ordering does not depend on colour.
@@ -29,15 +29,15 @@ export function ScenarioRankingChart({
   const summary = data
     .map(
       (entry) =>
-        `Rank ${entry.rank}: ${entry.label}, expected annual loss ${formatMoney(entry.expectedAnnualLoss, symbol)}.`,
+        `Rank ${entry.rank}: ${entry.label}, indicative annual exposure ${formatMoney(entry.expectedAnnualLoss, symbol)}.`,
     )
     .join(' ');
 
   return (
     <ChartFrame
       id="scenario-ranking"
-      title="Scenario ranking by expected annual loss"
-      description="Expected annual loss is the mean of simulated annual total losses for each scenario, including zero-loss years. It is not a forecast for a specific year."
+      title="Scenario ranking by indicative annual exposure"
+      description="Indicative annual exposure is the mean of simulated annual total losses for each scenario, including zero-loss years. It is not a forecast for a specific year."
       summary={summary}
       table={
         <TableWrap>
@@ -46,7 +46,7 @@ export function ScenarioRankingChart({
               <TableRow>
                 <TableHeaderCell>Rank</TableHeaderCell>
                 <TableHeaderCell>Scenario</TableHeaderCell>
-                <TableHeaderCell>Expected annual loss</TableHeaderCell>
+                <TableHeaderCell>Indicative annual exposure</TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -68,7 +68,7 @@ export function ScenarioRankingChart({
           <XAxis dataKey="label" {...axisProps} angle={-25} textAnchor="end" height={72} interval={0} />
           <YAxis {...axisProps} width={64} tickFormatter={(value: number) => formatMoney(value, symbol)} />
           <Tooltip
-            formatter={(value) => [formatMoney(Number(value), symbol), 'Expected annual loss']}
+            formatter={(value) => [formatMoney(Number(value), symbol), 'Indicative annual exposure']}
             contentStyle={{ borderRadius: 4, borderColor: chartColours.border, fontSize: 12 }}
           />
           <Bar dataKey="expectedAnnualLoss" isAnimationActive={false} radius={[2, 2, 0, 0]}>

@@ -7,7 +7,7 @@ import { formatDriverValue } from '@/lib/format';
  *
  * Shows the modelled intermediate values with their units, so an executive or analyst
  * can see why the result looks the way it does. All values originate from the server. These
- * are components of the modelled expected annual loss, not a sensitivity analysis.
+ * are components of the modelled indicative annual exposure, not a sensitivity analysis.
  */
 export function RiskDriverList({ scenario, symbol }: { scenario: ScenarioResult; symbol: string }) {
   return (

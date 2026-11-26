@@ -7,7 +7,7 @@ import { formatMoney } from '@/lib/format';
 /**
  * Sensitivity of expected annual total loss to each input.
  *
- * This is a one-at-a-time sensitivity: the server recomputes posterior-expected annual loss
+ * This is a one-at-a-time sensitivity: the server recomputes posterior-indicative annual exposure
  * across the same joint draws for every answer option while holding the other answers fixed,
  * and reports the ratio of the highest to the lowest resulting loss. It is not a variance-based
  * attribution, a causal analysis or a guarantee that changing a control will produce the
@@ -36,15 +36,15 @@ export function SensitivityChart({
   const summary = factors
     .map(
       (factor) =>
-        `${factor.label}: expected annual loss ranges from ${formatMoney(factor.lowExpectedAnnualLoss, symbol)} to ${formatMoney(factor.highExpectedAnnualLoss, symbol)} across its answer options.`,
+        `${factor.label}: indicative annual exposure ranges from ${formatMoney(factor.lowExpectedAnnualLoss, symbol)} to ${formatMoney(factor.highExpectedAnnualLoss, symbol)} across its answer options.`,
     )
     .join(' ');
 
   return (
     <ChartFrame
       id="sensitivity"
-      title="Sensitivity of the expected annual loss to each input"
-      description="One-at-a-time sensitivity of the modelled expected annual loss. Each factor is re-evaluated across all of its answer options with every other answer held fixed; the bar shows the ratio of the highest to the lowest resulting exposure."
+      title="Sensitivity of the indicative annual exposure to each input"
+      description="One-at-a-time sensitivity of the modelled indicative annual exposure. Each factor is re-evaluated across all of its answer options with every other answer held fixed; the bar shows the ratio of the highest to the lowest resulting exposure."
       summary={summary}
       height={360}
       table={
@@ -59,8 +59,8 @@ export function SensitivityChart({
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Factor</TableHeaderCell>
-                <TableHeaderCell>Lowest expected annual loss</TableHeaderCell>
-                <TableHeaderCell>Highest expected annual loss</TableHeaderCell>
+                <TableHeaderCell>Lowest indicative annual exposure</TableHeaderCell>
+                <TableHeaderCell>Highest indicative annual exposure</TableHeaderCell>
                 <TableHeaderCell>Spread ratio</TableHeaderCell>
               </TableRow>
             </TableHead>

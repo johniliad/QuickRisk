@@ -144,7 +144,7 @@ export const LIVE_DISCLOSURE: readonly DisclosureRow[] = [
   {
     business: 'Exposure €X → €Y with current controls',
     model: 'Baseline exposure vs real-time exposure',
-    formula: 'real-time = baseline × SOC multiplier, where baseline is the scenario’s expected annual loss.',
+    formula: 'real-time = baseline × SOC multiplier, where baseline is the scenario’s indicative annual exposure.',
     source: 'result.baselineEal / result.realTimeEal',
   },
   {

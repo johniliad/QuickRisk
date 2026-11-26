@@ -106,7 +106,7 @@ export function retentionSentence(days: number = LIVE_SESSION_RETENTION_DAYS): s
 /* ---------------------------------------------------------------------------------------
  * Where each number comes from.
  *
- * Results, QuickRisk Live and Decision Lab all show an expected annual loss, and they are
+ * Results, QuickRisk Live and Decision Lab all show an indicative annual exposure, and they are
  * three different figures. Results is a sum of five server-calculated scenarios, Live is a
  * single scenario copied from Results and multiplied in the browser, and Decision Lab replays
  * the assessment with the published seed and the same iteration count, so its baseline is the
@@ -245,7 +245,7 @@ export function decisionBaselineEalProvenance(provenance: {
         : `the results figure of ${formatMoney(provenance.resultsPortfolioEal)}`;
 
     return {
-      label: 'Decision Lab baseline expected annual loss',
+      label: 'Decision Lab baseline indicative annual exposure',
       source: `Recalculated on the server from your ${provenance.questionCount} answers by ${provenance.quickriskModelId} model ${provenance.quickriskModelVersion}. It is further from ${resultsFigure} than Monte Carlo noise explains, so your answers changed after the results were calculated.`,
       method: `Same ${run} as the results page. The difference is too large to be sampling noise, so it reflects changed answers rather than a different draw.`,
       independentOf: [
@@ -256,7 +256,7 @@ export function decisionBaselineEalProvenance(provenance: {
   }
 
   return {
-    label: 'Decision Lab baseline expected annual loss',
+    label: 'Decision Lab baseline indicative annual exposure',
     source:
       provenance.baselineCarriedFromResults === true
         ? `Carried from the results page: the same five scenarios, summed, replayed with the ${run}.`
@@ -277,7 +277,7 @@ export function decisionTreatedEalProvenance(provenance: {
   readonly quickriskModelVersion: string;
 }): EalProvenance {
   return {
-    label: 'Decision Lab treated expected annual loss',
+    label: 'Decision Lab treated indicative annual exposure',
     source: `The baseline above with the selected treatments applied, recalculated on the server by ${provenance.quickriskModelId} model ${provenance.quickriskModelVersion}.`,
     method: `Same seed (${provenance.simulationSeed}) and ${formatIterations(provenance.iterations)} iterations as the baseline, so the pair is compared on identical simulated years. Each treatment's effect is realised once from a seed derived from the simulation seed, the treatment id and its version.`,
     independentOf: [
@@ -311,13 +311,13 @@ export const JOURNEY_NODES: readonly JourneyNode[] = [
     key: 'results',
     name: 'Results',
     receives: 'One server calculation of all five scenarios',
-    produces: 'A portfolio total plus one expected annual loss per scenario',
+    produces: 'A portfolio total plus one indicative annual exposure per scenario',
     stores: 'Nothing — memory only',
   },
   {
     key: 'live',
     name: 'QuickRisk Live',
-    receives: "One scenario's expected annual loss, copied from Results",
+    receives: "One scenario's indicative annual exposure, copied from Results",
     produces: 'That baseline multiplied by a synthetic SOC multiplier',
     stores: 'Only a snapshot you save explicitly',
   },
@@ -325,7 +325,7 @@ export const JOURNEY_NODES: readonly JourneyNode[] = [
     key: 'decision-lab',
     name: 'Decision Lab',
     receives: 'The portfolio baseline from Results, plus your answers re-sent for the treated calculation',
-    produces: 'Baseline versus treated expected annual loss for the treatments you choose',
+    produces: 'Baseline versus treated indicative annual exposure for the treatments you choose',
     stores: 'Only the result you save; never your answers',
   },
 ];
@@ -396,12 +396,12 @@ export const DECISION_BRANCH_NOTE =
 export const HISTORY_BRANCH_NOTE =
   'Saved work from two independent branches: QuickRisk Live (Branch A) and Decision Lab (Branch B). Neither branch reads the other.';
 
-/** Label on the dropdown that chooses which scenario's expected annual loss Live uses. */
+/** Label on the dropdown that chooses which scenario's indicative annual exposure Live uses. */
 export const LIVE_BASELINE_SELECTOR_LABEL = "Quantitative baseline — which scenario's EAL to use";
 
 /** Help under that dropdown, stating what it does and does not change. */
 export const LIVE_BASELINE_SELECTOR_HELP =
-  'This chooses the one QuickRisk scenario whose expected annual loss becomes the Live baseline. It is not a demonstration scenario, and it does not change the results page. Switching it clears the timeline because every recorded exposure depends on the baseline.';
+  'This chooses the one QuickRisk scenario whose indicative annual exposure becomes the Live baseline. It is not a demonstration scenario, and it does not change the results page. Switching it clears the timeline because every recorded exposure depends on the baseline.';
 
 /** The three controls a visitor actually has over stored data. */
 export const DATA_CONTROLS: readonly string[] = [

@@ -87,6 +87,8 @@ The response declares `posterior-predictive-compound-poisson-annual-total` and `
 
 Because material-event counts are often zero and severity is heavy-tailed, P50 can be zero and the mean can exceed P90. This is a property of the declared distribution, not an arithmetic inconsistency; the response states it explicitly.
 
+**Terminology.** The user-facing label for this posterior-predictive mean is *indicative annual exposure*; the JSON field remains `expectedAnnualLoss` for API compatibility. This is a labelling clarification — the quantity, its computation and its caveats are unchanged.
+
 Joint percentiles are available only while the posterior engine is active. The legacy fallback declares the annualised-exposure method, `realisedAnnualTotalsModelled: false` and no joint percentile.
 
 ## 7. Calibration and validation

@@ -159,6 +159,23 @@ export function App() {
     }
   }, [status]);
 
+  // Preload the follow-on analysis views once a result exists. The Live simulator and the
+  // Decision Lab are separate chunks; fetching them while the visitor reads the results means
+  // switching to them does not stall behind the 8-second slow-load notice. Failures are
+  // ignored here — the real load in each view reports them.
+  useEffect(() => {
+    if (results === null) {
+      return undefined;
+    }
+    const timer = globalThis.setTimeout(() => {
+      void import('@/live/LiveSimulatorView').catch(() => undefined);
+      void import('@/live/LiveHistoryView').catch(() => undefined);
+      void import('@/decision/DecisionLabView').catch(() => undefined);
+    }, 1200);
+
+    return () => globalThis.clearTimeout(timer);
+  }, [results]);
+
   // A view change replaces the page content, so the visitor must start at the top of it.
   // Without this, choosing an entry path kept the browser at the previous scroll position
   // and the disclaimer (or the next screen) appeared halfway down the window.

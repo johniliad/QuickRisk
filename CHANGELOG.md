@@ -5,6 +5,45 @@ identity in `fairquickmodel/manifest.json`. The model, schema, calibration, meth
 disclaimer versions move with a model release; the application version is tracked separately.
 A published version's meaning is never edited in place.
 
+## [Unreleased] — hardening and documentation alignment
+
+### Changed
+
+- The user-facing label for the model's expected loss is now **"indicative annual exposure"**.
+  The JSON field `expectedAnnualLoss` and the technical "posterior-predictive annual total" label
+  are unchanged; this is a labelling clarification, not a different quantity.
+- Decision Lab appetite copy and server messages use "exposure limit" and "indicative-exposure
+  criterion" instead of "annual loss limit" / "expected annual-loss criterion".
+
+### Added
+
+- Legacy fallback samples primary and secondary loss magnitude from moment-matched **lognormal**
+  distributions (heavy right tails); distribution helpers and tests added
+  (`server/includes/distributions.php`, `tests/distributions.test.php`).
+- Organisation-profile modifiers are triangular uncertainty ranges sampled per Monte Carlo
+  iteration, so calibration uncertainty propagates into the output
+  (`server/includes/modifiers.php`, `server/includes/fair_engine.php`, `fairquickmodel/parameters.json`).
+- Legacy frequency bands and scenario susceptibility bases are evidence-anchored to DSIT 2025/2026
+  and IBM/Ponemon differentials, reproducible with `tools/calibrate-frequency-bands.php`.
+- A deploy-time guard refuses a frontend bundle that does not embed the active model
+  (`tools/prepare-upload.php`, `tools/deploy.sh`), preventing a VERSION_MISMATCH after a model bump.
+- The Live and Decision Lab chunks are preloaded once a result exists, so entering those views no
+  longer stalls behind the slow-chunk notice (`frontend/src/app/App.tsx`).
+
+### Fixed
+
+- Rebuilt `frontend/dist` so the served bundle embeds FAIR-QK-2.0; the previous stale bundle caused
+  "The request does not match the active model version" at calculation time.
+- Social and link previews now use a purpose-built 1200×627 (1.91:1) card,
+  `frontend/public/images/quickrisk-social-2026-11.jpg`, generated from the landing hero. The
+  1920×1280 hero is 3:2, so LinkedIn cropped it to 1.91:1 and lost the logo lockup and the
+  "Built by Dr. John ILIADIS" credit line. `og:image`, `og:image:secure_url`,
+  `og:image:width`/`og:image:height` and `twitter:image` now describe the social card, the hero
+  itself is unchanged for the landing page, and `frontend/tests/public-docs.test.ts` reads the
+  JPEG headers so the declared dimensions cannot drift from the bytes served.
+- Bumped the offline calibration dependency `pytest` from 9.0.2 to 9.0.3 (PYSEC-2026-1845 /
+  CVE-2025-71176, pytest tmpdir handling).
+
 ## [FAIR-QK-2.0 / application 1.3.5] — 2026-11-24
 
 ### Added
