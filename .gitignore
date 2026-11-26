@@ -30,8 +30,12 @@ cloudflare-origin-secret
 # It lives only on the host. The versioned Apache policies are server/.htaccess,
 # server/api/.htaccess, server/includes/.htaccess, server/live/api/.htaccess and
 # frontend/public/live/share/.htaccess, which are tracked (the leading slash below
-# anchors the rule to the repository root and leaves those files alone).
+# anchors the rule to the repository root and leaves those files alone). They carry the
+# fail-closed stub, never the secret: tools/render-apache-policy.php injects the secret
+# into a rendered copy and refuses any --out path that git tracks, so the rules here
+# only cover render trees that can appear locally.
 /.htaccess
+/qk-upload/
 
 # Editor and OS noise
 .vscode/*
@@ -104,8 +108,7 @@ ai-access-tokens.txt
 /requirements/
 /privatedocs/
 
-/server/.htaccess
-server/.htaccess
+
 
 #Development plan in markdown
 CISO_Board_Reporting_Development_Plan.md

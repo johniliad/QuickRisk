@@ -30,6 +30,12 @@ declare(strict_types=1);
  * --check renders and validates in memory, writes nothing, and exits non-zero on
  * any defect. The test suite uses it.
  *
+ * --out must not name a path git tracks. The rendered file carries the origin secret, so
+ * one `git add -A` would publish it. A path outside the repository is always allowed
+ * (tools/deploy.sh writes the web root, tools/prepare-upload.php assembles the upload tree
+ * in the system temp directory); a path inside it is allowed only when git confirms it is
+ * untracked, such as frontend/dist/ or .tmp/.
+ *
  * This script writes only the file named by --out. It never prints the secret.
  */
 
@@ -60,6 +66,10 @@ foreach (array_slice($argv, 1) as $qkArgument) {
 if (!$qkOptions['check'] && !is_string($qkOptions['out'])) {
     fwrite(STDERR, "Pass --out PATH (or --check to validate only).\n");
     exit(2);
+}
+
+if (!$qkOptions['check']) {
+    qk_render_assert_output_is_not_versioned((string) $qkOptions['out'], $qkRoot);
 }
 
 $qkPolicyPath = $qkRoot . '/server/.htaccess';
@@ -123,6 +133,10 @@ The origin secret is read from --secret-file, QK_ORIGIN_SECRET, or one of:
 
 It must be 32-128 characters of [A-Za-z0-9_-]. Nothing is written when it is missing.
 
+--out must not name a path git tracks: the rendered policy carries the secret, so the
+renderer refuses a path that a commit could publish. Deploy to the web root, or to an
+untracked tree such as the temporary upload folder.
+
 TXT);
 }
 
@@ -141,6 +155,139 @@ function qk_render_read(string $path): string
 
     // Normalise every line ending so marker matching and Apache parsing agree.
     return str_replace(["\r\n", "\r"], "\n", (string) $contents);
+}
+
+/**
+ * Refuses to write the rendered policy into a git-tracked path.
+ *
+ * The rendered file carries the Cloudflare origin secret, so a single `git add -A` would
+ * publish it. Both publishing paths write outside the repository — tools/deploy.sh to the
+ * web root, tools/prepare-upload.php into the system temp directory — so the guard only
+ * interrogates git when --out points inside the repository, and then only accepts a path
+ * that git reports as untracked (frontend/dist/, .tmp/).
+ */
+function qk_render_assert_output_is_not_versioned(string $target, string $root): void
+{
+    $outside = qk_render_relative_to_repository($target, $root);
+    if ($outside === null) {
+        return;
+    }
+
+    $tracked = qk_render_git_tracks($root, $outside);
+    if ($tracked === true) {
+        qk_render_abort(
+            "Refusing to write the rendered policy to a path git tracks: {$target}\n"
+            . "The rendered file carries the Cloudflare origin secret, so a commit would publish it.\n"
+            . "Write to the web root (tools/deploy.sh) or to an untracked build tree\n"
+            . "(tools/prepare-upload.php uses the system temp directory)."
+        );
+    }
+
+    if ($tracked === null) {
+        qk_render_abort(
+            "Cannot confirm that this --out path is untracked: {$target}\n"
+            . "git is unavailable here, so the renderer cannot prove that writing the secret\n"
+            . "inside the repository is safe. Use an --out path outside the repository, or run\n"
+            . "the renderer where git is on the PATH."
+        );
+    }
+}
+
+/**
+ * Returns the path relative to the repository root, or null when it lies outside it.
+ * The target need not exist yet: it is resolved lexically, never through the filesystem.
+ */
+function qk_render_relative_to_repository(string $target, string $root): ?string
+{
+    $absolute = qk_render_absolute_path($target);
+    $repository = qk_render_absolute_path($root);
+
+    // Windows resolves paths case-insensitively; git does not, but the filesystem does, so a
+    // differently-cased Server/.htaccess would still overwrite a tracked file.
+    if (DIRECTORY_SEPARATOR === '\\') {
+        $absolute = strtolower($absolute);
+        $repository = strtolower($repository);
+    }
+
+    if ($absolute === $repository) {
+        return '';
+    }
+
+    if (!str_starts_with($absolute, rtrim($repository, '/') . '/')) {
+        return null;
+    }
+
+    return substr($absolute, strlen(rtrim($repository, '/')) + 1);
+}
+
+/**
+ * Makes a path absolute and removes "." and ".." segments without touching the filesystem.
+ */
+function qk_render_absolute_path(string $path): string
+{
+    $normalised = str_replace('\\', '/', $path);
+
+    $prefix = '';
+    if (preg_match('#^([A-Za-z]:)?/#', $normalised, $match) === 1) {
+        $prefix = $match[0];
+        $normalised = substr($normalised, strlen($prefix));
+    } else {
+        $prefix = str_replace('\\', '/', (string) getcwd()) . '/';
+    }
+
+    $segments = [];
+    foreach (explode('/', $normalised) as $segment) {
+        if ($segment === '' || $segment === '.') {
+            continue;
+        }
+        if ($segment === '..') {
+            array_pop($segments);
+            continue;
+        }
+        $segments[] = $segment;
+    }
+
+    return $prefix . implode('/', $segments);
+}
+
+/**
+ * Asks git whether it tracks the path.
+ *
+ * @return bool|null true when tracked, false when untracked, null when git cannot answer
+ *                   (no git binary, not a work tree, or exec() disabled on the host).
+ */
+function qk_render_git_tracks(string $root, string $relative): ?bool
+{
+    if ($relative === '' || !function_exists('exec')) {
+        return null;
+    }
+
+    [$exitCode, $output] = qk_render_git($root, ['rev-parse', '--is-inside-work-tree']);
+    if ($exitCode !== 0 || trim($output) !== 'true') {
+        return null;
+    }
+
+    [$listed] = qk_render_git($root, ['ls-files', '--error-unmatch', '--', $relative]);
+
+    return $listed === 0;
+}
+
+/**
+ * @param array<int,string> $arguments
+ * @return array{0:int,1:string}
+ */
+function qk_render_git(string $root, array $arguments): array
+{
+    $command = 'git -C ' . escapeshellarg($root);
+    foreach ($arguments as $argument) {
+        $command .= ' ' . escapeshellarg($argument);
+    }
+
+    $output = [];
+    $exitCode = 0;
+    exec($command . ' 2>&1', $output, $exitCode);
+
+    return [$exitCode, trim(implode("\n", $output))];
 }
 
 function qk_render_secret(array $options, string $root): string

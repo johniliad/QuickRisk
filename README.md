@@ -630,6 +630,9 @@ stay reachable so that Let's Encrypt and cPanel AutoSSL can renew the certificat
   is public, and a committed placeholder would be a known bypass.
 - `tools/render-apache-policy.php` performs the substitution; `tools/deploy.sh` and
   `tools/prepare-upload.php` both call it and refuse to publish without a valid secret.
+- The renderer also refuses an `--out` path that git tracks, so the secret cannot be written
+  into a versioned file: publish to the web root, or to an untracked build tree such as the
+  temporary upload folder.
 - Branded `ErrorDocument` pages for 403, 404, 500 and 503 ship in `frontend/public/errors/`.
 
 Verified by `tests/apache_policy.test.php` and `tests/error_pages.test.php`, and by the

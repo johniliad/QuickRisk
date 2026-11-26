@@ -17,6 +17,63 @@ declare(strict_types=1);
  *  - the deploy script keeps both of those properties (notice exclusion and gate merge).
  */
 
+/**
+ * Runs tools/render-apache-policy.php from the repository root and returns [status, stdout, stderr].
+ *
+ * @param array<int,string> $arguments
+ * @return array{0:int,1:string,2:string}
+ */
+function qk_apache_run_renderer(array $arguments): array
+{
+    $command = array_merge(
+        [PHP_BINARY, qk_test_repository_root() . '/tools/render-apache-policy.php'],
+        $arguments
+    );
+
+    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $process = proc_open($command, $descriptors, $pipes, qk_test_repository_root());
+    if (!is_resource($process)) {
+        qk_fail('The policy renderer could not be started.');
+    }
+
+    $stdout = (string) stream_get_contents($pipes[1]);
+    $stderr = (string) stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+
+    return [proc_close($process), $stdout, $stderr];
+}
+
+/**
+ * Writes a throw-away origin secret and returns its path.
+ */
+function qk_apache_secret_file(): string
+{
+    $path = (string) tempnam(sys_get_temp_dir(), 'qk-secret-');
+    if ($path === '' || file_put_contents($path, str_repeat('k', 64)) === false) {
+        qk_fail('A temporary origin secret could not be written.');
+    }
+
+    return $path;
+}
+
+/**
+ * Reports whether git can answer tracking questions in this repository. The renderer's guard is
+ * fail-closed without git, so the untracked-path test below is only meaningful when git runs.
+ */
+function qk_apache_git_available(): bool
+{
+    if (!function_exists('exec')) {
+        return false;
+    }
+
+    $output = [];
+    $exitCode = 0;
+    exec('git -C ' . escapeshellarg(qk_test_repository_root()) . ' rev-parse --is-inside-work-tree 2>&1', $output, $exitCode);
+
+    return $exitCode === 0 && trim(implode("\n", $output)) === 'true';
+}
+
 return [
     'apache policy: the web-root .htaccess carries one complete Content-Security-Policy' => function (): void {
         $root = qk_test_repository_root();
@@ -358,5 +415,59 @@ return [
             is_dir($root . '/frontend/public/.well-known'),
             'No .well-known directory may be committed under frontend/public: the build would ship or clobber it'
         );
+    },
+
+    'apache policy: the renderer refuses to write the origin secret into a tracked path' => function (): void {
+        $root = qk_test_repository_root();
+        $policyPath = $root . '/server/.htaccess';
+        $before = (string) file_get_contents($policyPath);
+        $secret = qk_apache_secret_file();
+
+        try {
+            // The obvious accident: render the deployed policy over the versioned template.
+            [$status, , $stderr] = qk_apache_run_renderer([
+                '--out=server/.htaccess',
+                '--secret-file=' . $secret,
+            ]);
+        } finally {
+            @unlink($secret);
+        }
+
+        assertSame(1, $status, 'Rendering over the versioned policy must abort');
+        assertContains('path git tracks', $stderr, 'The refusal must name the tracked-path guard');
+        assertSame(
+            $before,
+            (string) file_get_contents($policyPath),
+            'The versioned policy must be left byte-identical, with no rendered secret in it'
+        );
+    },
+
+    'apache policy: the renderer still writes an untracked tree inside the repository' => function (): void {
+        if (!qk_apache_git_available()) {
+            return; // Without git the guard is fail-closed, so there is nothing to prove here.
+        }
+
+        $root = qk_test_repository_root();
+        $target = $root . '/.tmp/qk-render-guard-test/.htaccess';
+        $secret = qk_apache_secret_file();
+
+        try {
+            [$status, , $stderr] = qk_apache_run_renderer([
+                '--out=' . $target,
+                '--secret-file=' . $secret,
+            ]);
+
+            assertSame(0, $status, 'An untracked build tree must stay writable: ' . $stderr);
+            assertTrue(is_file($target), 'The rendered policy must be written to the untracked path');
+            assertContains(
+                str_repeat('k', 64),
+                (string) file_get_contents($target),
+                'The rendered policy must carry the injected secret'
+            );
+        } finally {
+            @unlink($target);
+            @rmdir(dirname($target));
+            @unlink($secret);
+        }
     },
 ];

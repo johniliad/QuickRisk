@@ -29,6 +29,10 @@ A published version's meaning is never edited in place.
   (`tools/prepare-upload.php`, `tools/deploy.sh`), preventing a VERSION_MISMATCH after a model bump.
 - The Live and Decision Lab chunks are preloaded once a result exists, so entering those views no
   longer stalls behind the slow-chunk notice (`frontend/src/app/App.tsx`).
+- `tools/render-apache-policy.php` refuses any `--out` path that git tracks (checked with
+  `git ls-files`, fail-closed when git cannot answer), so rendering can never write the
+  Cloudflare origin secret into a versioned file; `.gitignore` covers the local upload tree and
+  `tests/apache_policy.test.php` pins both the refusal and the untracked trees that still render.
 
 ### Fixed
 
@@ -43,6 +47,11 @@ A published version's meaning is never edited in place.
   JPEG headers so the declared dimensions cannot drift from the bytes served.
 - Bumped the offline calibration dependency `pytest` from 9.0.2 to 9.0.3 (PYSEC-2026-1845 /
   CVE-2025-71176, pytest tmpdir handling).
+- Restored the fail-closed deny rule in `server/.htaccess`: a rendered-looking 64-character
+  token had replaced `RewriteRule ^ - [F,L]`, so the committed gate denied nothing and the
+  "origin gate is fail-closed" tests failed. The inert `/server/.htaccess` ignore rules are
+  gone (gitignore never applies to a tracked file), and the renderer guard now makes that
+  specific accident impossible.
 
 ## [FAIR-QK-2.0 / application 1.3.5] — 2026-11-24
 
