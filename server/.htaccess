@@ -62,7 +62,7 @@ DirectoryIndex index.html
     RewriteEngine On
     # Fail-closed stub. Replaced at deploy time with the X-Origin-Secret check.
     RewriteCond %{ENV:REDIRECT_STATUS} ^$
-    RewriteRule ^874fc44e4030f0eb01d72c5bae7848ef956d9e536aaf7e757d0c61c0b7b73a91- [F,L]
+    RewriteRule ^78dd08badaa56c5828b73918333a81101e3119c1a5f20b093370b7484f2f5e09- [F,L]
 </IfModule>
 # <<< QK-ORIGIN-GATE-END
 

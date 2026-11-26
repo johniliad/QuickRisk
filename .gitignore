@@ -104,6 +104,8 @@ ai-access-tokens.txt
 /requirements/
 /privatedocs/
 
+/server/.htaccess
+
 #Development plan in markdown
 CISO_Board_Reporting_Development_Plan.md
 # ==========================================
